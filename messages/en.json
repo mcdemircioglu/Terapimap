@@ -1,0 +1,96 @@
+{
+  "meta": {
+    "siteName": "Terapimap",
+    "tagline": "Find the right therapist for you",
+    "description": "Discover trusted psychologists and psychotherapists in your city. Filter by specialty, city, and session type to find the right match."
+  },
+  "nav": {
+    "home": "Home",
+    "therapists": "Therapists",
+    "about": "About",
+    "forTherapists": "For therapists"
+  },
+  "home": {
+    "heroTitle": "Find the right therapist for you",
+    "heroSubtitle": "Browse hundreds of vetted psychologists by specialty, city, and session type. Take the first step today.",
+    "searchCity": "City",
+    "searchSpecialty": "Specialty",
+    "searchAllCities": "All cities",
+    "searchAllSpecialties": "All specialties",
+    "searchButton": "Search therapists",
+    "featuredTitle": "Featured therapists",
+    "featuredSubtitle": "Top-rated specialists currently accepting new clients.",
+    "featuredCta": "View all therapists",
+    "valueTitle": "Finding the right therapist shouldn't be hard",
+    "value1Title": "Verified specialists",
+    "value1Body": "Every psychologist is listed with their credentials and area of practice.",
+    "value2Title": "Search by what matters",
+    "value2Body": "Filter by anxiety, depression, couples therapy, CBT and more.",
+    "value3Title": "Online or in person",
+    "value3Body": "Pick the format that suits you — get support regardless of city.",
+    "ctaTitle": "Take the first step today",
+    "ctaBody": "Find a therapist that matches your needs and reach out directly.",
+    "ctaButton": "Browse therapists"
+  },
+  "filters": {
+    "title": "Filters",
+    "city": "City",
+    "specialty": "Specialty",
+    "online": "Online sessions only",
+    "all": "All",
+    "apply": "Apply",
+    "clear": "Clear"
+  },
+  "list": {
+    "titleAll": "All therapists",
+    "titleCity": "Therapists in {city}",
+    "titleCitySpecialty": "{specialty} specialists in {city}",
+    "count": "{count} results",
+    "empty": "No therapists matched these filters."
+  },
+  "card": {
+    "online": "Online",
+    "inPerson": "In person",
+    "viewProfile": "View profile",
+    "experience": "{years} yrs experience"
+  },
+  "detail": {
+    "about": "About",
+    "specialties": "Specialties",
+    "session": "Sessions",
+    "online": "Online",
+    "inPerson": "In person",
+    "price": "Session fee",
+    "experience": "Experience",
+    "contact": "Get in touch",
+    "contactCta": "Message this therapist"
+  },
+  "lead": {
+    "title": "Get in touch",
+    "subtitle": "Your message goes directly to the therapist. This site does not guarantee an appointment.",
+    "name": "Your name",
+    "email": "Email",
+    "phone": "Phone (optional)",
+    "message": "Your message",
+    "messagePlaceholder": "Briefly tell the therapist why you're reaching out...",
+    "submit": "Send",
+    "sending": "Sending...",
+    "successTitle": "Message sent!",
+    "success": "The therapist will get back to you shortly.",
+    "sendAnother": "Send another message",
+    "error": "Couldn't send your message. Please try again.",
+    "validation": "Please fill in all required fields."
+  },
+  "footer": {
+    "rights": "All rights reserved.",
+    "disclaimer": "Terapimap is not a healthcare provider. We connect individuals with independent specialists.",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "contact": "Contact"
+  },
+  "errors": {
+    "notFound": "Page not found",
+    "notFoundBody": "The page you're looking for doesn't exist or has been moved.",
+    "backHome": "Back home"
+  }
+}

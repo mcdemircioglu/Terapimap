@@ -1,0 +1,96 @@
+{
+  "meta": {
+    "siteName": "Terapimap",
+    "tagline": "Size en uygun terapisti bulun",
+    "description": "Şehrinizdeki uzman psikologları ve psikoterapistleri keşfedin. Anksiyete, depresyon, çift terapisi ve daha fazlası için doğru uzmanı bulun."
+  },
+  "nav": {
+    "home": "Ana Sayfa",
+    "therapists": "Terapistler",
+    "about": "Hakkımızda",
+    "forTherapists": "Terapistler İçin"
+  },
+  "home": {
+    "heroTitle": "Size en uygun terapisti bulun",
+    "heroSubtitle": "Uzmanlık alanı, şehir ve görüşme türüne göre yüzlerce psikoloğu inceleyin. Doğru kişiyle ilk adımı bugün atın.",
+    "searchCity": "Şehir",
+    "searchSpecialty": "Uzmanlık alanı",
+    "searchAllCities": "Tüm şehirler",
+    "searchAllSpecialties": "Tüm alanlar",
+    "searchButton": "Terapistleri ara",
+    "featuredTitle": "Öne çıkan terapistler",
+    "featuredSubtitle": "Yüksek puan alan ve aktif olarak danışan kabul eden uzmanlar.",
+    "featuredCta": "Tüm terapistleri gör",
+    "valueTitle": "Doğru terapisti bulmak neden zor olmasın?",
+    "value1Title": "Doğrulanmış uzmanlar",
+    "value1Body": "Tüm psikologlar diploma ve uzmanlık bilgileriyle listelenir.",
+    "value2Title": "Uzmanlık alanına göre ara",
+    "value2Body": "Anksiyete, depresyon, çift terapisi ve daha fazlasında uzman kişileri filtreleyin.",
+    "value3Title": "Çevrimiçi veya yüz yüze",
+    "value3Body": "Size uygun görüşme türünü seçin; şehir farketmeksizin destek alın.",
+    "ctaTitle": "Bugün ilk adımı atın",
+    "ctaBody": "İhtiyaçlarınıza uygun terapisti bulun, doğrudan iletişime geçin.",
+    "ctaButton": "Terapistleri keşfet"
+  },
+  "filters": {
+    "title": "Filtreler",
+    "city": "Şehir",
+    "specialty": "Uzmanlık",
+    "online": "Sadece çevrimiçi görüşen",
+    "all": "Tümü",
+    "apply": "Uygula",
+    "clear": "Temizle"
+  },
+  "list": {
+    "titleAll": "Tüm terapistler",
+    "titleCity": "{city} terapistleri",
+    "titleCitySpecialty": "{city} - {specialty} uzmanları",
+    "count": "{count} sonuç",
+    "empty": "Bu kriterlere uyan terapist bulunamadı."
+  },
+  "card": {
+    "online": "Çevrimiçi",
+    "inPerson": "Yüz yüze",
+    "viewProfile": "Profili gör",
+    "experience": "{years} yıl deneyim"
+  },
+  "detail": {
+    "about": "Hakkında",
+    "specialties": "Uzmanlık alanları",
+    "session": "Görüşme",
+    "online": "Çevrimiçi",
+    "inPerson": "Yüz yüze",
+    "price": "Seans ücreti",
+    "experience": "Deneyim",
+    "contact": "İletişime geç",
+    "contactCta": "Bu terapiste mesaj gönder"
+  },
+  "lead": {
+    "title": "İletişime geç",
+    "subtitle": "Mesajınız doğrudan terapiste iletilir. Bu site bir randevu garantisi vermez.",
+    "name": "Adınız",
+    "email": "E-posta",
+    "phone": "Telefon (opsiyonel)",
+    "message": "Mesajınız",
+    "messagePlaceholder": "Kısaca neden iletişime geçtiğinizi yazabilirsiniz...",
+    "submit": "Gönder",
+    "sending": "Gönderiliyor...",
+    "successTitle": "Mesajınız iletildi!",
+    "success": "Terapist en kısa sürede size dönüş yapacaktır.",
+    "sendAnother": "Başka bir mesaj gönder",
+    "error": "Mesaj gönderilemedi. Lütfen tekrar deneyin.",
+    "validation": "Lütfen tüm zorunlu alanları doldurun."
+  },
+  "footer": {
+    "rights": "Tüm hakları saklıdır.",
+    "disclaimer": "Terapimap bir sağlık hizmeti sağlayıcısı değildir; uzmanlarla bireyler arasında bir buluşma platformudur.",
+    "privacy": "Gizlilik",
+    "terms": "Kullanım Koşulları",
+    "contact": "İletişim"
+  },
+  "errors": {
+    "notFound": "Sayfa bulunamadı",
+    "notFoundBody": "Aradığınız sayfa mevcut değil ya da kaldırılmış olabilir.",
+    "backHome": "Ana sayfaya dön"
+  }
+}
