@@ -27,7 +27,12 @@ export default function CitySpecialtyPage({
   searchParams,
 }: {
   params: { locale: string; city: string; specialty: string };
-  searchParams: { online?: string };
+  searchParams: {
+    online?: string;
+    district?: string;
+    type?: string;
+    inPerson?: string;
+  };
 }) {
   unstable_setRequestLocale(params.locale);
   if (!isKnownCity(params.city)) notFound();

@@ -3,8 +3,9 @@ import { getTranslations } from 'next-intl/server';
 import Container from './Container';
 import Filters from './Filters';
 import TherapistGrid from './TherapistGrid';
-import { getSpecialties, getTherapists } from '@/lib/queries';
+import { getDistricts, getSpecialties, getTherapists } from '@/lib/queries';
 import { getCityName } from '@/lib/cities';
+import type { ProfessionalType } from '@/types/database';
 
 export default async function TherapistListing({
   locale,
@@ -15,7 +16,14 @@ export default async function TherapistListing({
   locale: string;
   citySlug?: string;
   specialtySlug?: string;
-  searchParams: { online?: string; specialty?: string; city?: string };
+  searchParams: {
+    online?: string;
+    specialty?: string;
+    city?: string;
+    district?: string;
+    type?: string;
+    inPerson?: string;
+  };
 }) {
   const t = await getTranslations({ locale, namespace: 'list' });
 
@@ -23,13 +31,20 @@ export default async function TherapistListing({
   const effectiveCity = citySlug ?? searchParams.city;
   const effectiveSpecialty = specialtySlug ?? searchParams.specialty;
   const online = searchParams.online === '1';
+  const inPerson = searchParams.inPerson === '1';
+  const district = searchParams.district || undefined;
+  const professionalType = (searchParams.type || undefined) as ProfessionalType | undefined;
 
-  const [specialties, therapists] = await Promise.all([
+  const [specialties, districts, therapists] = await Promise.all([
     getSpecialties(),
+    getDistricts(effectiveCity),
     getTherapists({
       citySlug: effectiveCity,
       specialtySlug: effectiveSpecialty,
+      district,
+      professionalType,
       online,
+      inPerson,
     }),
   ]);
 
@@ -63,6 +78,7 @@ export default async function TherapistListing({
         <Filters
           locale={locale}
           specialties={specialties}
+          districts={districts}
           selectedCity={effectiveCity}
           selectedSpecialty={effectiveSpecialty}
         />

@@ -5,7 +5,6 @@ import TherapistListing from '@/components/TherapistListing';
 import { CITIES, getCityName, isKnownCity } from '@/lib/cities';
 
 export function generateStaticParams() {
-  // Pre-render the well-known cities for SEO.
   return CITIES.map((c) => ({ city: c.slug }));
 }
 
@@ -25,7 +24,13 @@ export default function CityPage({
   searchParams,
 }: {
   params: { locale: string; city: string };
-  searchParams: { online?: string; specialty?: string };
+  searchParams: {
+    online?: string;
+    specialty?: string;
+    district?: string;
+    type?: string;
+    inPerson?: string;
+  };
 }) {
   unstable_setRequestLocale(params.locale);
   if (!isKnownCity(params.city)) notFound();

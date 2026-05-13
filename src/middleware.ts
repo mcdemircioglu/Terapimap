@@ -8,6 +8,6 @@ export default createMiddleware({
 });
 
 export const config = {
-  // Skip API routes, _next, static files, favicon.
-  matcher: ['/((?!api|_next|.*\\..*).*)'],
+  // Skip API routes, admin panel, _next, static files, favicon.
+  matcher: ['/((?!api|admin|_next|.*[.].*).*)'],
 };

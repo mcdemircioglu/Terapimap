@@ -35,8 +35,11 @@
   "filters": {
     "title": "Filtreler",
     "city": "Şehir",
+    "district": "İlçe",
     "specialty": "Uzmanlık",
+    "professionalType": "Uzman türü",
     "online": "Sadece çevrimiçi görüşen",
+    "inPerson": "Sadece yüz yüze görüşen",
     "all": "Tümü",
     "apply": "Uygula",
     "clear": "Temizle"

@@ -43,7 +43,14 @@ export default function TherapistsPage({
   searchParams,
 }: {
   params: { locale: string };
-  searchParams: { online?: string; specialty?: string; city?: string };
+  searchParams: {
+    online?: string;
+    specialty?: string;
+    city?: string;
+    district?: string;
+    type?: string;
+    inPerson?: string;
+  };
 }) {
   unstable_setRequestLocale(params.locale);
   const locale = params.locale;

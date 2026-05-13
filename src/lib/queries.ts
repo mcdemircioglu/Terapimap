@@ -12,7 +12,7 @@ import type {
 // ---------------------------------------------------------------------
 
 function logError(fn: string, error: unknown) {
-  console.error(`\n[terapimap:queries] ❌ ${fn} failed:`);
+  console.error(`\n[terapimap:queries] ${fn} failed:`);
   console.error(JSON.stringify(error, null, 2));
 }
 
@@ -37,8 +37,10 @@ const PROFESSIONAL_SELECT = `
 export type TherapistFilters = {
   citySlug?: string;
   specialtySlug?: string;
+  district?: string;
   professionalType?: ProfessionalType;
   online?: boolean;
+  inPerson?: boolean;
   search?: string;
   limit?: number;
 };
@@ -58,8 +60,34 @@ export async function getSpecialties(): Promise<Specialty[]> {
     logError('getSpecialties', error);
     return [];
   }
-  console.log(`[terapimap:queries] getSpecialties → ${data?.length ?? 0} rows`);
+  console.log(`[terapimap:queries] getSpecialties -> ${data?.length ?? 0} rows`);
   return data ?? [];
+}
+
+/**
+ * Returns distinct, sorted district values for a given city (or all cities).
+ * Used to populate the district filter dropdown.
+ */
+export async function getDistricts(citySlug?: string): Promise<string[]> {
+  const supabase = getServerClient();
+  let query = supabase.from('professionals').select('district');
+  if (citySlug) {
+    const cityName = getCityName(citySlug);
+    if (cityName) query = query.eq('city', cityName);
+  }
+  const { data, error } = await query;
+  if (error) {
+    logError('getDistricts', error);
+    return [];
+  }
+  const unique = Array.from(
+    new Set(
+      (data ?? [])
+        .map((r: any) => r.district as string | null)
+        .filter((d): d is string => typeof d === 'string' && d.trim() !== ''),
+    ),
+  ).sort((a, b) => a.localeCompare(b));
+  return unique;
 }
 
 export async function getTherapists(
@@ -71,13 +99,15 @@ export async function getTherapists(
     .from('professionals')
     .select(PROFESSIONAL_SELECT);
 
-  // Map city slug → city name for the Supabase filter (DB has `city`, not `city_slug`)
+  // Map city slug -> city name for the Supabase filter (DB has `city`, not `city_slug`)
   if (filters.citySlug) {
     const cityName = getCityName(filters.citySlug);
     if (cityName) query = query.eq('city', cityName);
   }
+  if (filters.district) query = query.eq('district', filters.district);
   if (filters.professionalType) query = query.eq('professional_type', filters.professionalType);
   if (filters.online === true) query = query.eq('is_online', true);
+  if (filters.inPerson === true) query = query.eq('is_in_person', true);
   if (filters.search) {
     const term = `%${filters.search}%`;
     query = query.or(`name.ilike.${term},about.ilike.${term}`);
@@ -94,7 +124,7 @@ export async function getTherapists(
   }
 
   console.log(
-    `[terapimap:queries] getTherapists(${JSON.stringify(filters)}) → ${data?.length ?? 0} rows`,
+    `[terapimap:queries] getTherapists(${JSON.stringify(filters)}) -> ${data?.length ?? 0} rows`,
   );
 
   let rows = (data ?? []).map((row: any) => ({
@@ -129,7 +159,7 @@ export async function getFeaturedTherapists(
   }
 
   console.log(
-    `[terapimap:queries] getFeaturedTherapists → ${data?.length ?? 0} rows`,
+    `[terapimap:queries] getFeaturedTherapists -> ${data?.length ?? 0} rows`,
   );
   return (data ?? []).map((row: any) => ({
     ...(row as Professional),
@@ -152,11 +182,11 @@ export async function getTherapistBySlug(
     return null;
   }
   if (!data) {
-    console.warn(`[terapimap:queries] getTherapistBySlug("${slug}") → not found`);
+    console.warn(`[terapimap:queries] getTherapistBySlug("${slug}") -> not found`);
     return null;
   }
 
-  console.log(`[terapimap:queries] getTherapistBySlug("${slug}") → found`);
+  console.log(`[terapimap:queries] getTherapistBySlug("${slug}") -> found`);
   return {
     ...(data as Professional),
     specialties: flattenSpecialties(data),

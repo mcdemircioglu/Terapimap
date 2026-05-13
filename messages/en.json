@@ -35,8 +35,11 @@
   "filters": {
     "title": "Filters",
     "city": "City",
+    "district": "District",
     "specialty": "Specialty",
+    "professionalType": "Professional type",
     "online": "Online sessions only",
+    "inPerson": "In-person sessions only",
     "all": "All",
     "apply": "Apply",
     "clear": "Clear"
