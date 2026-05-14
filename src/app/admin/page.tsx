@@ -15,6 +15,7 @@ type Professional = {
   professional_type: string | null;
   city: string;
   district: string | null;
+  clinic_name: string | null;
   address: string | null;
   google_maps_url: string | null;
   is_online: boolean;
@@ -40,6 +41,7 @@ type FormData = {
   professional_type: string;
   city: string;
   district: string;
+  clinic_name: string;
   address: string;
   google_maps_url: string;
   is_online: boolean;
@@ -79,6 +81,7 @@ const EMPTY_FORM: FormData = {
   professional_type: '',
   city: '',
   district: '',
+  clinic_name: '',
   address: '',
   google_maps_url: '',
   is_online: false,
@@ -123,6 +126,7 @@ function profToForm(p: Professional): FormData {
     professional_type: p.professional_type ?? '',
     city: p.city ?? '',
     district: p.district ?? '',
+    clinic_name: p.clinic_name ?? '',
     address: p.address ?? '',
     google_maps_url: p.google_maps_url ?? '',
     is_online: p.is_online ?? false,
@@ -599,6 +603,7 @@ function ProfessionalForm({
         professional_type: form.professional_type || null,
         city: form.city.trim(),
         district: form.district || null,
+        clinic_name: form.clinic_name || null,
         address: form.address || null,
         google_maps_url: form.google_maps_url || null,
         is_online: form.is_online,
@@ -735,6 +740,10 @@ function ProfessionalForm({
               onChange={set('google_maps_url')}
               placeholder="https://maps.google.com/…"
             />
+          </div>
+          <div className="md:col-span-2">
+            <Label>Klinik / Kurum Adı</Label>
+            <Input value={form.clinic_name} onChange={set('clinic_name')} placeholder="Örn. Sağlık Merkezi, Terapi Kliniği…" />
           </div>
         </div>
 
@@ -938,6 +947,12 @@ export default function AdminPage() {
               ← Listeye Dön
             </Btn>
           )}
+          <a
+            href="/admin/leads"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+          >
+            Leads
+          </a>
           <Btn variant="ghost" onClick={handleLogout} className="text-sm text-gray-400 hover:text-red-600 hover:bg-red-50">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

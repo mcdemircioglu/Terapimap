@@ -122,6 +122,7 @@ export default async function TherapistDetailPage({
                   <p className="mt-2 text-sm text-brand-700">
                     {therapist.city}
                     {therapist.district ? ' · ' + therapist.district : ''}
+                    {therapist.clinic_name ? ' · ' + therapist.clinic_name : ''}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {therapist.is_online && <Badge variant="accent">{t('online')}</Badge>}

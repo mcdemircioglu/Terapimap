@@ -31,6 +31,7 @@ export type Professional = {
   professional_type: ProfessionalType | null;
   city: string;
   district: string | null;
+  clinic_name: string | null;
   is_online: boolean;
   is_in_person: boolean;
   is_featured: boolean;

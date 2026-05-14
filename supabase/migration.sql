@@ -237,3 +237,23 @@ on conflict (slug) do update set
   professional_type = excluded.professional_type,
   is_published      = excluded.is_published,
   is_featured       = excluded.is_featured;
+
+-- ─────────────────────────────────────────────────────────────────────
+-- 8. leads: add status and source columns
+-- ─────────────────────────────────────────────────────────────────────
+
+alter table public.leads
+  add column if not exists status text not null default 'new'
+    check (status in ('new', 'reviewed', 'contacted', 'spam'));
+
+alter table public.leads
+  add column if not exists source text;
+
+create index if not exists leads_status_idx on public.leads (status);
+
+-- ─────────────────────────────────────────────────────────────────────
+-- 9. professionals: add clinic_name column
+-- ─────────────────────────────────────────────────────────────────────
+
+alter table public.professionals
+  add column if not exists clinic_name text;
