@@ -127,9 +127,8 @@ export default async function TherapistDetailPage({
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {therapist.is_online && <Badge variant="accent">{t('online')}</Badge>}
                     {therapist.is_in_person && <Badge variant="default">{t('inPerson')}</Badge>}
-                    <Badge variant="soft">{t('experience', { years: therapist.experience_years })}</Badge>
-                    {therapist.rating > 0 && (
-                      <Badge variant="brand">★ {therapist.rating.toFixed(1)}</Badge>
+                    {therapist.experience_years > 0 && (
+                      <Badge variant="soft">{t('experience', { years: therapist.experience_years })}</Badge>
                     )}
                   </div>
                 </div>
@@ -144,40 +143,44 @@ export default async function TherapistDetailPage({
                 </section>
               )}
 
-              <section className="mt-8">
-                <h2 className="text-lg font-semibold text-brand-900">{tDetail('specialties')}</h2>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {therapist.specialties.map((s) => (
-                    <Link
-                      key={s.id}
-                      href={'/' + locale + '/therapists/' + citySlug + '/' + s.slug}
-                    >
-                      <Badge variant="brand" className="cursor-pointer hover:bg-brand-200">
-                        {s.name}
-                      </Badge>
-                    </Link>
-                  ))}
-                </div>
-              </section>
+              {therapist.specialties.length > 0 && (
+                <section className="mt-8">
+                  <h2 className="text-lg font-semibold text-brand-900">{tDetail('specialties')}</h2>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {therapist.specialties.map((s) => (
+                      <Link
+                        key={s.id}
+                        href={'/' + locale + '/therapists/' + citySlug + '/' + s.slug}
+                      >
+                        <Badge variant="brand" className="cursor-pointer hover:bg-brand-200">
+                          {s.name}
+                        </Badge>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              )}
 
-              <section className="mt-8 grid gap-4 sm:grid-cols-3">
-                <InfoRow
-                  label={tDetail('experience')}
-                  value={therapist.experience_years + ' yil / yrs'}
-                />
-                <InfoRow
-                  label={tDetail('session')}
-                  value={
-                    [
-                      therapist.is_online && tDetail('online'),
-                      therapist.is_in_person && tDetail('inPerson'),
-                    ]
-                      .filter(Boolean)
-                      .join(' · ') || '-'
-                  }
-                />
-                <InfoRow label={tDetail('price')} value={therapist.price_range ?? '-'} />
-              </section>
+              {(() => {
+                const sessionValue = [
+                  therapist.is_online && tDetail('online'),
+                  therapist.is_in_person && tDetail('inPerson'),
+                ].filter(Boolean).join(' · ');
+
+                const rows: { label: string; value: string }[] = [];
+                if (therapist.experience_years > 0)
+                  rows.push({ label: tDetail('experience'), value: therapist.experience_years + ' yil / yrs' });
+                if (sessionValue)
+                  rows.push({ label: tDetail('session'), value: sessionValue });
+                if (therapist.price_range && therapist.price_range !== '-')
+                  rows.push({ label: tDetail('price'), value: therapist.price_range });
+
+                return rows.length > 0 ? (
+                  <section className="mt-8 grid gap-4 sm:grid-cols-3">
+                    {rows.map((r) => <InfoRow key={r.label} label={r.label} value={r.value} />)}
+                  </section>
+                ) : null;
+              })()}
             </Card>
           </div>
 

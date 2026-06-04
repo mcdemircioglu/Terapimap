@@ -41,14 +41,6 @@ export default function TherapistCard({
             {therapist.district ? ` · ${therapist.district}` : ''}
           </p>
         </div>
-        {therapist.rating > 0 && (
-          <span className="flex items-center gap-1 text-sm font-medium text-brand-800">
-            <svg viewBox="0 0 20 20" className="h-4 w-4 text-amber-500" fill="currentColor">
-              <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.77l-5.2 2.74.99-5.79L1.58 7.62l5.82-.85L10 1.5z" />
-            </svg>
-            {therapist.rating.toFixed(1)}
-          </span>
-        )}
       </div>
 
       <div className="mt-4 flex flex-wrap gap-1.5">
@@ -65,8 +57,10 @@ export default function TherapistCard({
       <div className="mt-3 flex flex-wrap gap-1.5 text-xs">
         {therapist.is_online && <Badge variant="accent">{t('online')}</Badge>}
         {therapist.is_in_person && <Badge variant="default">{t('inPerson')}</Badge>}
-        <Badge variant="soft">{t('experience', { years: therapist.experience_years })}</Badge>
-        {therapist.price_range && (
+        {therapist.experience_years > 0 && (
+          <Badge variant="soft">{t('experience', { years: therapist.experience_years })}</Badge>
+        )}
+        {therapist.price_range && therapist.price_range !== '-' && (
           <Badge variant="soft">{therapist.price_range}</Badge>
         )}
       </div>
