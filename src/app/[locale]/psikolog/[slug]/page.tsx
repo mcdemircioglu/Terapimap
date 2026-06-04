@@ -1,6 +1,12 @@
+/**
+ * /[locale]/psikolog/[slug]  — canonical profil sayfası
+ *
+ * Tüm internal linkler buraya işaret eder.
+ * /[locale]/therapist/[slug] buraya 301 redirect yapar.
+ */
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import LeadForm from '@/components/LeadForm';
@@ -10,11 +16,7 @@ import { Card } from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
 import { getTherapistBySlug } from '@/lib/queries';
 import { getCitySlug } from '@/lib/cities';
-import {
-  absUrl,
-  buildTherapistSchema,
-  buildBreadcrumbSchema,
-} from '@/lib/schema';
+import { absUrl, buildTherapistSchema, buildBreadcrumbSchema } from '@/lib/schema';
 
 export async function generateMetadata({
   params: { locale, slug },
@@ -23,25 +25,36 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const therapist = await getTherapistBySlug(slug);
   if (!therapist) return {};
-  const t = await getTranslations({ locale, namespace: 'meta' });
 
   const specialties = therapist.specialties.map((s) => s.name).join(', ');
-  const url = absUrl('/' + locale + '/therapist/' + slug);
+  const location = [therapist.city, therapist.district].filter(Boolean).join(' ');
+  const url = absUrl('/' + locale + '/psikolog/' + slug);
+
+  // Güçlü title: "Ad Soyad — Psikolog İstanbul Kadıköy | Terapimap"
+  const title = [
+    therapist.name,
+    [therapist.title, location].filter(Boolean).join(' '),
+    'Terapimap',
+  ].join(' | ');
+
+  // Meta description: about varsa kullan, yoksa template
+  const description = therapist.about
+    ? therapist.about.slice(0, 155)
+    : `${therapist.name}, ${location} uzman ${therapist.title ?? 'psikolog'}. Uzmanlık alanları: ${specialties}. Terapimap üzerinden iletişime geçin.`;
 
   return {
-    title: therapist.name + ' — ' + (therapist.title ?? t('siteName')),
-    description:
-      therapist.about ?? therapist.name + ', ' + therapist.city + '. ' + specialties,
+    title,
+    description,
     alternates: {
       canonical: url,
       languages: {
-        tr: absUrl('/tr/therapist/' + slug),
-        en: absUrl('/en/therapist/' + slug),
+        tr: absUrl('/tr/psikolog/' + slug),
+        en: absUrl('/en/psikolog/' + slug),
       },
     },
     openGraph: {
-      title: therapist.name + ' — ' + therapist.city,
-      description: therapist.about ?? specialties,
+      title: therapist.name + ' — ' + location,
+      description,
       type: 'profile',
       url,
       ...(therapist.image_url ? { images: [{ url: therapist.image_url }] } : {}),
@@ -49,14 +62,11 @@ export async function generateMetadata({
   };
 }
 
-export default async function TherapistDetailPage({
+export default async function PsikologDetailPage({
   params: { locale, slug },
 }: {
   params: { locale: string; slug: string };
 }) {
-  // /[locale]/therapist/[slug] → /[locale]/psikolog/[slug] (301)
-  redirect('/' + locale + '/psikolog/' + slug);
-
   unstable_setRequestLocale(locale);
   const [therapist, t, tDetail, tLead, tNav] = await Promise.all([
     getTherapistBySlug(slug),
@@ -69,7 +79,7 @@ export default async function TherapistDetailPage({
   if (!therapist) notFound();
 
   const citySlug = getCitySlug(therapist.city) ?? therapist.city.toLowerCase();
-  const pageUrl = absUrl('/' + locale + '/therapist/' + therapist.slug);
+  const pageUrl = absUrl('/' + locale + '/psikolog/' + therapist.slug);
 
   const breadcrumbLabel =
     locale === 'tr'
@@ -105,7 +115,7 @@ export default async function TherapistDetailPage({
         </nav>
 
         <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
-          {/* Profile */}
+          {/* Profil */}
           <div>
             <Card className="p-6 md:p-8">
               <div className="flex items-start gap-5">
@@ -172,7 +182,7 @@ export default async function TherapistDetailPage({
 
                 const rows: { label: string; value: string }[] = [];
                 if (therapist.experience_years > 0)
-                  rows.push({ label: tDetail('experience'), value: therapist.experience_years + ' yil / yrs' });
+                  rows.push({ label: tDetail('experience'), value: therapist.experience_years + ' yıl' });
                 if (sessionValue)
                   rows.push({ label: tDetail('session'), value: sessionValue });
                 if (therapist.price_range && therapist.price_range !== '-')

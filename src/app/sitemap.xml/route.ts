@@ -83,7 +83,7 @@ export async function GET() {
 
     for (const locale of locales) {
       items.push(
-        item(`/${locale}/therapist/${therapist.slug}`, "monthly", 0.6, lastmod)
+        item(`/${locale}/psikolog/${therapist.slug}`, "monthly", 0.7, lastmod)
       );
     }
   }

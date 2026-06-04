@@ -66,7 +66,7 @@ export default function TherapistCard({
       </div>
 
       <div className="mt-auto pt-5">
-        <Link href={"/" + locale + "/therapist/" + therapist.slug}>
+        <Link href={"/" + locale + "/psikolog/" + therapist.slug}>
           <Button variant="outline" className="w-full">
             {t('viewProfile')}
           </Button>

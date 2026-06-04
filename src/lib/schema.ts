@@ -34,7 +34,7 @@ export function buildTherapistSchema(
   therapist: ProfessionalWithSpecialties,
   locale: string,
 ) {
-  const url = absUrl('/' + locale + '/therapist/' + therapist.slug);
+  const url = absUrl('/' + locale + '/psikolog/' + therapist.slug);
   const specialtyNames = therapist.specialties.map((s) => s.name);
 
   const schema: Record<string, unknown> = {
