@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import TherapistListing from '@/components/TherapistListing';
 import JsonLd from '@/components/JsonLd';
@@ -54,6 +55,18 @@ export default function TherapistsPage({
 }) {
   unstable_setRequestLocale(params.locale);
   const locale = params.locale;
+
+  // ?city=istanbul → /therapists/istanbul (SEO clean URL)
+  if (searchParams.city) {
+    const qs = new URLSearchParams();
+    if (searchParams.specialty) qs.set('specialty', searchParams.specialty);
+    if (searchParams.district) qs.set('district', searchParams.district);
+    if (searchParams.type) qs.set('type', searchParams.type);
+    if (searchParams.online) qs.set('online', searchParams.online);
+    if (searchParams.inPerson) qs.set('inPerson', searchParams.inPerson);
+    const suffix = qs.toString() ? '?' + qs.toString() : '';
+    redirect('/' + locale + '/therapists/' + searchParams.city + suffix);
+  }
   const pageUrl = absUrl('/' + locale + '/therapists');
 
   const pageTitle =

@@ -77,10 +77,14 @@ export default function Filters({
     isOnline?: boolean;
     isInPerson?: boolean;
   }) {
-    const base = "/" + locale + "/therapists";
+    // City ve specialty → clean path: /therapists/istanbul/anksiyete
+    let base = "/" + locale + "/therapists";
+    if (city) base += "/" + city;
+    if (city && specialty) base += "/" + specialty;
+
+    // Geri kalan filtreler query param olarak kalır
     const qs = new URLSearchParams();
-    if (city) qs.set("city", city);
-    if (specialty) qs.set("specialty", specialty);
+    if (!city && specialty) qs.set("specialty", specialty);
     if (district) qs.set("district", district);
     if (type) qs.set("type", type);
     if (isOnline) qs.set("online", "1");
