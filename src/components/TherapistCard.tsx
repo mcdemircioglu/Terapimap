@@ -24,7 +24,7 @@ export default function TherapistCard({
         <Avatar
           name={therapist.name}
           slug={therapist.slug}
-          photoUrl={therapist.photo_url}
+          photoUrl={therapist.image_url}
           size="md"
         />
         <div className="min-w-0 flex-1">

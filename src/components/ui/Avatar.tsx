@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { getPlaceholderAvatar } from '@/lib/utils';
+
+const DEFAULT_AVATAR = '/images/default-therapist-avatar.svg';
 
 type AvatarSize = 'sm' | 'md' | 'lg';
 
@@ -14,19 +15,19 @@ const SIZE: Record<AvatarSize, { outer: string; text: string }> = {
 
 export default function Avatar({
   name,
-  slug,
+  slug: _slug,
   photoUrl,
   size = 'md',
 }: {
   name: string;
-  slug: string;
+  slug?: string;
   photoUrl?: string | null;
   size?: AvatarSize;
 }) {
   const [imgError, setImgError] = useState(false);
 
-  const src = photoUrl ?? getPlaceholderAvatar(slug);
-  const showImage = !imgError;
+  const src = (!imgError && photoUrl) ? photoUrl : DEFAULT_AVATAR;
+  const showImage = !imgError || src === DEFAULT_AVATAR;
 
   const initials = name
     .split(' ')

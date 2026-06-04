@@ -23,6 +23,8 @@ export const PROFESSIONAL_TYPE_LABELS: Record<ProfessionalType, string> = {
   counselor: "Psikolojik Danisман",
 };
 
+export type ProfessionalStatus = 'pending' | 'approved' | 'featured' | 'rejected';
+
 export type Professional = {
   id: string;
   slug: string;
@@ -35,11 +37,13 @@ export type Professional = {
   is_online: boolean;
   is_in_person: boolean;
   is_featured: boolean;
+  is_verified: boolean;
+  status: ProfessionalStatus | null;
   experience_years: number;
   about: string | null;
   price_range: string | null;
   rating: number;
-  photo_url: string | null;
+  image_url: string | null;
   user_id: string | null;
   created_at: string;
   updated_at: string;

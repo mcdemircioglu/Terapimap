@@ -31,6 +31,7 @@ type Professional = {
   rating: number;
   is_verified: boolean;
   is_featured: boolean;
+  status: string | null;
   specialties: Specialty[];
 };
 
@@ -57,6 +58,7 @@ type FormData = {
   rating: string;
   is_verified: boolean;
   is_featured: boolean;
+  status: string;
   specialtyIds: string[];
 };
 
@@ -97,6 +99,7 @@ const EMPTY_FORM: FormData = {
   rating: '5.0',
   is_verified: false,
   is_featured: false,
+  status: 'pending',
   specialtyIds: [],
 };
 
@@ -142,6 +145,7 @@ function profToForm(p: Professional): FormData {
     rating: String(p.rating ?? 5),
     is_verified: p.is_verified ?? false,
     is_featured: p.is_featured ?? false,
+    status: p.status ?? 'pending',
     specialtyIds: (p.specialties ?? []).map((s) => s.id),
   };
 }
@@ -477,6 +481,18 @@ function ProfessionalList({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
+                        {p.status === 'approved' && (
+                          <span className="px-1.5 py-0.5 rounded text-xs bg-green-50 text-green-700 font-medium">✓ Approved</span>
+                        )}
+                        {p.status === 'featured' && (
+                          <span className="px-1.5 py-0.5 rounded text-xs bg-yellow-50 text-yellow-700 font-medium">★ Featured</span>
+                        )}
+                        {p.status === 'pending' && (
+                          <span className="px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600 font-medium">Bekliyor</span>
+                        )}
+                        {p.status === 'rejected' && (
+                          <span className="px-1.5 py-0.5 rounded text-xs bg-red-50 text-red-600 font-medium">Reddedildi</span>
+                        )}
                         {p.is_online && (
                           <span className="px-1.5 py-0.5 rounded text-xs bg-blue-50 text-blue-700 font-medium">Online</span>
                         )}
@@ -484,7 +500,7 @@ function ProfessionalList({
                           <span className="px-1.5 py-0.5 rounded text-xs bg-green-50 text-green-700 font-medium">Yüz yüze</span>
                         )}
                         {p.is_verified && (
-                          <span className="px-1.5 py-0.5 rounded text-xs bg-brand-50 text-brand-700 font-medium">✓ Onaylı</span>
+                          <span className="px-1.5 py-0.5 rounded text-xs bg-brand-50 text-brand-700 font-medium">✓ Doğrulandı</span>
                         )}
                         {p.is_featured && (
                           <span className="px-1.5 py-0.5 rounded text-xs bg-yellow-50 text-yellow-700 font-medium">★ Öne Çıkan</span>
@@ -619,6 +635,7 @@ function ProfessionalForm({
         rating: parseFloat(form.rating) || 5.0,
         is_verified: form.is_verified,
         is_featured: form.is_featured,
+        status: form.status,
         specialtyIds: form.specialtyIds,
       };
 
@@ -781,10 +798,24 @@ function ProfessionalForm({
 
         {/* ── Settings ── */}
         <SectionHeading>Ayarlar</SectionHeading>
+        <div className="mb-4">
+          <Label required>Durum (Status)</Label>
+          <Select
+            value={form.status}
+            onChange={set('status')}
+            options={[
+              { value: 'pending',  label: 'Bekliyor (pending)' },
+              { value: 'approved', label: 'Onaylandı (approved) — public' },
+              { value: 'featured', label: 'Öne Çıkan (featured) — public' },
+              { value: 'rejected', label: 'Reddedildi (rejected)' },
+            ]}
+          />
+          <p className="text-xs text-gray-400 mt-1">Sadece approved ve featured kayıtlar sitede görünür.</p>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Checkbox checked={form.is_online} onChange={set('is_online') as (v: boolean) => void} label="Online görüşme" />
           <Checkbox checked={form.is_in_person} onChange={set('is_in_person') as (v: boolean) => void} label="Yüz yüze" />
-          <Checkbox checked={form.is_verified} onChange={set('is_verified') as (v: boolean) => void} label="Onaylandı" />
+          <Checkbox checked={form.is_verified} onChange={set('is_verified') as (v: boolean) => void} label="Doğrulandı (rozet)" />
           <Checkbox checked={form.is_featured} onChange={set('is_featured') as (v: boolean) => void} label="Öne çıkan" />
         </div>
 

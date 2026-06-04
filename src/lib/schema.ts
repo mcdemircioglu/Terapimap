@@ -50,7 +50,7 @@ export function buildTherapistSchema(
     },
     ...(therapist.about ? { description: therapist.about } : {}),
     ...(therapist.title ? { jobTitle: therapist.title } : {}),
-    ...(therapist.photo_url ? { image: therapist.photo_url } : {}),
+    ...(therapist.image_url ? { image: therapist.image_url } : {}),
     ...(specialtyNames.length
       ? { knowsAbout: specialtyNames, medicalSpecialty: specialtyNames }
       : {}),

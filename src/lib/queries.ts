@@ -70,7 +70,7 @@ export async function getSpecialties(): Promise<Specialty[]> {
  */
 export async function getDistricts(citySlug?: string): Promise<string[]> {
   const supabase = getServerClient();
-  let query = supabase.from('professionals').select('district');
+  let query = supabase.from('professionals').select('district').in('status', ['approved', 'featured']);
   if (citySlug) {
     const cityName = getCityName(citySlug);
     if (cityName) query = query.eq('city', cityName);
@@ -97,7 +97,8 @@ export async function getTherapists(
 
   let query = supabase
     .from('professionals')
-    .select(PROFESSIONAL_SELECT);
+    .select(PROFESSIONAL_SELECT)
+    .in('status', ['approved', 'featured']);
 
   // Map city slug -> city name for the Supabase filter (DB has `city`, not `city_slug`)
   if (filters.citySlug) {
@@ -149,6 +150,7 @@ export async function getFeaturedTherapists(
   const { data, error } = await supabase
     .from('professionals')
     .select(PROFESSIONAL_SELECT)
+    .in('status', ['approved', 'featured'])
     .eq('is_featured', true)
     .order('rating', { ascending: false })
     .limit(count);
@@ -175,6 +177,7 @@ export async function getTherapistBySlug(
     .from('professionals')
     .select(PROFESSIONAL_SELECT)
     .eq('slug', slug)
+    .in('status', ['approved', 'featured'])
     .maybeSingle();
 
   if (error) {
@@ -208,7 +211,8 @@ export async function getCityCounts(): Promise<Record<string, number>> {
   const supabase = getServerClient();
   const { data, error } = await supabase
     .from('professionals')
-    .select('city');
+    .select('city')
+    .in('status', ['approved', 'featured']);
 
   if (error) {
     logError('getCityCounts', error);

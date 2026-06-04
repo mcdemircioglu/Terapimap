@@ -44,7 +44,7 @@ export async function generateMetadata({
       description: therapist.about ?? specialties,
       type: 'profile',
       url,
-      ...(therapist.photo_url ? { images: [{ url: therapist.photo_url }] } : {}),
+      ...(therapist.image_url ? { images: [{ url: therapist.image_url }] } : {}),
     },
   };
 }
@@ -109,7 +109,7 @@ export default async function TherapistDetailPage({
                 <Avatar
                   name={therapist.name}
                   slug={therapist.slug}
-                  photoUrl={therapist.photo_url}
+                  photoUrl={therapist.image_url}
                   size="lg"
                 />
                 <div className="min-w-0 flex-1">
