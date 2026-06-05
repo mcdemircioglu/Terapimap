@@ -1,6 +1,7 @@
 import { CITIES } from "@/lib/cities";
 import { getKnownSeoSlugs } from "@/lib/seo-slugs";
 import { getTherapists, getSpecialties } from "@/lib/queries";
+import { getProfessionalUrlSegment } from "@/lib/utils";
 import { locales } from "@/i18n";
 
 export const revalidate = 3600;
@@ -55,14 +56,16 @@ export async function GET() {
     const l = `/${locale}`;
 
     items.push(item(l, "daily", 1.0));
-    items.push(item(`${l}/therapists`, "daily", 0.9));
+    // TR → /terapistler/, EN → /therapists/
+    const listSlug = locale === "tr" ? "terapistler" : "therapists";
+    items.push(item(`${l}/${listSlug}`, "daily", 0.9));
 
     for (const city of CITIES) {
-      items.push(item(`${l}/therapists/${city.slug}`, "weekly", 0.8));
+      items.push(item(`${l}/${listSlug}/${city.slug}`, "weekly", 0.8));
 
       for (const specialty of specialties) {
         items.push(
-          item(`${l}/therapists/${city.slug}/${specialty.slug}`, "weekly", 0.6)
+          item(`${l}/${listSlug}/${city.slug}/${specialty.slug}`, "weekly", 0.6)
         );
       }
     }
@@ -82,8 +85,9 @@ export async function GET() {
       : new Date();
 
     for (const locale of locales) {
+      const typeSegment = getProfessionalUrlSegment(therapist.professional_type);
       items.push(
-        item(`/${locale}/psikolog/${therapist.slug}`, "monthly", 0.7, lastmod)
+        item(`/${locale}/${typeSegment}/${therapist.slug}`, "monthly", 0.7, lastmod)
       );
     }
   }
