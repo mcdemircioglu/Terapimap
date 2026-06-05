@@ -78,7 +78,8 @@ export default function Filters({
     isInPerson?: boolean;
   }) {
     // City ve specialty → clean path: /therapists/istanbul/anksiyete
-    let base = "/" + locale + "/therapists";
+    const listBase = locale === "tr" ? "terapistler" : "therapists";
+    let base = "/" + locale + "/" + listBase;
     if (city) base += "/" + city;
     if (city && specialty) base += "/" + specialty;
 
