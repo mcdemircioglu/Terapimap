@@ -384,13 +384,26 @@ function ProfessionalList({
   onDelete: (id: string, name: string) => void;
 }) {
   const [search, setSearch] = useState('');
+  const [cityFilter, setCityFilter] = useState('');
+  const [verifiedFilter, setVerifiedFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
-  const filtered = professionals.filter(
-    (p) =>
+  // Unique cities sorted alphabetically
+  const cities = Array.from(new Set(professionals.map((p) => p.city).filter(Boolean))).sort();
+
+  const filtered = professionals.filter((p) => {
+    const matchSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.city?.toLowerCase().includes(search.toLowerCase()) ||
-      p.professional_type?.toLowerCase().includes(search.toLowerCase()),
-  );
+      p.professional_type?.toLowerCase().includes(search.toLowerCase());
+    const matchCity = !cityFilter || p.city === cityFilter;
+    const matchVerified =
+      !verifiedFilter ||
+      (verifiedFilter === 'verified' && p.is_verified) ||
+      (verifiedFilter === 'unverified' && !p.is_verified);
+    const matchStatus = !statusFilter || p.status === statusFilter;
+    return matchSearch && matchCity && matchVerified && matchStatus;
+  });
 
   const typeLabel = (t: string | null) =>
     PROFESSIONAL_TYPES.find((x) => x.value === t)?.label ?? t ?? '—';
@@ -398,25 +411,66 @@ function ProfessionalList({
   return (
     <div>
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-5 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-lg font-bold text-gray-800">Profesyoneller</h2>
-          <p className="text-xs text-gray-500">{professionals.length} kayıt</p>
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="İsim, şehir veya tür ara…"
-            className="flex-1 sm:w-64 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
-          />
+      <div className="flex flex-col gap-3 mb-5">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">Profesyoneller</h2>
+            <p className="text-xs text-gray-500">{filtered.length} / {professionals.length} kayıt</p>
+          </div>
           <Btn onClick={onAdd}>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
             </svg>
             Ekle
           </Btn>
+        </div>
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="İsim, şehir veya tür ara…"
+            className="flex-1 min-w-[180px] border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+          />
+          <select
+            value={cityFilter}
+            onChange={(e) => setCityFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-400"
+          >
+            <option value="">Tüm Şehirler</option>
+            {cities.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-400"
+          >
+            <option value="">Tüm Durumlar</option>
+            <option value="pending">Bekliyor</option>
+            <option value="approved">Onaylandı</option>
+            <option value="featured">Öne Çıkan</option>
+            <option value="rejected">Reddedildi</option>
+          </select>
+          <select
+            value={verifiedFilter}
+            onChange={(e) => setVerifiedFilter(e.target.value)}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-400"
+          >
+            <option value="">Tüm Doğrulama</option>
+            <option value="verified">✓ Doğrulandı</option>
+            <option value="unverified">Doğrulanmadı</option>
+          </select>
+          {(cityFilter || statusFilter || verifiedFilter || search) && (
+            <button
+              onClick={() => { setCityFilter(''); setStatusFilter(''); setVerifiedFilter(''); setSearch(''); }}
+              className="px-3 py-2 text-sm text-gray-500 hover:text-gray-800 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              × Temizle
+            </button>
+          )}
         </div>
       </div>
 
@@ -426,7 +480,7 @@ function ProfessionalList({
           <div className="py-20 text-center text-gray-400 text-sm">Yükleniyor…</div>
         ) : filtered.length === 0 ? (
           <div className="py-20 text-center text-gray-400 text-sm">
-            {search ? 'Sonuç bulunamadı.' : 'Henüz profesyonel eklenmemiş.'}
+            {(search || cityFilter || statusFilter || verifiedFilter) ? 'Filtreye uyan sonuç bulunamadı.' : 'Henüz profesyonel eklenmemiş.'}
           </div>
         ) : (
           <div className="overflow-x-auto">
