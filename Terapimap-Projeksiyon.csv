@@ -1,0 +1,31 @@
+﻿TERAPIMAP 12 AYLIK GELIR PROJEKSIYONU (BAZ SENARYO);;;;;;;;;
+Varsayimlar: Premium listeleme 990 TL/ay; Otomasyon ortalama 2.650 TL/ay; Kurulum ort. 4.000 TL (yeni otomasyon musterilerinin %60'i kurulum alir);;;;;;;;;
+Aylik maliyet varsayimi: API + araclar + reklam = 3.000-5.000 TL;;;;;;;;;
+;;;;;;;;;
+Ay;Toplam Profil;Organik Ziyaret/Ay;Sahiplenilen Profil;Premium Uye;Otomasyon Musterisi;Premium Gelir (TL);Otomasyon MRR (TL);Kurulum Geliri (TL);TOPLAM GELIR (TL)
+1;1500;200;10;0;0;0;0;0;0
+2;2500;600;40;0;1;0;2650;2400;5050
+3;3500;1500;90;3;4;2970;10600;7200;20770
+4;4500;3000;150;6;7;5940;18550;7200;31690
+5;5000;5000;220;10;9;9900;23850;4800;38550
+6;5500;8000;300;15;11;14850;29150;4800;48800
+7;6000;12000;380;21;13;20790;34450;4800;60040
+8;6500;16000;460;27;14;26730;37100;2400;66230
+9;7000;21000;540;33;15;32670;39750;2400;74820
+10;7500;27000;620;39;16;38610;42400;2400;83410
+11;8000;33000;700;45;17;44550;45050;2400;92000
+12;8500;40000;780;50;18;49500;47700;2400;99600
+;;;;;;;;;
+YIL 1 TOPLAM GELIR;;;;;;;;;620960
+;;;;;;;;;
+SENARYO KARSILASTIRMASI (Ay 12 MRR - kurulum haric);;;;;;;;;
+Senaryo;Premium Uye;Otomasyon Musterisi;Ay 12 MRR (TL);;;;;;
+Muhafazakar;25;8;45950;;;;;;
+Baz;50;18;97200;;;;;;
+Iyimser;90;38;189800;;;;;;
+;;;;;;;;;
+NOTLAR;;;;;;;;;
+1) Ilk 10 otomasyon musterisi kurucu uye indirimiyle (%50) gelebilir - Ay 2-5 gelirleri bu durumda yaklasik yari olur;;;;;;;;;
+2) Organik ziyaret tahmini SEO'nun Ay 4-6'da devreye girmesine baglidir;;;;;;;;;
+3) Premium donusum varsayimi: sahiplenilen profillerin ~%6'si;;;;;;;;;
+4) Dosya Excel'de dogrudan acilir (noktali virgul ayracli);;;;;;;;;

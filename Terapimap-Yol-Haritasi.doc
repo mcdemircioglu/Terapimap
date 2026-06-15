@@ -1,0 +1,128 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Terapimap Yol Haritası</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+body { font-family: Calibri, sans-serif; font-size: 11pt; line-height: 1.4; }
+h1 { font-size: 20pt; color: #1F4E79; }
+h2 { font-size: 14pt; color: #1F4E79; border-bottom: 1px solid #1F4E79; padding-bottom: 3px; margin-top: 24px; }
+h3 { font-size: 12pt; color: #2E74B5; }
+table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+th { background: #1F4E79; color: white; padding: 6px 10px; text-align: left; border: 1px solid #999; }
+td { padding: 6px 10px; border: 1px solid #999; }
+li { margin-bottom: 6px; }
+.meta { color: #666; font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<h1>Terapimap.com — Yol Haritası ve Gelir Projeksiyonu</h1>
+<p class="meta">Hazırlanma tarihi: 11 Haziran 2026<br>
+Varsayımlar: Tek kişi, tam zamanlı; aylık bütçe 0–5.000 TL.</p>
+
+<h2>1. Mevcut Durumun Eleştirisi</h2>
+<p><b>Doğru yapılanlar:</b> Niş odak (sadece mental sağlık) doğru — DoktorTakvimi tüm doktorları kapsıyor, sen derinleşebilirsin. SEO-slug yapısı ve Supabase tercihi de doğru.</p>
+<p><b>Kritik sorunlar:</b></p>
+<ol>
+<li><b>Manuel veri girişi en büyük darboğazın.</b> 600 kaydı elle girmek günlerini yiyor ve ölçeklenemez. Bunun yerine: Python ile temizleme/doğrulama scripti (telefon formatı, unvan kontrolü, duplicate tespiti) → Supabase'e toplu import → sadece örneklem üzerinden el ile spot kontrol. Hedefin 5.000+ kayıtsa elle giriş matematiksel olarak imkansız.</li>
+<li><b>KVKK riski.</b> Scraping ile topladığın veriler kişisel veri. Kamuya açık olsa bile aydınlatma yükümlülüğün ve silme talebi sürecin olmalı. Çözüm aynı zamanda fırsat: her profile "Bu profili sahiplenin" butonu koy — hem hukuki pozisyonunu güçlendirir hem de birincil lead motorun olur.</li>
+<li><b>İki iş modelini ayır.</b> Directory (trafik/güven motoru) ve AI otomasyon (gelir motoru) farklı işler. Directory'den ilk yıl ciddi para bekleme; onu otomasyon satışı için lead kaynağı ve güvenilirlik vitrini olarak kullan.</li>
+<li><b>Tavuk-yumurta problemi.</b> Trafiğin yokken terapist ödeme yapmaz. Sıralama: önce ücretsiz profiller + SEO trafiği → sonra "profilinize X kişi baktı, Y kişi telefonunuzu istedi" verisiyle ücretli paket sat.</li>
+</ol>
+
+<h2>2. Veri ve SEO Stratejisi — "Ne kadar veri girmeliyim?"</h2>
+<p>Kısa cevap: <b>ham profil sayısı değil, indexlenebilir kaliteli sayfa sayısı</b> trafiği belirler.</p>
+<ul>
+<li><b>Hedef veri:</b> 6 ay içinde 5.000 profil (İstanbul, Ankara, İzmir, Bursa, Antalya öncelikli). 600 profil SEO için çok az; Google bu hacimde siteyi "ince içerik" sayar.</li>
+<li><b>Programatik SEO sayfaları:</b> Şehir × ilçe × uzmanlık kombinasyonları: "Kadıköy psikolog", "Ankara EMDR terapisti", "İzmir çift terapisti", "online terapi fiyatları". 81 il + büyük ilçeler + ~15 uzmanlık ≈ binlerce long-tail sayfa. Asıl trafik buradan gelir.</li>
+<li><b>Thin content'ten kaçın:</b> Her listeleme sayfasına benzersiz giriş metni, SSS bloğu (FAQ schema), ortalama seans ücreti bilgisi ekle. Profil sayfalarına Physician/LocalBusiness schema markup koy.</li>
+<li><b>Destek içerik:</b> Haftada 2 blog yazısı ("Psikolog mu psikiyatrist mi?", "EMDR nedir?", "2026 terapi seans ücretleri"). Bu yazılar listeleme sayfalarına internal link versin.</li>
+<li><b>Teknik:</b> Google Search Console kur, sitemap gönder, Core Web Vitals'ı ölç. İlk 3 ay her hafta indexlenme oranını takip et.</li>
+</ul>
+<p><b>Beklenti yönetimi:</b> SEO 4–6 ayda sonuç verir. Ay 6'da aylık 10–20 bin organik ziyaret gerçekçi bir hedef (rekabete bağlı).</p>
+
+<h2>3. Lead Yakalama (Terapist Kazanımı)</h2>
+<h3>Ana motor — profil sahiplenme funnel'ı</h3>
+<ol>
+<li>Scraped profil yayında, üstünde "Doğrulanmamış profil" rozeti.</li>
+<li>Terapiste e-posta/Instagram DM: "Terapimap'te profiliniz var, ücretsiz sahiplenin ve bilgilerinizi güncelleyin."</li>
+<li>Sahiplenen terapiste 2 hafta sonra istatistik maili: "Profiliniz 340 kez görüntülendi, 12 kişi iletişim bilginizi açtı."</li>
+<li>Bu veriyle premium paket teklifi.</li>
+</ol>
+<h3>Cold outreach (günlük rutin, ücretsiz)</h3>
+<ul>
+<li>Günde 20 kişiselleştirilmiş e-posta + 10 Instagram DM. Şablon: tek cümle kişiselleştirme + "profiliniz hazır, tek tıkla sahiplenin" + link.</li>
+<li>Instagram'da aktif içerik üreten psikologlar en sıcak segment — görünürlüğe zaten yatırım yapıyorlar.</li>
+<li>Yeni mezun psikologlar (danışan bulma derdi en yüksek segment) ve şehir değiştiren terapistler.</li>
+</ul>
+<p><b>Danışan tarafı = terapist tarafının kanıtı:</b> Sitene "Sana uygun terapisti bul" mini anketi koy (uzmanlık, şehir, online/yüz yüze, bütçe). Form çıktısını eşleşen terapiste ilet. Terapiste giden her gerçek danışan talebi, satış konuşmandaki en güçlü argüman.</p>
+
+<h2>4. AI Otomasyon Ürünleri ve Fiyatlandırma</h2>
+<p><b>Pazar doğrulaması:</b> DoktorTakvimi profesyonel üyeliği 4.799–6.399 TL+KDV/ay; üstüne AI not asistanı (Noa Notes) +2.500 TL/ay satıyor. Yani terapistler bu fiyat bandına alışkın — senin avantajın niş odak ve daha düşük fiyat.</p>
+<h3>Ürün sıralaması (geliştirme kolaylığı + talep sırasına göre)</h3>
+<ol>
+<li><b>WhatsApp randevu ve hatırlatma botu</b> — no-show her terapistin somut para kaybı; en kolay satılan ürün. (Twilio/WhatsApp Business API + Supabase)</li>
+<li><b>Danışan ön-görüşme (intake) otomasyonu</b> — randevu öncesi form, AI özetiyle terapiste iletim.</li>
+<li><b>Seans notu AI asistanı</b> — ses kaydından/kısa nottan yapılandırılmış seans notu. (Noa Notes 2.500 TL/ay anchor'ı hazır.)</li>
+<li><b>Web sitesi + Google Business + SEO profili paketi</b> — tek seferlik kurulum geliri.</li>
+<li><b>Sosyal medya içerik otomasyonu</b> — haftalık içerik takvimi + AI taslaklar.</li>
+</ol>
+<h3>Fiyat tablosu (önerilen)</h3>
+<table>
+<tr><th>Paket</th><th>İçerik</th><th>Fiyat</th></tr>
+<tr><td>Ücretsiz profil</td><td>Listeleme + doğrulama rozeti</td><td>0 TL</td></tr>
+<tr><td>Premium listeleme</td><td>Üst sıra, öne çıkan rozet, istatistik paneli, danışan talebi yönlendirme</td><td>990 TL/ay</td></tr>
+<tr><td>Otomasyon Başlangıç</td><td>WhatsApp hatırlatma + online randevu takvimi</td><td>1.490 TL/ay</td></tr>
+<tr><td>Otomasyon Pro</td><td>Başlangıç + intake otomasyonu + seans notu AI</td><td>2.990 TL/ay</td></tr>
+<tr><td>Otomasyon VIP</td><td>Pro + web sitesi + sosyal medya otomasyonu</td><td>4.990 TL/ay</td></tr>
+<tr><td>Kurulum (tek seferlik)</td><td>Web sitesi/bot kurulumu</td><td>3.000–7.500 TL</td></tr>
+</table>
+<p>Premium listelemeyi otomasyon paketlerine bedava dahil et — directory, otomasyonun pazarlama kanalı olsun.</p>
+<p><b>Satış taktiği:</b> İlk 10 müşteriye "kurucu üye" fiyatı (%50, ömür boyu) ver; karşılığında referans ve görüş yazısı al. Satış görüşmesini "demo" olarak yap: terapistin kendi telefonuna WhatsApp botundan mesaj düşür, 5 dakikada ikna eder.</p>
+
+<h2>5. Pazarlama Planı (0–5.000 TL/ay bütçe)</h2>
+<p>Bütçen düşük olduğu için ağırlık <b>organik + outreach</b>. Adım adım:</p>
+<h3>Ay 1–2: Temel</h3>
+<ul>
+<li>Veri pipeline'ını otomatikleştir, 2.000 profile çık.</li>
+<li>Programatik SEO sayfalarını yayına al, Search Console + sitemap.</li>
+<li>Instagram ve LinkedIn hesapları: hedef kitle terapistler. İçerik teması "muayenehaneni büyüt": danışan bulma, no-show azaltma, Google'da görünme.</li>
+<li>KVKK aydınlatma metni + profil silme süreci.</li>
+</ul>
+<h3>Ay 2–4: Outreach + ilk gelir</h3>
+<ul>
+<li>Günde 20 e-posta + 10 DM sahiplenme kampanyası → hedef ay sonunda 150 sahiplenilmiş profil.</li>
+<li>Lead magnet: "Psikologlar için Danışan Bulma Rehberi" (PDF) → e-posta listesi büyüt.</li>
+<li>İlk 10 otomasyon müşterisi (kurucu fiyatıyla). WhatsApp botu MVP'sini bu 10 kişiyle rafine et.</li>
+<li>Bütçenin kullanımı: 2.000–3.000 TL Instagram reklamı sadece terapist hedefli (lead magnet'e), kalan API/araç maliyetleri.</li>
+</ul>
+<h3>Ay 4–6: Ölçek</h3>
+<ul>
+<li>5.000 profil, organik trafik büyümeye başlar.</li>
+<li>Görüş/başarı hikayeleri yayınla ("X psikolog no-show'unu %40 azalttı").</li>
+<li>Psikoloji öğrenci toplulukları ve mezun gruplarına webinar: "Mezuniyet sonrası danışan nasıl bulunur?" — ücretsiz, listene kayıt karşılığı.</li>
+<li>Referans programı: getiren terapiste 1 ay bedava.</li>
+</ul>
+<h3>Ay 6–12: Para kazanma</h3>
+<ul>
+<li>Trafik verisiyle premium listeleme satışına ağırlık ver.</li>
+<li>Danışan talep formu hacmi arttıkça "lead başına ödeme" modelini test et (talep başına 100–200 TL).</li>
+<li>Blog trafiği üzerinden danışan tarafında marka bilinirliği; terapist tarafında "Terapimap'te olmak gerekir" algısı.</li>
+</ul>
+
+<h2>6. Gelir Projeksiyonu Özeti</h2>
+<p>Detay: <i>Terapimap-Projeksiyon</i> dosyası.</p>
+<p>Baz senaryo, Ay 12 itibarıyla: ~50 premium listeleme (≈50.000 TL/ay) + ~18 otomasyon müşterisi (≈48.000 TL/ay) + kurulum gelirleri → <b>~100.000 TL MRR</b>. Muhafazakar senaryoda ~45.000 TL, iyimser senaryoda ~190.000 TL MRR. İlk anlamlı gelir Ay 3–4'te (kurucu üye otomasyon satışları), directory geliri ağırlıklı olarak Ay 6 sonrası.</p>
+<p><b>En önemli 3 metrik:</b> haftalık organik tıklama (Search Console), sahiplenilmiş profil sayısı, otomasyon demo→satış dönüşüm oranı.</p>
+
+<h2>7. Riskler</h2>
+<ul>
+<li><b>DoktorTakvimi/Hiwell rekabeti:</b> Onlar genel; sen terapist nişinde derinleş ve fiyatta altta kal.</li>
+<li><b>KVKK:</b> Sahiplenme modeli + hızlı silme süreci şart. Bir hukukçuya tek seferlik aydınlatma metni danışmanlığı aldır.</li>
+<li><b>Tek kişi riski:</b> Otomasyon müşterisi arttıkça destek yükü büyür; ürünleri self-service kurguya yaklaştır.</li>
+<li><b>AI not asistanında veri hassasiyeti:</b> Seans içeriği sağlık verisidir (özel nitelikli). Açık rıza + Türkiye'de barındırma tercih et; bunu satış argümanına çevir ("verileriniz yurt dışına çıkmaz").</li>
+</ul>
+
+</body>
+</html>

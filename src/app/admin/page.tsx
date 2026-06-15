@@ -28,7 +28,6 @@ type Professional = {
   website_url: string | null;
   instagram_url: string | null;
   image_url: string | null;
-  rating: number;
   is_verified: boolean;
   is_featured: boolean;
   status: string | null;
@@ -55,7 +54,6 @@ type FormData = {
   website_url: string;
   instagram_url: string;
   image_url: string;
-  rating: string;
   is_verified: boolean;
   is_featured: boolean;
   status: string;
@@ -96,7 +94,6 @@ const EMPTY_FORM: FormData = {
   website_url: '',
   instagram_url: '',
   image_url: '',
-  rating: '5.0',
   is_verified: false,
   is_featured: false,
   status: 'pending',
@@ -142,7 +139,6 @@ function profToForm(p: Professional): FormData {
     website_url: p.website_url ?? '',
     instagram_url: p.instagram_url ?? '',
     image_url: p.image_url ?? '',
-    rating: String(p.rating ?? 5),
     is_verified: p.is_verified ?? false,
     is_featured: p.is_featured ?? false,
     status: p.status ?? 'pending',
@@ -490,7 +486,6 @@ function ProfessionalList({
                   <th className="px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Ad</th>
                   <th className="px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Tür</th>
                   <th className="px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Şehir</th>
-                  <th className="px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Puan</th>
                   <th className="px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Durum</th>
                   <th className="px-4 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wide">Uzmanlıklar</th>
                   <th className="px-4 py-3"></th>
@@ -524,14 +519,6 @@ function ProfessionalList({
                     <td className="px-4 py-3 text-gray-600">
                       {p.city}
                       {p.district ? ` / ${p.district}` : ''}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      <span className="flex items-center gap-1">
-                        <svg className="w-3.5 h-3.5 text-yellow-400 fill-current" viewBox="0 0 24 24">
-                          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                        </svg>
-                        {p.rating ?? '—'}
-                      </span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
@@ -686,7 +673,6 @@ function ProfessionalForm({
         website_url: form.website_url || null,
         instagram_url: form.instagram_url || null,
         image_url: form.image_url || null,
-        rating: parseFloat(form.rating) || 5.0,
         is_verified: form.is_verified,
         is_featured: form.is_featured,
         status: form.status,
@@ -766,11 +752,6 @@ function ProfessionalForm({
           <div>
             <Label>Deneyim (yıl)</Label>
             <Input type="number" value={form.experience_years} onChange={set('experience_years')} placeholder="5" />
-          </div>
-          <div>
-            <Label>Puan</Label>
-            <Input type="number" value={form.rating} onChange={set('rating')} placeholder="5.0" />
-            <p className="text-xs text-gray-400 mt-1">0 – 5 arası</p>
           </div>
         </div>
 

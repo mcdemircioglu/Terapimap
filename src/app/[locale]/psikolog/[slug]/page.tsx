@@ -147,15 +147,6 @@ export default async function PsikologDetailPage({
                 </div>
               </div>
 
-              {therapist.about && (
-                <section className="mt-8">
-                  <h2 className="text-lg font-semibold text-brand-900">{tDetail('about')}</h2>
-                  <p className="mt-3 whitespace-pre-line leading-relaxed text-brand-800">
-                    {therapist.about}
-                  </p>
-                </section>
-              )}
-
               {therapist.specialties.length > 0 && (
                 <section className="mt-8">
                   <h2 className="text-lg font-semibold text-brand-900">{tDetail('specialties')}</h2>
@@ -171,6 +162,15 @@ export default async function PsikologDetailPage({
                       </Link>
                     ))}
                   </div>
+                </section>
+              )}
+
+              {therapist.about && (
+                <section className="mt-8">
+                  <h2 className="text-lg font-semibold text-brand-900">{tDetail('about')}</h2>
+                  <p className="mt-3 whitespace-pre-line leading-relaxed text-brand-800">
+                    {therapist.about}
+                  </p>
                 </section>
               )}
 

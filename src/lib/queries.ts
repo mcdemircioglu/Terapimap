@@ -114,7 +114,7 @@ export async function getTherapists(
     query = query.or(`name.ilike.${term},about.ilike.${term}`);
   }
 
-  query = query.order('rating', { ascending: false });
+  query = query.order('created_at', { ascending: false });
   if (filters.limit) query = query.limit(filters.limit);
 
   const { data, error } = await query;
@@ -152,7 +152,7 @@ export async function getFeaturedTherapists(
     .select(PROFESSIONAL_SELECT)
     .in('status', ['approved', 'featured'])
     .eq('is_featured', true)
-    .order('rating', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(count);
 
   if (error) {

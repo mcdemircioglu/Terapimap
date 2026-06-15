@@ -57,16 +57,6 @@ export function buildTherapistSchema(
     inLanguage: locale === 'tr' ? 'tr-TR' : 'en-US',
   };
 
-  // aggregateRating only when we have a real rating value
-  if (therapist.rating > 0) {
-    schema['aggregateRating'] = {
-      '@type': 'AggregateRating',
-      ratingValue: therapist.rating.toFixed(1),
-      bestRating: '5',
-      worstRating: '1',
-    };
-  }
-
   return schema;
 }
 
