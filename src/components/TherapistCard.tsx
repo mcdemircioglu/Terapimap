@@ -29,10 +29,10 @@ export default function TherapistCard({
           size="md"
         />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-base font-semibold text-brand-900">
+          <h3 className="text-base font-semibold text-brand-900 leading-snug">
             {therapist.name}
           </h3>
-          <p className="truncate text-xs text-brand-600">
+          <p className="text-xs text-brand-600">
             {therapist.professional_type
               ? PROFESSIONAL_TYPE_LABELS[therapist.professional_type]
               : therapist.title}

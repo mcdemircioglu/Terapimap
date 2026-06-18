@@ -45,6 +45,11 @@ export type TherapistFilters = {
   limit?: number;
 };
 
+export type TherapistPagedFilters = Omit<TherapistFilters, 'limit'> & {
+  page?: number;
+  pageSize?: number;
+};
+
 // ---------------------------------------------------------------------
 // Reads
 // ---------------------------------------------------------------------
@@ -193,6 +198,82 @@ export async function getTherapistBySlug(
   return {
     ...(data as Professional),
     specialties: flattenSpecialties(data),
+  };
+}
+
+export async function getTherapistsPaged(
+  filters: TherapistPagedFilters = {},
+): Promise<{ therapists: ProfessionalWithSpecialties[]; total: number }> {
+  const supabase = getServerClient();
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = filters.pageSize ?? 12;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  // Specialty slug → professional IDs (iki adımlı: Supabase JS client subquery desteklemiyor)
+  let specialtyProfIds: string[] | null = null;
+  if (filters.specialtySlug) {
+    const { data: specData } = await supabase
+      .from('specialties')
+      .select('id')
+      .eq('slug', filters.specialtySlug)
+      .maybeSingle();
+
+    if (specData) {
+      const { data: psData } = await supabase
+        .from('professional_specialties')
+        .select('professional_id')
+        .eq('specialty_id', specData.id);
+      specialtyProfIds = (psData ?? []).map((r: any) => r.professional_id);
+    } else {
+      specialtyProfIds = [];
+    }
+  }
+
+  if (specialtyProfIds !== null && specialtyProfIds.length === 0) {
+    return { therapists: [], total: 0 };
+  }
+
+  let query = supabase
+    .from('professionals')
+    .select(PROFESSIONAL_SELECT, { count: 'exact' })
+    .in('status', ['approved', 'featured']);
+
+  if (filters.citySlug) {
+    const cityName = getCityName(filters.citySlug);
+    if (cityName) query = query.eq('city', cityName);
+  }
+  if (filters.district) query = query.eq('district', filters.district);
+  if (filters.professionalType) query = query.eq('professional_type', filters.professionalType);
+  if (filters.online === true) query = query.eq('is_online', true);
+  if (filters.inPerson === true) query = query.eq('is_in_person', true);
+  if (filters.search) {
+    const term = `%${filters.search}%`;
+    query = query.or(`name.ilike.${term},about.ilike.${term}`);
+  }
+  if (specialtyProfIds !== null && specialtyProfIds.length > 0) {
+    query = query.in('id', specialtyProfIds);
+  }
+
+  query = query.order('created_at', { ascending: false }).range(from, to);
+
+  const { data, error, count } = await query;
+
+  if (error) {
+    logError('getTherapistsPaged', error);
+    return { therapists: [], total: 0 };
+  }
+
+  console.log(
+    `[terapimap:queries] getTherapistsPaged(page=${page}, pageSize=${pageSize}) -> ${data?.length ?? 0}/${count ?? 0}`,
+  );
+
+  return {
+    therapists: (data ?? []).map((row: any) => ({
+      ...(row as Professional),
+      specialties: flattenSpecialties(row),
+    })) as ProfessionalWithSpecialties[],
+    total: count ?? 0,
   };
 }
 

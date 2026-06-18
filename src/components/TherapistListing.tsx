@@ -1,11 +1,15 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import Container from './Container';
 import Filters from './Filters';
 import TherapistGrid from './TherapistGrid';
-import { getDistricts, getSpecialties, getTherapists } from '@/lib/queries';
+import Pagination from './Pagination';
+import { getDistricts, getSpecialties, getTherapistsPaged } from '@/lib/queries';
 import { getCityName } from '@/lib/cities';
 import type { ProfessionalType } from '@/types/database';
+
+const PAGE_SIZE = 12;
 
 export default async function TherapistListing({
   locale,
@@ -23,30 +27,35 @@ export default async function TherapistListing({
     district?: string;
     type?: string;
     inPerson?: string;
+    page?: string;
   };
 }) {
   const t = await getTranslations({ locale, namespace: 'list' });
 
-  // City/specialty can come from path segments OR from query params (when coming from SearchBar).
   const effectiveCity = citySlug ?? searchParams.city;
   const effectiveSpecialty = specialtySlug ?? searchParams.specialty;
   const online = searchParams.online === '1';
   const inPerson = searchParams.inPerson === '1';
   const district = searchParams.district || undefined;
   const professionalType = (searchParams.type || undefined) as ProfessionalType | undefined;
+  const page = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
 
-  const [specialties, districts, therapists] = await Promise.all([
+  const [specialties, districts, { therapists, total }] = await Promise.all([
     getSpecialties(),
     getDistricts(effectiveCity),
-    getTherapists({
+    getTherapistsPaged({
       citySlug: effectiveCity,
       specialtySlug: effectiveSpecialty,
       district,
       professionalType,
       online,
       inPerson,
+      page,
+      pageSize: PAGE_SIZE,
     }),
   ]);
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const cityName = effectiveCity ? getCityName(effectiveCity) ?? effectiveCity : null;
   const specialty = effectiveSpecialty
@@ -63,6 +72,9 @@ export default async function TherapistListing({
     title = t('titleAll');
   }
 
+  const from = (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, total);
+
   return (
     <Container className="py-10 md:py-14">
       <header className="mb-8">
@@ -70,7 +82,9 @@ export default async function TherapistListing({
           {title}
         </h1>
         <p className="mt-1 text-sm text-brand-600">
-          {t('count', { count: therapists.length })}
+          {total > 0
+            ? `${total} sonuç${totalPages > 1 ? ` · ${from}–${to} gösteriliyor` : ''}`
+            : t('count', { count: 0 })}
         </p>
       </header>
 
@@ -108,7 +122,12 @@ export default async function TherapistListing({
               </Link>
             </div>
           ) : (
-            <TherapistGrid therapists={therapists} locale={locale} />
+            <>
+              <TherapistGrid therapists={therapists} locale={locale} />
+              <Suspense>
+                <Pagination currentPage={page} totalPages={totalPages} />
+              </Suspense>
+            </>
           )}
         </div>
       </div>
