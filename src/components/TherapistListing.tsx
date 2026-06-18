@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import Container from './Container';
 import Filters from './Filters';
@@ -7,6 +8,7 @@ import TherapistGrid from './TherapistGrid';
 import Pagination from './Pagination';
 import { getDistricts, getSpecialties, getTherapistsPaged } from '@/lib/queries';
 import { getCityName } from '@/lib/cities';
+import { findBySlug } from '@/lib/utils';
 import type { ProfessionalType } from '@/types/database';
 
 const PAGE_SIZE = 12;
@@ -36,13 +38,41 @@ export default async function TherapistListing({
   const effectiveSpecialty = specialtySlug ?? searchParams.specialty;
   const online = searchParams.online === '1';
   const inPerson = searchParams.inPerson === '1';
-  const district = searchParams.district || undefined;
+  const districtSlug = searchParams.district || undefined;
   const professionalType = (searchParams.type || undefined) as ProfessionalType | undefined;
-  const page = Math.max(1, parseInt(searchParams.page ?? '1', 10) || 1);
+  const rawPage = parseInt(searchParams.page ?? '1', 10) || 1;
 
-  const [specialties, districts, { therapists, total }] = await Promise.all([
+  // ?page=1 → canonical base URL (duplicate content önlemi)
+  if (rawPage === 1 && searchParams.page !== undefined) {
+    const qs = new URLSearchParams();
+    if (searchParams.online) qs.set('online', searchParams.online);
+    if (searchParams.district) qs.set('district', searchParams.district);
+    if (searchParams.type) qs.set('type', searchParams.type);
+    if (searchParams.inPerson) qs.set('inPerson', searchParams.inPerson);
+    const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
+    let base = '/' + locale + '/' + listBase;
+    if (citySlug) base += '/' + citySlug;
+    if (citySlug && specialtySlug) base += '/' + specialtySlug;
+    else if (!citySlug && searchParams.specialty) qs.set('specialty', searchParams.specialty);
+    const suffix = qs.toString() ? '?' + qs.toString() : '';
+    redirect(base + suffix);
+  }
+
+  const page = Math.max(1, rawPage);
+
+  // District slug → DB display name dönüşümü.
+  // Slug varsa önce districts'i çekip çözüyoruz, yoksa parallel çalıştırıyoruz.
+  let resolvedDistricts: string[] = [];
+  let district: string | undefined;
+
+  if (districtSlug) {
+    resolvedDistricts = await getDistricts(effectiveCity);
+    district = findBySlug(resolvedDistricts, districtSlug) ?? districtSlug;
+  }
+
+  const [specialties, fetchedDistricts, { therapists, total }] = await Promise.all([
     getSpecialties(),
-    getDistricts(effectiveCity),
+    districtSlug ? Promise.resolve(resolvedDistricts) : getDistricts(effectiveCity),
     getTherapistsPaged({
       citySlug: effectiveCity,
       specialtySlug: effectiveSpecialty,
@@ -54,6 +84,8 @@ export default async function TherapistListing({
       pageSize: PAGE_SIZE,
     }),
   ]);
+
+  const districts = fetchedDistricts;
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 

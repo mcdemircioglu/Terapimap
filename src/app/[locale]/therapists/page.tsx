@@ -7,32 +7,39 @@ import { absUrl, buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/
 
 export async function generateMetadata({
   params: { locale },
+  searchParams,
 }: {
   params: { locale: string };
+  searchParams: { page?: string };
 }): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: 'list' });
-  const url = absUrl('/' + locale + '/therapists');
+  const baseUrl = absUrl('/' + locale + '/therapists');
+  const page = parseInt(searchParams.page ?? '1', 10) || 1;
 
-  const title = t('titleAll');
+  const baseTitle = t('titleAll');
+  const title = page > 1 ? `${baseTitle} — Sayfa ${page}` : baseTitle;
   const description =
     locale === 'tr'
       ? 'Turkiye genelinde psikolog, klinik psikolog ve terapistleri kesfet. Sehir, uzmanlik alani ve seans turune gore filtrele.'
       : 'Discover psychologists, clinical psychologists and therapists across Turkey. Filter by city, specialty and session type.';
 
+  const canonical = page > 1 ? `${baseUrl}?page=${page}` : baseUrl;
+
   return {
     title,
     description,
     alternates: {
-      canonical: url,
+      canonical,
       languages: {
-        tr: absUrl('/tr/therapists'),
-        en: absUrl('/en/therapists'),
+        tr: absUrl('/tr/therapists') + (page > 1 ? `?page=${page}` : ''),
+        en: absUrl('/en/therapists') + (page > 1 ? `?page=${page}` : ''),
       },
     },
+    robots: page > 1 ? { index: true, follow: true } : undefined,
     openGraph: {
       title,
       description,
-      url,
+      url: canonical,
       type: 'website',
       locale: locale === 'tr' ? 'tr_TR' : 'en_US',
     },
@@ -51,6 +58,7 @@ export default function TherapistsPage({
     district?: string;
     type?: string;
     inPerson?: string;
+    page?: string;
   };
 }) {
   unstable_setRequestLocale(params.locale);

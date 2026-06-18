@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Select } from "./ui/Select";
 import { CITIES } from "@/lib/cities";
+import { slugifyTr } from "@/lib/utils";
 import type { Specialty } from "@/types/database";
 
 const PROF_TYPE_OPTIONS = {
@@ -203,7 +204,7 @@ export default function Filters({
               >
                 <option value="">{t("all")}</option>
                 {districts.map((d) => (
-                  <option key={d} value={d}>
+                  <option key={d} value={slugifyTr(d)}>
                     {d}
                   </option>
                 ))}
