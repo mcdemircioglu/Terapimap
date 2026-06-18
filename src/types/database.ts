@@ -34,6 +34,7 @@ export type Professional = {
   city: string;
   district: string | null;
   clinic_name: string | null;
+  address: string | null;
   is_online: boolean;
   is_in_person: boolean;
   is_featured: boolean;
@@ -44,6 +45,11 @@ export type Professional = {
   price_range: string | null;
   rating: number;
   image_url: string | null;
+  phone: string | null;
+  email: string | null;
+  website_url: string | null;
+  google_maps_url: string | null;
+  instagram_url: string | null;
   user_id: string | null;
   created_at: string;
   updated_at: string;
