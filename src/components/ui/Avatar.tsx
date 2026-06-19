@@ -78,7 +78,7 @@ export default function Avatar({
   if (hasPhoto) {
     return (
       <div className={`relative flex-shrink-0 ${outer}`}>
-        <div className="w-full h-full overflow-hidden rounded-full">
+        <div className="relative w-full h-full overflow-hidden rounded-full">
           <Image
             src={photoUrl}
             alt={name}
