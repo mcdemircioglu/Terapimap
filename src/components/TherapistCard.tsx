@@ -26,7 +26,8 @@ export default function TherapistCard({
           name={therapist.name}
           slug={therapist.slug}
           photoUrl={therapist.image_url}
-          size="md"
+          size="lg"
+          verified={therapist.is_verified}
         />
         <div className="min-w-0 flex-1">
           <h3 className="text-base font-semibold text-brand-900 leading-snug">

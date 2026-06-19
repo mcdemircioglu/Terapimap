@@ -124,7 +124,8 @@ export default async function PsikologDetailPage({
                   name={therapist.name}
                   slug={therapist.slug}
                   photoUrl={therapist.image_url}
-                  size="lg"
+                  size="xl"
+                  verified={therapist.is_verified}
                 />
                 <div className="min-w-0 flex-1">
                   <h1 className="text-2xl font-semibold text-brand-900 md:text-3xl">
