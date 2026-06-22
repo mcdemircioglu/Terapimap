@@ -10,8 +10,18 @@
     "about": "About",
     "forTherapists": "For therapists"
   },
+  "about": {
+    "metaTitle": "About Us",
+    "metaDescription": "Terapimap makes it easier to find the right therapist. Learn about our mission and approach.",
+    "title": "About Us",
+    "p1": "Terapimap was built to make finding the right therapist easier. We bring together verified psychologists and psychotherapists from across Turkey in one place, so you can search by specialty, city, and session type — online or in person — to find the match that's right for you.",
+    "p2": "Taking the first step toward therapy is often the hardest part. Instead of spending hours searching or getting lost in confusing options, Terapimap lets you browse therapists with verified credentials and specialties, choose the one that fits your needs, and reach out directly.",
+    "p3": "Our mission is to make access to mental health support transparent, trustworthy, and easy. Terapimap doesn't guarantee an appointment — instead, we give you the right information so you can make the decision yourself.",
+    "p4": "We're continuing to build a platform that works for clients and therapists alike.",
+    "ctaButton": "Explore therapists"
+  },
   "home": {
-    "heroTitle": "Find the right therapist for you",
+    "heroTitle": "Right therapist.\nRight approach.\nMeaningful life.",
     "heroSubtitle": "Browse hundreds of vetted psychologists by specialty, city, and session type. Take the first step today.",
     "searchCity": "City",
     "searchSpecialty": "Specialty",
@@ -21,7 +31,7 @@
     "featuredTitle": "Featured therapists",
     "featuredSubtitle": "Top-rated specialists currently accepting new clients.",
     "featuredCta": "View all therapists",
-    "valueTitle": "Finding the right therapist shouldn't be hard",
+    "valueTitle": "Why Terapimap?",
     "value1Title": "Verified specialists",
     "value1Body": "Every psychologist is listed with their credentials and area of practice.",
     "value2Title": "Search by what matters",

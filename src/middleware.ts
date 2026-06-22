@@ -9,5 +9,5 @@ export default createMiddleware({
 
 export const config = {
   // Skip API routes, admin panel, _next, static files, favicon.
-  matcher: ['/((?!api|admin|_next|.*[.].*).*)'],
+  matcher: ['/((?!api|admin|profil-dogrula|_next|.*[.].*).*)'],
 };

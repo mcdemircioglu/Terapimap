@@ -21,22 +21,21 @@ export default async function HomePage({
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 to-white">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-40 left-1/2 h-[480px] w-[820px] -translate-x-1/2 rounded-full bg-brand-200/30 blur-3xl"
-        />
-        <Container className="relative py-12 md:py-28">
+      <section className="relative overflow-hidden bg-brand-950">
+        <Container className="relative py-16 md:py-32">
           <div className="mx-auto max-w-2xl text-center">
-            <h1 className="text-3xl font-semibold leading-tight tracking-tight text-brand-950 sm:text-4xl md:text-5xl">
+            <p className="mb-5 text-xs font-semibold uppercase tracking-widest text-brand-400">
+              Terapimap
+            </p>
+            <h1 className="whitespace-pre-line text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl">
               {t('heroTitle')}
             </h1>
-            <p className="mt-3 text-base leading-relaxed text-brand-700 md:mt-4 md:text-lg">
+            <p className="mt-5 text-base leading-relaxed text-brand-300 md:mt-6 md:text-lg">
               {t('heroSubtitle')}
             </p>
           </div>
-          <div className="mx-auto mt-6 max-w-3xl md:mt-10">
-            <SearchBar locale={locale} specialties={specialties} />
+          <div className="mx-auto mt-8 max-w-3xl md:mt-12">
+            <SearchBar locale={locale} specialties={specialties} dark />
           </div>
         </Container>
       </section>

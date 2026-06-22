@@ -61,12 +61,47 @@ export type ProfessionalWithSpecialties = Professional & {
 
 export type Lead = {
   id: string;
-  professional_id: string;
+  professional_id: string | null;
   name: string;
   email: string;
   phone: string | null;
-  message: string;
+  message: string | null;
+  status: string;
+  source: string | null;
   created_at: string;
 };
 
-export type NewLead = Omit<Lead, "id" | "created_at">;
+// Verification requests feature
+
+export type VerificationRequestType = 'update' | 'photo_update' | 'removal';
+export type VerificationRequestStatus = 'pending' | 'approved' | 'rejected' | 'removal_requested' | 'removed';
+
+export type VerificationRequest = {
+  id: string;
+  professional_id: string | null;
+  request_type: VerificationRequestType;
+  full_name: string;
+  email: string;
+  phone: string;
+  title: string | null;
+  city: string | null;
+  district: string | null;
+  clinic_name: string | null;
+  address: string | null;
+  website: string | null;
+  instagram: string | null;
+  offers_online: boolean | null;
+  offers_in_person: boolean | null;
+  specialties: string[] | null;
+  bio: string | null;
+  photo_url: string | null;
+  message: string | null;
+  status: VerificationRequestStatus;
+  admin_note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type VerificationRequestWithProfessional = VerificationRequest & {
+  professional: Professional | null;
+};

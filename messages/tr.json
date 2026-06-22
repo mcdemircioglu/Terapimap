@@ -10,8 +10,18 @@
     "about": "Hakkımızda",
     "forTherapists": "Terapistler İçin"
   },
+  "about": {
+    "metaTitle": "Hakkımızda",
+    "metaDescription": "Terapimap, doğru terapisti bulmayı kolaylaştıran bir platform. Misyonumuzu ve yaklaşımımızı öğrenin.",
+    "title": "Hakkımızda",
+    "p1": "Terapimap, doğru terapisti bulmayı kolaylaştırmak için kurulmuş bir platform. Türkiye'nin dört bir yanından uzman psikolog ve psikoterapistleri tek bir yerde buluşturuyor; insanların uzmanlık alanı, şehir ve görüşme tercihine (çevrimiçi veya yüz yüze) göre kendilerine en uygun terapisti kolayca bulmasını sağlıyoruz.",
+    "p2": "Terapiye ilk adımı atmak çoğu zaman en zor kısımdır. Doğru kişiyi bulmak için saatlerce arama yapmak, kafa karıştırıcı seçenekler arasında kaybolmak yerine; Terapimap'te diploma ve uzmanlık bilgileri doğrulanmış terapistleri inceleyebilir, ihtiyacınıza uygun olanı seçebilir ve doğrudan iletişime geçebilirsiniz.",
+    "p3": "Misyonumuz, ruh sağlığı desteğine erişimi şeffaf, güvenilir ve erişilebilir kılmak. Terapimap bir randevu garantisi sunmaz; bunun yerine size doğru bilgiyi sağlayıp kararı sizin elinize bırakır.",
+    "p4": "Hem danışanlar hem de terapistler için sürekli gelişen bir platform olmaya devam ediyoruz.",
+    "ctaButton": "Terapistleri keşfet"
+  },
   "home": {
-    "heroTitle": "Size en uygun terapisti bulun",
+    "heroTitle": "Doğru terapist.\nDoğru yaklaşım.\nAnlamlı hayat.",
     "heroSubtitle": "Uzmanlık alanı, şehir ve görüşme türüne göre yüzlerce psikoloğu inceleyin. Doğru kişiyle ilk adımı bugün atın.",
     "searchCity": "Şehir",
     "searchSpecialty": "Uzmanlık alanı",
@@ -21,7 +31,7 @@
     "featuredTitle": "Öne çıkan terapistler",
     "featuredSubtitle": "Yüksek puan alan ve aktif olarak danışan kabul eden uzmanlar.",
     "featuredCta": "Tüm terapistleri gör",
-    "valueTitle": "Doğru terapisti bulmak neden zor olmasın?",
+    "valueTitle": "Neden Terapimap?",
     "value1Title": "Doğrulanmış uzmanlar",
     "value1Body": "Tüm psikologlar diploma ve uzmanlık bilgileriyle listelenir.",
     "value2Title": "Uzmanlık alanına göre ara",

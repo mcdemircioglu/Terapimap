@@ -45,11 +45,6 @@ export type TherapistFilters = {
   limit?: number;
 };
 
-export type TherapistPagedFilters = Omit<TherapistFilters, 'limit'> & {
-  page?: number;
-  pageSize?: number;
-};
-
 // ---------------------------------------------------------------------
 // Reads
 // ---------------------------------------------------------------------
@@ -69,13 +64,14 @@ export async function getSpecialties(): Promise<Specialty[]> {
   return data ?? [];
 }
 
-/**
- * Returns distinct, sorted district values for a given city (or all cities).
- * Used to populate the district filter dropdown.
- */
 export async function getDistricts(citySlug?: string): Promise<string[]> {
   const supabase = getServerClient();
-  let query = supabase.from('professionals').select('district').in('status', ['approved', 'featured']);
+  let query = supabase
+    .from('professionals')
+    .select('district')
+    .in('status', ['approved', 'featured'])
+    .eq('is_visible', true)
+    .is('removed_at', null);
   if (citySlug) {
     const cityName = getCityName(citySlug);
     if (cityName) query = query.eq('city', cityName);
@@ -103,9 +99,10 @@ export async function getTherapists(
   let query = supabase
     .from('professionals')
     .select(PROFESSIONAL_SELECT)
-    .in('status', ['approved', 'featured']);
+    .in('status', ['approved', 'featured'])
+    .eq('is_visible', true)
+    .is('removed_at', null);
 
-  // Map city slug -> city name for the Supabase filter (DB has `city`, not `city_slug`)
   if (filters.citySlug) {
     const cityName = getCityName(filters.citySlug);
     if (cityName) query = query.eq('city', cityName);
@@ -119,7 +116,7 @@ export async function getTherapists(
     query = query.or(`name.ilike.${term},about.ilike.${term}`);
   }
 
-  query = query.order('created_at', { ascending: false });
+  query = query.order('rating', { ascending: false });
   if (filters.limit) query = query.limit(filters.limit);
 
   const { data, error } = await query;
@@ -156,8 +153,10 @@ export async function getFeaturedTherapists(
     .from('professionals')
     .select(PROFESSIONAL_SELECT)
     .in('status', ['approved', 'featured'])
+    .eq('is_visible', true)
+    .is('removed_at', null)
     .eq('is_featured', true)
-    .order('created_at', { ascending: false })
+    .order('rating', { ascending: false })
     .limit(count);
 
   if (error) {
@@ -183,6 +182,8 @@ export async function getTherapistBySlug(
     .select(PROFESSIONAL_SELECT)
     .eq('slug', slug)
     .in('status', ['approved', 'featured'])
+    .eq('is_visible', true)
+    .is('removed_at', null)
     .maybeSingle();
 
   if (error) {
@@ -201,6 +202,43 @@ export async function getTherapistBySlug(
   };
 }
 
+export async function getSpecialtyBySlug(slug: string): Promise<Specialty | null> {
+  const supabase = getServerClient();
+  const { data, error } = await supabase
+    .from('specialties')
+    .select('*')
+    .eq('slug', slug)
+    .maybeSingle();
+  if (error) { logError('getSpecialtyBySlug', error); return null; }
+  return data ?? null;
+}
+
+export async function getCityCounts(): Promise<Record<string, number>> {
+  const supabase = getServerClient();
+  const { data, error } = await supabase
+    .from('professionals')
+    .select('city')
+    .in('status', ['approved', 'featured'])
+    .eq('is_visible', true)
+    .is('removed_at', null);
+
+  if (error) {
+    logError('getCityCounts', error);
+    return {};
+  }
+  return (data ?? []).reduce<Record<string, number>>((acc, row: any) => {
+    const slug = getCitySlug(row.city) ?? row.city?.toLowerCase() ?? 'unknown';
+    acc[slug] = (acc[slug] ?? 0) + 1;
+    return acc;
+  }, {});
+}
+
+
+export type TherapistPagedFilters = TherapistFilters & {
+  page?: number;
+  pageSize?: number;
+};
+
 export async function getTherapistsPaged(
   filters: TherapistPagedFilters = {},
 ): Promise<{ therapists: ProfessionalWithSpecialties[]; total: number }> {
@@ -210,7 +248,7 @@ export async function getTherapistsPaged(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  // Specialty slug → professional IDs (iki adımlı: Supabase JS client subquery desteklemiyor)
+  // Specialty slug → professional IDs (two-step: JS client doesn't support subqueries)
   let specialtyProfIds: string[] | null = null;
   if (filters.specialtySlug) {
     const { data: specData } = await supabase
@@ -237,7 +275,9 @@ export async function getTherapistsPaged(
   let query = supabase
     .from('professionals')
     .select(PROFESSIONAL_SELECT, { count: 'exact' })
-    .in('status', ['approved', 'featured']);
+    .in('status', ['approved', 'featured'])
+    .eq('is_visible', true)
+    .is('removed_at', null);
 
   if (filters.citySlug) {
     const cityName = getCityName(filters.citySlug);
@@ -255,7 +295,7 @@ export async function getTherapistsPaged(
     query = query.in('id', specialtyProfIds);
   }
 
-  query = query.order('created_at', { ascending: false }).range(from, to);
+  query = query.order('rating', { ascending: false }).range(from, to);
 
   const { data, error, count } = await query;
 
@@ -264,47 +304,12 @@ export async function getTherapistsPaged(
     return { therapists: [], total: 0 };
   }
 
-  console.log(
-    `[terapimap:queries] getTherapistsPaged(page=${page}, pageSize=${pageSize}) -> ${data?.length ?? 0}/${count ?? 0}`,
-  );
+  const therapists = (data ?? []).map((row: any) => ({
+    ...(row as Professional),
+    specialties: flattenSpecialties(row),
+  })) as ProfessionalWithSpecialties[];
 
-  return {
-    therapists: (data ?? []).map((row: any) => ({
-      ...(row as Professional),
-      specialties: flattenSpecialties(row),
-    })) as ProfessionalWithSpecialties[],
-    total: count ?? 0,
-  };
-}
-
-export async function getSpecialtyBySlug(slug: string): Promise<Specialty | null> {
-  const supabase = getServerClient();
-  const { data, error } = await supabase
-    .from('specialties')
-    .select('*')
-    .eq('slug', slug)
-    .maybeSingle();
-  if (error) { logError('getSpecialtyBySlug', error); return null; }
-  return data ?? null;
-}
-
-export async function getCityCounts(): Promise<Record<string, number>> {
-  const supabase = getServerClient();
-  const { data, error } = await supabase
-    .from('professionals')
-    .select('city')
-    .in('status', ['approved', 'featured']);
-
-  if (error) {
-    logError('getCityCounts', error);
-    return {};
-  }
-  // Accumulate counts keyed by slug (derived from city name)
-  return (data ?? []).reduce<Record<string, number>>((acc, row: any) => {
-    const slug = getCitySlug(row.city) ?? row.city?.toLowerCase() ?? 'unknown';
-    acc[slug] = (acc[slug] ?? 0) + 1;
-    return acc;
-  }, {});
+  return { therapists, total: count ?? 0 };
 }
 
 // ---------------------------------------------------------------------

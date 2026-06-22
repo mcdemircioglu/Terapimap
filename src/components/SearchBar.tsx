@@ -11,9 +11,11 @@ import type { Specialty } from '@/types/database';
 export default function SearchBar({
   locale,
   specialties,
+  dark = false,
 }: {
   locale: string;
   specialties: Specialty[];
+  dark?: boolean;
 }) {
   const t = useTranslations('home');
   const router = useRouter();
@@ -32,11 +34,19 @@ export default function SearchBar({
   return (
     <form
       onSubmit={onSubmit}
-      className="grid gap-3 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-brand-100 sm:grid-cols-[1fr_1fr_auto]"
+      className={
+        dark
+          ? 'grid gap-3 rounded-2xl p-3 ring-1 ring-white/20 bg-white/10 backdrop-blur-sm sm:grid-cols-[1fr_1fr_auto]'
+          : 'grid gap-3 rounded-2xl bg-white p-3 shadow-soft ring-1 ring-brand-100 sm:grid-cols-[1fr_1fr_auto]'
+      }
     >
       <div>
         <label className="sr-only">{t('searchCity')}</label>
-        <Select value={city} onChange={(e) => setCity(e.target.value)}>
+        <Select
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          className={dark ? '!bg-white/10 !border-white/20 !text-white [&>option]:!text-brand-950 [&>option]:!bg-white' : ''}
+        >
           <option value="">{t('searchAllCities')}</option>
           {CITIES.map((c) => (
             <option key={c.slug} value={c.slug}>{c.name}</option>
@@ -45,7 +55,11 @@ export default function SearchBar({
       </div>
       <div>
         <label className="sr-only">{t('searchSpecialty')}</label>
-        <Select value={specialty} onChange={(e) => setSpecialty(e.target.value)}>
+        <Select
+          value={specialty}
+          onChange={(e) => setSpecialty(e.target.value)}
+          className={dark ? '!bg-white/10 !border-white/20 !text-white [&>option]:!text-brand-950 [&>option]:!bg-white' : ''}
+        >
           <option value="">{t('searchAllSpecialties')}</option>
           {specialties.map((s) => (
             <option key={s.slug} value={s.slug}>{s.name}</option>
