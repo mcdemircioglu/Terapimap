@@ -2,9 +2,10 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import TherapistListing from '@/components/TherapistListing';
+import JsonLd from '@/components/JsonLd';
 import { CITIES, getCityName, isKnownCity } from '@/lib/cities';
 import { getDistricts } from '@/lib/queries';
-import { absUrl } from '@/lib/schema';
+import { absUrl, buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/schema';
 import { findBySlug } from '@/lib/utils';
 
 export function generateStaticParams() {
@@ -36,6 +37,12 @@ export async function generateMetadata({
     : t('titleCity', { city: cityName });
   const title = page > 1 ? `${baseTitle} — Sayfa ${page}` : baseTitle;
 
+  const place = districtName ? `${cityName} ${districtName}` : cityName;
+  const description =
+    locale === 'tr'
+      ? `${place}'deki uzman psikolog, klinik psikolog ve psikiyatristleri keşfedin. Uzmanlık alanı, görüşme türü ve daha fazlasına göre filtreleyin.`
+      : `Discover verified psychologists, clinical psychologists and psychiatrists in ${place}. Filter by specialty, session type and more.`;
+
   const qs = new URLSearchParams();
   if (searchParams.district) qs.set('district', searchParams.district);
   if (page > 1) qs.set('page', String(page));
@@ -43,7 +50,16 @@ export async function generateMetadata({
 
   return {
     title,
+    description,
     alternates: { canonical },
+    robots: page > 1 ? { index: true, follow: true } : undefined,
+    openGraph: {
+      title,
+      description,
+      url: canonical,
+      type: 'website',
+      locale: locale === 'tr' ? 'tr_TR' : 'en_US',
+    },
   };
 }
 
@@ -63,11 +79,39 @@ export default function CityPage({
 }) {
   unstable_setRequestLocale(params.locale);
   if (!isKnownCity(params.city)) notFound();
+
+  const { locale, city } = params;
+  const cityName = getCityName(city) as string;
+  const pageUrl = absUrl('/' + locale + '/therapists/' + city);
+  const homeLabel = locale === 'tr' ? 'Ana Sayfa' : 'Home';
+  const listLabel = locale === 'tr' ? 'Terapistler' : 'Therapists';
+  const description =
+    locale === 'tr'
+      ? `${cityName}'deki uzman psikolog, klinik psikolog ve psikiyatristleri keşfedin.`
+      : `Discover verified psychologists, clinical psychologists and psychiatrists in ${cityName}.`;
+
+  const schemas = [
+    buildCollectionPageSchema({
+      name: locale === 'tr' ? `${cityName} Terapistleri` : `Therapists in ${cityName}`,
+      description,
+      url: pageUrl,
+      locale,
+    }),
+    buildBreadcrumbSchema([
+      { name: homeLabel, url: absUrl('/' + locale) },
+      { name: listLabel, url: absUrl('/' + locale + '/therapists') },
+      { name: cityName, url: pageUrl },
+    ]),
+  ];
+
   return (
-    <TherapistListing
-      locale={params.locale}
-      citySlug={params.city}
-      searchParams={searchParams}
-    />
+    <>
+      <JsonLd schema={schemas} />
+      <TherapistListing
+        locale={locale}
+        citySlug={city}
+        searchParams={searchParams}
+      />
+    </>
   );
 }
