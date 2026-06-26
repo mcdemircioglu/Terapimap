@@ -51,3 +51,28 @@ export function slugifyTr(text: string): string {
 export function findBySlug<T extends string>(list: T[], slug: string): T | undefined {
   return list.find((item) => slugifyTr(item) === slug);
 }
+
+const BACK_VOWELS = new Set(['a', 'ı', 'o', 'u']);
+const FRONT_VOWELS = new Set(['e', 'i', 'ö', 'ü']);
+const VOICELESS_CONSONANTS = new Set(['ç', 'f', 'h', 'k', 'p', 's', 'ş', 't']);
+
+/**
+ * Türkçe ünlü uyumuna göre "-da/-de/-ta/-te" (ve istenirse "-ki" eki) bulur.
+ * Örn: getLocativeSuffix("İstanbul") → "'da", getLocativeSuffix("İzmir", true) → "'deki"
+ */
+export function getLocativeSuffix(name: string, withKi = false): string {
+  const w = name.toLocaleLowerCase('tr');
+  let vowel = 'a';
+  for (let i = w.length - 1; i >= 0; i--) {
+    const ch = w[i];
+    if (BACK_VOWELS.has(ch) || FRONT_VOWELS.has(ch)) {
+      vowel = ch;
+      break;
+    }
+  }
+  const isBack = BACK_VOWELS.has(vowel);
+  const lastChar = w[w.length - 1];
+  const consonant = VOICELESS_CONSONANTS.has(lastChar) ? 't' : 'd';
+  const suffixVowel = isBack ? 'a' : 'e';
+  return "'" + consonant + suffixVowel + (withKi ? 'ki' : '');
+}

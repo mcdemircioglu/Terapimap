@@ -6,6 +6,7 @@ import JsonLd from '@/components/JsonLd';
 import { getCityName, isKnownCity } from '@/lib/cities';
 import { getSpecialties } from '@/lib/queries';
 import { absUrl, buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/schema';
+import { getLocativeSuffix } from '@/lib/utils';
 
 export async function generateMetadata({
   params: { locale, city, specialty },
@@ -30,7 +31,7 @@ export async function generateMetadata({
   const specialtyLower = specialtyName.toLocaleLowerCase(locale === 'tr' ? 'tr' : 'en');
   const description =
     locale === 'tr'
-      ? `${cityName}'de ${specialtyLower} konusunda uzman psikolog ve terapistleri keşfedin. Diploma ve uzmanlık bilgileri doğrulanmış uzmanlarla doğrudan iletişime geçin.`
+      ? `${cityName}${getLocativeSuffix(cityName)} ${specialtyLower} konusunda uzman psikolog ve terapistleri keşfedin. Diploma ve uzmanlık bilgileri doğrulanmış uzmanlarla doğrudan iletişime geçin.`
       : `Discover verified ${specialtyLower} specialists in ${cityName}. Browse credentials and reach out directly.`;
 
   const canonical = page > 1 ? `${baseUrl}?page=${page}` : baseUrl;
@@ -78,7 +79,7 @@ export default async function CitySpecialtyPage({
   const listLabel = locale === 'tr' ? 'Terapistler' : 'Therapists';
   const description =
     locale === 'tr'
-      ? `${cityName}'de ${specialtyName.toLocaleLowerCase('tr')} uzmanları`
+      ? `${cityName}${getLocativeSuffix(cityName)} ${specialtyName.toLocaleLowerCase('tr')} uzmanları`
       : `${specialtyName} specialists in ${cityName}`;
 
   const schemas = [

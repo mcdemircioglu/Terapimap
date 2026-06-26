@@ -6,7 +6,7 @@ import JsonLd from '@/components/JsonLd';
 import { CITIES, getCityName, isKnownCity } from '@/lib/cities';
 import { getDistricts } from '@/lib/queries';
 import { absUrl, buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/schema';
-import { findBySlug } from '@/lib/utils';
+import { findBySlug, getLocativeSuffix } from '@/lib/utils';
 
 export function generateStaticParams() {
   return CITIES.map((c) => ({ city: c.slug }));
@@ -40,7 +40,7 @@ export async function generateMetadata({
   const place = districtName ? `${cityName} ${districtName}` : cityName;
   const description =
     locale === 'tr'
-      ? `${place}'deki uzman psikolog, klinik psikolog ve psikiyatristleri keşfedin. Uzmanlık alanı, görüşme türü ve daha fazlasına göre filtreleyin.`
+      ? `${place}${getLocativeSuffix(place, true)} uzman psikolog, klinik psikolog ve psikiyatristleri keşfedin. Uzmanlık alanı, görüşme türü ve daha fazlasına göre filtreleyin.`
       : `Discover verified psychologists, clinical psychologists and psychiatrists in ${place}. Filter by specialty, session type and more.`;
 
   const qs = new URLSearchParams();
@@ -87,7 +87,7 @@ export default function CityPage({
   const listLabel = locale === 'tr' ? 'Terapistler' : 'Therapists';
   const description =
     locale === 'tr'
-      ? `${cityName}'deki uzman psikolog, klinik psikolog ve psikiyatristleri keşfedin.`
+      ? `${cityName}${getLocativeSuffix(cityName, true)} uzman psikolog, klinik psikolog ve psikiyatristleri keşfedin.`
       : `Discover verified psychologists, clinical psychologists and psychiatrists in ${cityName}.`;
 
   const schemas = [
