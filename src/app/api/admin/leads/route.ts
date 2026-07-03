@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('leads')
-    .select(`*, professionals ( name )`)
+    .select(`*, professionals ( name, slug )`)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -24,7 +24,11 @@ export async function GET(request: Request) {
 
   const leads = (data ?? []).map((row: any) => {
     const { professionals, ...rest } = row;
-    return { ...rest, professional_name: professionals?.name ?? null };
+    return {
+      ...rest,
+      professional_name: professionals?.name ?? null,
+      professional_slug: professionals?.slug ?? null,
+    };
   });
 
   return NextResponse.json(leads);

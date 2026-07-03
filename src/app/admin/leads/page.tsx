@@ -10,6 +10,7 @@ type Lead = {
   id: string;
   professional_id: string;
   professional_name: string | null;
+  professional_slug: string | null;
   name: string;
   email: string;
   phone: string | null;
@@ -353,7 +354,22 @@ export default function LeadsPage() {
                   {filtered.map((lead) => (
                     <tr key={lead.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 text-gray-800 font-medium whitespace-nowrap">
-                        {lead.professional_name ?? <span className="text-gray-400">—</span>}
+                        {lead.professional_name ? (
+                          lead.professional_slug ? (
+                            <a
+                              href={`/tr/psikolog/${lead.professional_slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-brand-600 hover:underline"
+                            >
+                              {lead.professional_name}
+                            </a>
+                          ) : (
+                            lead.professional_name
+                          )
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-800 whitespace-nowrap">{lead.name}</td>
                       <td className="px-4 py-3">
@@ -364,8 +380,8 @@ export default function LeadsPage() {
                       <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                         {lead.phone ?? <span className="text-gray-400">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-gray-600 max-w-xs">
-                        <p className="truncate" title={lead.message}>{lead.message}</p>
+                      <td className="px-4 py-3 text-gray-600 min-w-[220px] max-w-sm align-top">
+                        <p className="whitespace-pre-line break-words">{lead.message}</p>
                       </td>
                       <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                         {lead.source ?? <span className="text-gray-400">—</span>}
