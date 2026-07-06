@@ -97,9 +97,12 @@
   "footer": {
     "rights": "All rights reserved.",
     "disclaimer": "Terapimap is not a healthcare provider. We connect individuals with independent specialists.",
-    "privacy": "Privacy",
+    "privacy": "Privacy Policy",
     "terms": "Terms",
-    "contact": "Contact"
+    "contact": "Contact",
+    "kvkk": "KVKK Privacy Notice",
+    "cookies": "Cookie Policy",
+    "therapistPolicy": "Therapist Profile Policy"
   },
   "errors": {
     "notFound": "Page not found",

@@ -19,10 +19,13 @@ export default function Footer() {
               {t('disclaimer')}
             </p>
           </div>
-          <ul className="flex gap-6 text-sm text-brand-700">
-            <li><a href={`/${locale}/therapists`} className="hover:text-brand-900">{t('contact')}</a></li>
-            <li><a href={`/${locale}`} className="hover:text-brand-900">{t('privacy')}</a></li>
-            <li><a href={`/${locale}`} className="hover:text-brand-900">{t('terms')}</a></li>
+          <ul className="grid grid-cols-1 gap-2 text-sm text-brand-700 sm:grid-cols-2 sm:gap-x-8">
+            <li><a href={`/${locale}/iletisim`} className="hover:text-brand-900">{t('contact')}</a></li>
+            <li><a href={`/${locale}/kvkk-aydinlatma-metni`} className="hover:text-brand-900">{t('kvkk')}</a></li>
+            <li><a href={`/${locale}/gizlilik-politikasi`} className="hover:text-brand-900">{t('privacy')}</a></li>
+            <li><a href={`/${locale}/cerez-politikasi`} className="hover:text-brand-900">{t('cookies')}</a></li>
+            <li><a href={`/${locale}/kullanim-kosullari`} className="hover:text-brand-900">{t('terms')}</a></li>
+            <li><a href={`/${locale}/terapist-profil-politikasi`} className="hover:text-brand-900">{t('therapistPolicy')}</a></li>
           </ul>
         </div>
         <div className="mt-8 border-t border-brand-100 pt-6 text-xs text-brand-500">

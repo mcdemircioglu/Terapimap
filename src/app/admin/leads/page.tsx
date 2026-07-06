@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Types ────────────────────────────────────────────────────────────────────
 
 type LeadStatus = 'new' | 'reviewed' | 'contacted' | 'spam';
 
@@ -18,6 +18,7 @@ type Lead = {
   source: string | null;
   status: LeadStatus;
   created_at: string;
+  sent_at: string | null;
 };
 
 type Flash = { type: 'success' | 'error'; text: string };
@@ -210,6 +211,40 @@ export default function LeadsPage() {
     } else {
       const d = await res.json();
       showFlash({ type: 'error', text: d.error ?? 'Durum güncellenemedi.' });
+    }
+  };
+
+  const [sendingId, setSendingId] = useState<string | null>(null);
+
+  const handleSend = async (lead: Lead) => {
+    if (
+      !window.confirm(
+        `"${lead.name}" adlı danışanın talebi ${lead.professional_name ?? 'terapist'}'e mail olarak gönderilecek.\nDanışana da bilgilendirme maili iletilecek.\n\nOnaylıyor musunuz?`,
+      )
+    )
+      return;
+    setSendingId(lead.id);
+    try {
+      const res = await apiFetch(`/api/admin/leads/${lead.id}/send`, { method: 'POST' });
+      const d = await res.json();
+      if (res.ok && d.ok) {
+        setLeads((prev) =>
+          prev.map((l) =>
+            l.id === lead.id ? { ...l, status: 'contacted', sent_at: d.lead?.sent_at ?? new Date().toISOString() } : l,
+          ),
+        );
+        showFlash(
+          d.warning
+            ? { type: 'error', text: d.warning }
+            : { type: 'success', text: `Talep ${lead.professional_name ?? 'terapiste'} iletildi, danışana onay maili gönderildi.` },
+        );
+      } else {
+        showFlash({ type: 'error', text: d.error ?? 'Gönderim başarısız.' });
+      }
+    } catch {
+      showFlash({ type: 'error', text: 'Bağlantı hatası. Lütfen tekrar deneyin.' });
+    } finally {
+      setSendingId(null);
     }
   };
 
@@ -407,10 +442,38 @@ export default function LeadsPage() {
                         })}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
+                        {lead.sent_at ? (
+                          <span
+                            className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg"
+                            title={`Gönderildi: ${new Date(lead.sent_at).toLocaleString('tr-TR')}`}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Gönderildi
+                          </span>
+                        ) : (
+                          <Btn
+                            onClick={() => handleSend(lead)}
+                            disabled={sendingId === lead.id}
+                            className="text-xs px-3 py-1.5"
+                          >
+                            {sendingId === lead.id ? (
+                              'Gönderiliyor…'
+                            ) : (
+                              <>
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
+                                Onayla ve Gönder
+                              </>
+                            )}
+                          </Btn>
+                        )}
                         <Btn
                           variant="ghost"
                           onClick={() => handleDelete(lead.id, lead.name)}
-                          className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                          className="text-red-400 hover:text-red-600 hover:bg-red-50 ml-1"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

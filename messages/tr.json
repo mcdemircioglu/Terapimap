@@ -97,9 +97,12 @@
   "footer": {
     "rights": "Tüm hakları saklıdır.",
     "disclaimer": "Terapimap bir sağlık hizmeti sağlayıcısı değildir; uzmanlarla bireyler arasında bir buluşma platformudur.",
-    "privacy": "Gizlilik",
+    "privacy": "Gizlilik Politikası",
     "terms": "Kullanım Koşulları",
-    "contact": "İletişim"
+    "contact": "İletişim",
+    "kvkk": "KVKK Aydınlatma Metni",
+    "cookies": "Çerez Politikası",
+    "therapistPolicy": "Terapist Profil Politikası"
   },
   "errors": {
     "notFound": "Sayfa bulunamadı",
