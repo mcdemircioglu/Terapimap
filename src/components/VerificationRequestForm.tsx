@@ -1,12 +1,21 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { CITIES } from '@/lib/cities';
+import { getDistricts } from '@/lib/districts';
 
 type RequestType = 'update' | 'photo_update' | 'removal' | '';
+
+interface SpecialtyOption {
+  id: string;
+  name: string;
+}
 
 interface Props {
   professionalId: string;
   professionalName: string;
+  specialtyOptions?: SpecialtyOption[];
 }
 
 const REQUEST_TYPE_OPTIONS = [
@@ -58,6 +67,28 @@ function Textarea({ value, onChange, placeholder, rows = 4, required }: {
   );
 }
 
+function Select({
+  value, onChange, options, placeholder, disabled,
+}: {
+  value: string; onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder: string; disabled?: boolean;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+    >
+      <option value="">{placeholder}</option>
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>{o.label}</option>
+      ))}
+    </select>
+  );
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-4">
@@ -69,14 +100,18 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export default function VerificationRequestForm({ professionalId, professionalName }: Props) {
+export default function VerificationRequestForm({
+  professionalId,
+  professionalName,
+  specialtyOptions = [],
+}: Props) {
   // ── State ──
   const [requestType, setRequestType] = useState<RequestType>('');
   const [fullName, setFullName] = useState(professionalName);
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [title, setTitle] = useState('');
-  const [city, setCity] = useState('');
+  const [citySlug, setCitySlug] = useState('');
   const [district, setDistrict] = useState('');
   const [clinicName, setClinicName] = useState('');
   const [address, setAddress] = useState('');
@@ -84,7 +119,7 @@ export default function VerificationRequestForm({ professionalId, professionalNa
   const [instagram, setInstagram] = useState('');
   const [offersOnline, setOffersOnline] = useState<boolean | null>(null);
   const [offersInPerson, setOffersInPerson] = useState<boolean | null>(null);
-  const [specialties, setSpecialties] = useState('');
+  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [bio, setBio] = useState('');
   const [message, setMessage] = useState('');
 
@@ -98,10 +133,39 @@ export default function VerificationRequestForm({ professionalId, professionalNa
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [redirectSeconds, setRedirectSeconds] = useState(5);
+  const router = useRouter();
+
+  // Başarı ekranından 5 saniye sonra anasayfaya dön
+  useEffect(() => {
+    if (!success) return;
+    const interval = setInterval(() => {
+      setRedirectSeconds((s) => (s > 0 ? s - 1 : 0));
+    }, 1000);
+    const timer = setTimeout(() => router.push('/'), 5000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timer);
+    };
+  }, [success, router]);
 
   const isRemoval = requestType === 'removal';
   const showPhotoUpload = requestType === 'photo_update' || requestType === 'update';
   const showUpdateFields = requestType === 'update';
+
+  const selectedCity = CITIES.find((c) => c.slug === citySlug) ?? null;
+  const districtOptions = citySlug ? getDistricts(citySlug) : [];
+
+  function handleCityChange(slug: string) {
+    setCitySlug(slug);
+    setDistrict(''); // şehir değişince ilçe sıfırlanır
+  }
+
+  function toggleSpecialty(name: string) {
+    setSelectedSpecialties((prev) =>
+      prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name],
+    );
+  }
 
   // ── Photo handling ──
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -173,8 +237,8 @@ export default function VerificationRequestForm({ professionalId, professionalNa
 
       if (showUpdateFields) {
         if (title) payload.title = title.trim();
-        if (city) payload.city = city.trim();
-        if (district) payload.district = district.trim();
+        if (selectedCity) payload.city = selectedCity.name;
+        if (district) payload.district = district;
         if (clinicName) payload.clinic_name = clinicName.trim();
         if (address) payload.address = address.trim();
         if (website) payload.website = website.trim();
@@ -182,8 +246,8 @@ export default function VerificationRequestForm({ professionalId, professionalNa
         if (bio) payload.bio = bio.trim();
         if (offersOnline !== null) payload.offers_online = offersOnline;
         if (offersInPerson !== null) payload.offers_in_person = offersInPerson;
-        if (specialties.trim()) {
-          payload.specialties = specialties.split(',').map((s) => s.trim()).filter(Boolean);
+        if (selectedSpecialties.length > 0) {
+          payload.specialties = selectedSpecialties;
         }
       }
 
@@ -225,6 +289,18 @@ export default function VerificationRequestForm({ professionalId, professionalNa
         </p>
         <p className="mt-4 text-sm text-gray-400">
           Süreçle ilgili {email} adresine bildirim gönderilecektir.
+        </p>
+        <a
+          href="/"
+          className="mt-6 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          Anasayfaya Dön
+        </a>
+        <p className="mt-3 text-xs text-gray-400">
+          {redirectSeconds} saniye içinde anasayfaya yönlendirileceksiniz…
         </p>
       </div>
     );
@@ -342,11 +418,22 @@ export default function VerificationRequestForm({ professionalId, professionalNa
                   </div>
                   <div>
                     <FieldLabel>Şehir</FieldLabel>
-                    <Input value={city} onChange={setCity} placeholder="İstanbul" />
+                    <Select
+                      value={citySlug}
+                      onChange={handleCityChange}
+                      options={CITIES.map((c) => ({ value: c.slug, label: c.name }))}
+                      placeholder="Şehir seçin"
+                    />
                   </div>
                   <div>
                     <FieldLabel>İlçe</FieldLabel>
-                    <Input value={district} onChange={setDistrict} placeholder="Kadıköy" />
+                    <Select
+                      value={district}
+                      onChange={setDistrict}
+                      options={districtOptions.map((d) => ({ value: d, label: d }))}
+                      placeholder={citySlug ? 'İlçe seçin' : 'Önce şehir seçin'}
+                      disabled={!citySlug}
+                    />
                   </div>
                   <div>
                     <FieldLabel>Klinik / Kurum Adı</FieldLabel>
@@ -397,14 +484,43 @@ export default function VerificationRequestForm({ professionalId, professionalNa
               </Section>
 
               <Section title="Uzmanlık Alanları (Opsiyonel)">
-                <div>
-                  <p className="text-xs text-gray-400 mb-2">Uzmanlık alanlarınızı virgülle ayırarak yazın.</p>
-                  <Input
-                    value={specialties}
-                    onChange={setSpecialties}
-                    placeholder="Anksiyete, Depresyon, Çift Terapisi"
-                  />
-                </div>
+                {specialtyOptions.length === 0 ? (
+                  <p className="text-sm text-gray-400">Uzmanlık alanları yüklenemedi.</p>
+                ) : (
+                  <>
+                    <p className="text-xs text-gray-400 -mt-1 mb-2">
+                      Profilinizde görünmesini istediğiniz uzmanlık alanlarını seçin.
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {specialtyOptions.map((s) => {
+                        const selected = selectedSpecialties.includes(s.name);
+                        return (
+                          <label
+                            key={s.id}
+                            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border cursor-pointer transition-colors text-sm ${
+                              selected
+                                ? 'border-brand-500 bg-brand-50 text-brand-800'
+                                : 'border-gray-200 text-gray-700 hover:border-brand-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={() => toggleSpecialty(s.name)}
+                              className="rounded text-brand-600 focus:ring-brand-400"
+                            />
+                            {s.name}
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {selectedSpecialties.length > 0 && (
+                      <p className="text-xs text-brand-600 mt-1">
+                        {selectedSpecialties.length} alan seçildi
+                      </p>
+                    )}
+                  </>
+                )}
               </Section>
 
               <Section title="Hakkımda (Opsiyonel)">

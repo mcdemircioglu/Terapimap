@@ -189,7 +189,6 @@ export async function sendConfirmationToClient({ lead, professional }: LeadEmail
     <p style="margin:0;font-size:12px;color:${C.muted};line-height:1.6;">
       Hatırlatma: Terapimap terapi veya sağlık hizmeti sunmaz; yalnızca sizi uzmanlarla buluşturan bir
       platformdur. Bilgileriniz yalnızca talep ettiğiniz uzmana iletilmiştir.
-      Acil bir durumdaysanız lütfen 112 Acil Çağrı Merkezi&#39;ni arayınız.
     </p>`,
   );
 
@@ -200,7 +199,6 @@ export async function sendConfirmationToClient({ lead, professional }: LeadEmail
     'Uzman en kısa sürede sizinle iletişime geçecektir.',
     '',
     'Bilgileriniz yalnızca talep ettiğiniz uzmana iletilmiştir.',
-    "Acil bir durumdaysanız lütfen 112 Acil Çağrı Merkezi'ni arayınız.",
     '',
     'Terapimap — terapimap.com',
   ].join('\n');

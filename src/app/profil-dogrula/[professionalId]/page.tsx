@@ -8,11 +8,17 @@ export default async function ProfilDogrulaPage({
   params: { professionalId: string };
 }) {
   const supabase = getServiceClient();
-  const { data: professional } = await supabase
-    .from('professionals')
-    .select('id, name, title, city, district, slug, is_verified, image_url')
-    .eq('id', professionalId)
-    .maybeSingle();
+  const [{ data: professional }, { data: specialties }] = await Promise.all([
+    supabase
+      .from('professionals')
+      .select('id, name, title, city, district, slug, is_verified, image_url')
+      .eq('id', professionalId)
+      .maybeSingle(),
+    supabase
+      .from('specialties')
+      .select('id, name')
+      .order('name', { ascending: true }),
+  ]);
 
   if (!professional) notFound();
 
@@ -62,7 +68,11 @@ export default async function ProfilDogrulaPage({
           )}
         </div>
 
-        <VerificationRequestForm professionalId={professional.id} professionalName={professional.name} />
+        <VerificationRequestForm
+          professionalId={professional.id}
+          professionalName={professional.name}
+          specialtyOptions={specialties ?? []}
+        />
       </div>
     </main>
   );
