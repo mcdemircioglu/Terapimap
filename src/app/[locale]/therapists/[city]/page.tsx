@@ -3,10 +3,18 @@ import { notFound } from 'next/navigation';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import TherapistListing from '@/components/TherapistListing';
 import JsonLd from '@/components/JsonLd';
+import SeoLandingHeader from '@/components/seo/SeoLandingHeader';
 import { CITIES, getCityName, isKnownCity } from '@/lib/cities';
-import { getDistricts } from '@/lib/queries';
-import { absUrl, buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/schema';
+import { getDistricts, getSpecialties, getTherapists, getTherapistStats } from '@/lib/queries';
+import {
+  absUrl,
+  buildCollectionPageSchema,
+  buildBreadcrumbSchema,
+  buildItemListSchema,
+} from '@/lib/schema';
+import { buildInternalLinks, landingCanonical } from '@/lib/seo-landing';
 import { findBySlug, getLocativeSuffix } from '@/lib/utils';
+import SeoEmptySuggestions from '@/components/seo/SeoEmptySuggestions';
 
 export function generateStaticParams() {
   return CITIES.map((c) => ({ city: c.slug }));
@@ -23,7 +31,7 @@ export async function generateMetadata({
   if (!cityName) return {};
   const t = await getTranslations({ locale, namespace: 'list' });
   const page = parseInt(searchParams.page ?? '1', 10) || 1;
-  const baseUrl = absUrl('/' + locale + '/therapists/' + city);
+  const baseUrl = landingCanonical(locale, city);
 
   // District slug → display name
   let districtName: string | undefined;
@@ -33,14 +41,14 @@ export async function generateMetadata({
   }
 
   const baseTitle = districtName
-    ? `${cityName} ${districtName} Terapistleri`
-    : t('titleCity', { city: cityName });
+    ? `${cityName} ${districtName} Terapistleri | Terapimap`
+    : `${cityName} Terapistleri ve Psikologları | Terapimap`;
   const title = page > 1 ? `${baseTitle} — Sayfa ${page}` : baseTitle;
 
   const place = districtName ? `${cityName} ${districtName}` : cityName;
   const description =
     locale === 'tr'
-      ? `${place}${getLocativeSuffix(place, true)} uzman psikolog, klinik psikolog ve psikiyatristleri keşfedin. Uzmanlık alanı, görüşme türü ve daha fazlasına göre filtreleyin.`
+      ? `${place}${getLocativeSuffix(place, true)} psikolog, klinik psikolog ve psikiyatristleri inceleyin. Uzmanlık alanı ve görüşme türüne göre filtreleyin, size uygun uzmanı seçin.`
       : `Discover verified psychologists, clinical psychologists and psychiatrists in ${place}. Filter by specialty, session type and more.`;
 
   const qs = new URLSearchParams();
@@ -52,18 +60,24 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical },
-    robots: page > 1 ? { index: true, follow: true } : undefined,
+    robots: { index: true, follow: true },
     openGraph: {
       title,
       description,
       url: canonical,
       type: 'website',
+      siteName: 'Terapimap',
       locale: locale === 'tr' ? 'tr_TR' : 'en_US',
+    },
+    twitter: {
+      card: 'summary',
+      title: t('titleCity', { city: cityName }),
+      description,
     },
   };
 }
 
-export default function CityPage({
+export default async function CityPage({
   params,
   searchParams,
 }: {
@@ -82,15 +96,23 @@ export default function CityPage({
 
   const { locale, city } = params;
   const cityName = getCityName(city) as string;
-  const pageUrl = absUrl('/' + locale + '/therapists/' + city);
+  const pageUrl = landingCanonical(locale, city);
+  const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
   const homeLabel = locale === 'tr' ? 'Ana Sayfa' : 'Home';
   const listLabel = locale === 'tr' ? 'Terapistler' : 'Therapists';
+
+  const [stats, specialties, listTherapists] = await Promise.all([
+    getTherapistStats({ citySlug: city }),
+    getSpecialties(),
+    getTherapists({ citySlug: city, limit: 24 }),
+  ]);
+
   const description =
     locale === 'tr'
       ? `${cityName}${getLocativeSuffix(cityName, true)} uzman psikolog, klinik psikolog ve psikiyatristleri keşfedin.`
       : `Discover verified psychologists, clinical psychologists and psychiatrists in ${cityName}.`;
 
-  const schemas = [
+  const schemas: object[] = [
     buildCollectionPageSchema({
       name: locale === 'tr' ? `${cityName} Terapistleri` : `Therapists in ${cityName}`,
       description,
@@ -99,10 +121,37 @@ export default function CityPage({
     }),
     buildBreadcrumbSchema([
       { name: homeLabel, url: absUrl('/' + locale) },
-      { name: listLabel, url: absUrl('/' + locale + '/therapists') },
+      { name: listLabel, url: absUrl(`/${locale}/${listBase}`) },
       { name: cityName, url: pageUrl },
     ]),
+    ...(listTherapists.length
+      ? [
+          buildItemListSchema({
+            therapists: listTherapists,
+            locale,
+            listUrl: pageUrl,
+            cityName,
+          }),
+        ]
+      : []),
   ];
+
+  const internalLinks = buildInternalLinks({
+    locale,
+    citySlug: city,
+    cityName,
+    specialties,
+  });
+
+  const intro =
+    locale === 'tr'
+      ? `${cityName}${getLocativeSuffix(cityName)} çalışan psikolog, klinik psikolog, psikiyatrist ve terapistleri inceleyebilir; uzmanlık alanına, ilçeye ve görüşme türüne göre filtreleyebilirsiniz.`
+      : `Browse therapists in ${cityName} and filter by specialty, district and session type.`;
+
+  // İlçe filtresi aktifken varsayılan başlık kullanılır (ilçe adı H1'e yansır).
+  const useLandingHeader = !searchParams.district;
+
+  const emptyMessage = `${cityName}${getLocativeSuffix(cityName)} bu kriterlerde kayıtlı uzman şu anda bulunmuyor. Filtreleri değiştirerek veya aşağıdaki bağlantılardan diğer seçenekleri inceleyebilirsiniz.`;
 
   return (
     <>
@@ -111,6 +160,27 @@ export default function CityPage({
         locale={locale}
         citySlug={city}
         searchParams={searchParams}
+        headerOverride={
+          useLandingHeader ? (
+            <SeoLandingHeader
+              breadcrumbs={[
+                { label: homeLabel, href: `/${locale}` },
+                { label: listLabel, href: `/${locale}/${listBase}` },
+                { label: cityName },
+              ]}
+              h1={locale === 'tr' ? `${cityName} Terapistleri` : `Therapists in ${cityName}`}
+              intro={intro}
+              total={stats.total}
+              onlineCount={stats.online}
+              inPersonCount={stats.inPerson}
+              ctaHref={`/${locale}/${listBase}/${city}?online=1`}
+              ctaLabel="Online Uzmanları Gör"
+            />
+          ) : undefined
+        }
+        emptyExtra={
+          <SeoEmptySuggestions message={emptyMessage} links={internalLinks} />
+        }
       />
     </>
   );

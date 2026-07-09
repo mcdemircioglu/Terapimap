@@ -1,4 +1,4 @@
-import { CITIES } from "@/lib/cities";
+import { CITIES, getCitySlug } from "@/lib/cities";
 import { getKnownSeoSlugs } from "@/lib/seo-slugs";
 import { getTherapists, getSpecialties } from "@/lib/queries";
 import { getProfessionalUrlSegment } from "@/lib/utils";
@@ -50,6 +50,26 @@ export async function GET() {
     getSpecialties(),
   ]);
 
+  // Onaylı terapist sayıları: yalnızca en az 1 uzman içeren sayfalar
+  // sitemap'e girer (düşük kaliteli boş kombinasyonlar hariç tutulur).
+  const cityCounts = new Map<string, number>();
+  const specialtyCounts = new Map<string, number>();
+  const comboCounts = new Map<string, number>();
+
+  for (const t of therapists) {
+    const citySlug = t.city ? getCitySlug(t.city) : null;
+    if (citySlug) {
+      cityCounts.set(citySlug, (cityCounts.get(citySlug) ?? 0) + 1);
+    }
+    for (const s of t.specialties) {
+      specialtyCounts.set(s.slug, (specialtyCounts.get(s.slug) ?? 0) + 1);
+      if (citySlug) {
+        const key = `${citySlug}:${s.slug}`;
+        comboCounts.set(key, (comboCounts.get(key) ?? 0) + 1);
+      }
+    }
+  }
+
   const items: SitemapItem[] = [];
 
   for (const locale of locales) {
@@ -61,9 +81,11 @@ export async function GET() {
     items.push(item(`${l}/${listSlug}`, "daily", 0.9));
 
     for (const city of CITIES) {
+      if ((cityCounts.get(city.slug) ?? 0) < 1) continue;
       items.push(item(`${l}/${listSlug}/${city.slug}`, "weekly", 0.8));
 
       for (const specialty of specialties) {
+        if ((comboCounts.get(`${city.slug}:${specialty.slug}`) ?? 0) < 1) continue;
         items.push(
           item(`${l}/${listSlug}/${city.slug}/${specialty.slug}`, "weekly", 0.6)
         );
@@ -75,6 +97,7 @@ export async function GET() {
     }
 
     for (const specialty of specialties) {
+      if ((specialtyCounts.get(specialty.slug) ?? 0) < 1) continue;
       items.push(item(`${l}/${specialty.slug}`, "weekly", 0.7));
     }
   }

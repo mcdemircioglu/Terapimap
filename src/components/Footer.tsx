@@ -1,5 +1,6 @@
 import { useLocale, useTranslations } from 'next-intl';
 import Container from './Container';
+import ManageCookiesLink from './cookie-consent/ManageCookiesLink';
 
 export default function Footer() {
   const t = useTranslations('footer');
@@ -26,6 +27,7 @@ export default function Footer() {
             <li><a href={`/${locale}/cerez-politikasi`} className="hover:text-brand-900">{t('cookies')}</a></li>
             <li><a href={`/${locale}/kullanim-kosullari`} className="hover:text-brand-900">{t('terms')}</a></li>
             <li><a href={`/${locale}/terapist-profil-politikasi`} className="hover:text-brand-900">{t('therapistPolicy')}</a></li>
+            <li><ManageCookiesLink label={t('cookiePrefs')} /></li>
           </ul>
         </div>
         <div className="mt-8 border-t border-brand-100 pt-6 text-xs text-brand-500">

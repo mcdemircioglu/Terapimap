@@ -102,7 +102,8 @@
     "contact": "Contact",
     "kvkk": "KVKK Privacy Notice",
     "cookies": "Cookie Policy",
-    "therapistPolicy": "Therapist Profile Policy"
+    "therapistPolicy": "Therapist Profile Policy",
+    "cookiePrefs": "Manage Cookie Preferences"
   },
   "errors": {
     "notFound": "Page not found",

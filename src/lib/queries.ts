@@ -313,6 +313,67 @@ export async function getTherapistsPaged(
 }
 
 // ---------------------------------------------------------------------
+// SEO landing istatistikleri — hafif sayım (yalnızca 3 kolon çeker)
+// ---------------------------------------------------------------------
+
+export async function getTherapistStats(filters: {
+  citySlug?: string;
+  specialtySlug?: string;
+}): Promise<{ total: number; online: number; inPerson: number }> {
+  const supabase = getServerClient();
+
+  // Specialty slug → professional IDs (iki adım)
+  let specialtyProfIds: string[] | null = null;
+  if (filters.specialtySlug) {
+    const { data: specData } = await supabase
+      .from('specialties')
+      .select('id')
+      .eq('slug', filters.specialtySlug)
+      .maybeSingle();
+
+    if (specData) {
+      const { data: psData } = await supabase
+        .from('professional_specialties')
+        .select('professional_id')
+        .eq('specialty_id', specData.id);
+      specialtyProfIds = (psData ?? []).map((r: any) => r.professional_id);
+    } else {
+      specialtyProfIds = [];
+    }
+  }
+
+  if (specialtyProfIds !== null && specialtyProfIds.length === 0) {
+    return { total: 0, online: 0, inPerson: 0 };
+  }
+
+  let query = supabase
+    .from('professionals')
+    .select('id, is_online, is_in_person')
+    .in('status', ['approved', 'featured'])
+    .eq('is_visible', true)
+    .is('removed_at', null);
+
+  if (filters.citySlug) {
+    const cityName = getCityName(filters.citySlug);
+    if (cityName) query = query.eq('city', cityName);
+  }
+  if (specialtyProfIds !== null) query = query.in('id', specialtyProfIds);
+
+  const { data, error } = await query;
+  if (error) {
+    logError('getTherapistStats', error);
+    return { total: 0, online: 0, inPerson: 0 };
+  }
+
+  const rows = data ?? [];
+  return {
+    total: rows.length,
+    online: rows.filter((r: any) => r.is_online).length,
+    inPerson: rows.filter((r: any) => r.is_in_person).length,
+  };
+}
+
+// ---------------------------------------------------------------------
 // Writes
 // ---------------------------------------------------------------------
 

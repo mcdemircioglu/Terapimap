@@ -18,6 +18,9 @@ export default async function TherapistListing({
   citySlug,
   specialtySlug,
   searchParams,
+  headerOverride,
+  belowResults,
+  emptyExtra,
 }: {
   locale: string;
   citySlug?: string;
@@ -31,6 +34,12 @@ export default async function TherapistListing({
     inPerson?: string;
     page?: string;
   };
+  /** SEO landing sayfalarında varsayılan başlığın yerine geçen header (tek H1 kuralı). */
+  headerOverride?: React.ReactNode;
+  /** Kart listesinin/pagination'ın altına eklenecek SEO içerik bloğu. */
+  belowResults?: React.ReactNode;
+  /** Sonuç yokken empty-state kutusunun altına eklenecek öneriler. */
+  emptyExtra?: React.ReactNode;
 }) {
   const t = await getTranslations({ locale, namespace: 'list' });
 
@@ -109,16 +118,18 @@ export default async function TherapistListing({
 
   return (
     <Container className="py-10 md:py-14">
-      <header className="mb-8">
-        <h1 className="text-2xl font-semibold text-brand-900 md:text-3xl">
-          {title}
-        </h1>
-        <p className="mt-1 text-sm text-brand-600">
-          {total > 0
-            ? `${total} sonuç${totalPages > 1 ? ` · ${from}–${to} gösteriliyor` : ''}`
-            : t('count', { count: 0 })}
-        </p>
-      </header>
+      {headerOverride ?? (
+        <header className="mb-8">
+          <h1 className="text-2xl font-semibold text-brand-900 md:text-3xl">
+            {title}
+          </h1>
+          <p className="mt-1 text-sm text-brand-600">
+            {total > 0
+              ? `${total} sonuç${totalPages > 1 ? ` · ${from}–${to} gösteriliyor` : ''}`
+              : t('count', { count: 0 })}
+          </p>
+        </header>
+      )}
 
       <div className="grid gap-6 md:grid-cols-[260px_1fr]">
         <Filters
@@ -152,6 +163,7 @@ export default async function TherapistListing({
               >
                 {locale === 'tr' ? 'Filtreleri temizle' : 'Clear filters'}
               </Link>
+              {emptyExtra}
             </div>
           ) : (
             <>
@@ -163,6 +175,7 @@ export default async function TherapistListing({
           )}
         </div>
       </div>
+      {belowResults}
     </Container>
   );
 }

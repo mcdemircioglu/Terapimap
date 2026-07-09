@@ -46,13 +46,13 @@ export default function TherapistCard({
       </div>
 
       <div className="mt-4 flex flex-wrap gap-1.5">
-        {therapist.specialties.slice(0, 3).map((s) => (
+        {therapist.specialties.slice(0, 5).map((s) => (
           <Badge key={s.id} variant="brand">
             {s.name}
           </Badge>
         ))}
-        {therapist.specialties.length > 3 && (
-          <Badge variant="soft">+{therapist.specialties.length - 3}</Badge>
+        {therapist.specialties.length > 5 && (
+          <Badge variant="soft">+{therapist.specialties.length - 5}</Badge>
         )}
       </div>
 

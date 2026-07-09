@@ -10,9 +10,15 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: '/',
         disallow: [
-          '/api/',      // API routes
-          '/admin/',    // admin panel (if added later)
-          '/_next/',    // Next.js internals
+          '/api/',            // API routes
+          '/admin',           // admin panel
+          '/admin/',
+          '/_next/',          // Next.js internals
+          '/login',           // giriş sayfaları (ileride eklenirse)
+          '/verify',          // doğrulama akışları
+          '/dogrulama',       // doğrulama (tr)
+          '/profil-dogrula/', // terapist profil doğrulama formu
+          '/leads',           // lead yönetimi
         ],
       },
     ],

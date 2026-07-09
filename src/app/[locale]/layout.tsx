@@ -10,6 +10,10 @@ import '../globals.css';
 
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { CookieConsentProvider } from '@/components/cookie-consent/CookieConsentProvider';
+import CookieBanner from '@/components/cookie-consent/CookieBanner';
+import CookiePreferencesModal from '@/components/cookie-consent/CookiePreferencesModal';
+import ConsentScripts from '@/components/cookie-consent/ConsentScripts';
 import { locales, type Locale } from '@/i18n';
 
 export function generateStaticParams() {
@@ -69,11 +73,16 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <div className="flex min-h-screen flex-col">
-            <Navbar locale={locale as Locale} />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+          <CookieConsentProvider>
+            <div className="flex min-h-screen flex-col">
+              <Navbar locale={locale as Locale} />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <CookieBanner />
+            <CookiePreferencesModal />
+            <ConsentScripts />
+          </CookieConsentProvider>
         </NextIntlClientProvider>
       </body>
     </html>

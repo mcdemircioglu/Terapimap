@@ -37,6 +37,19 @@ export function buildTherapistSchema(
   const url = absUrl('/' + locale + '/psikolog/' + therapist.slug);
   const specialtyNames = therapist.specialties.map((s) => s.name);
 
+  const sameAs = [therapist.website_url, therapist.instagram_url].filter(
+    (u): u is string => typeof u === 'string' && u.trim() !== '',
+  );
+
+  const availableService = [
+    ...(therapist.is_online
+      ? [{ '@type': 'MedicalTherapy', name: 'Online Terapi', serviceType: 'online' }]
+      : []),
+    ...(therapist.is_in_person
+      ? [{ '@type': 'MedicalTherapy', name: 'Yüz Yüze Terapi', serviceType: 'in_person' }]
+      : []),
+  ];
+
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': ['Person', 'MedicalBusiness'],
@@ -48,16 +61,61 @@ export function buildTherapistSchema(
       addressCountry: 'TR',
       ...(therapist.district ? { addressRegion: therapist.district } : {}),
     },
+    areaServed: {
+      '@type': 'City',
+      name: therapist.city,
+    },
     ...(therapist.about ? { description: therapist.about } : {}),
     ...(therapist.title ? { jobTitle: therapist.title } : {}),
     ...(therapist.image_url ? { image: therapist.image_url } : {}),
     ...(specialtyNames.length
       ? { knowsAbout: specialtyNames, medicalSpecialty: specialtyNames }
       : {}),
+    ...(sameAs.length ? { sameAs } : {}),
+    ...(availableService.length ? { availableService } : {}),
     inLanguage: locale === 'tr' ? 'tr-TR' : 'en-US',
   };
 
   return schema;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ItemList — listing sayfalarındaki terapistler
+// ─────────────────────────────────────────────────────────────────────────────
+export function buildItemListSchema({
+  therapists,
+  locale,
+  listUrl,
+  cityName,
+}: {
+  therapists: ProfessionalWithSpecialties[];
+  locale: string;
+  listUrl: string;
+  cityName?: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    url: listUrl,
+    numberOfItems: therapists.length,
+    itemListElement: therapists.map((t, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Person',
+        name: t.name,
+        url: absUrl('/' + locale + '/psikolog/' + t.slug),
+        ...(t.title ? { jobTitle: t.title } : {}),
+        ...(t.image_url ? { image: t.image_url } : {}),
+        ...(cityName || t.city
+          ? { areaServed: { '@type': 'City', name: cityName ?? t.city } }
+          : {}),
+        ...(t.specialties.length
+          ? { knowsAbout: t.specialties.map((s) => s.name) }
+          : {}),
+      },
+    })),
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
