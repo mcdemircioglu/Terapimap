@@ -5,10 +5,10 @@
  */
 import { getTranslations } from 'next-intl/server';
 import { Card } from '@/components/ui/Card';
+import AppointmentModalButton from '@/components/therapist/AppointmentModalButton';
 import {
   CheckIcon,
   ExternalLinkIcon,
-  GlobeIcon,
   InstagramIcon,
   MapPinIcon,
   StethoscopeIcon,
@@ -22,7 +22,10 @@ type Props = {
 };
 
 export default async function MeetingInfoCard({ therapist, locale }: Props) {
-  const t = await getTranslations({ locale, namespace: 'detail' });
+  const [t, tLead] = await Promise.all([
+    getTranslations({ locale, namespace: 'detail' }),
+    getTranslations({ locale, namespace: 'lead' }),
+  ]);
 
   const sessionTypes = [
     ...(therapist.is_online
@@ -41,8 +44,6 @@ export default async function MeetingInfoCard({ therapist, locale }: Props) {
     facts.push({ label: t('price'), value: therapist.price_range });
   }
 
-  const hasLinks = Boolean(therapist.website_url || therapist.instagram_url);
-  if (sessionTypes.length === 0 && facts.length === 0 && !hasLinks) return null;
 
   return (
     <Card className="p-6 md:p-8">
@@ -90,22 +91,15 @@ export default async function MeetingInfoCard({ therapist, locale }: Props) {
         </dl>
       )}
 
-      {/* Website / Instagram */}
-      {hasLinks && (
-        <div className="mt-6 flex flex-col gap-3 border-t border-brand-100 pt-6 sm:flex-row">
-          {therapist.website_url && (
-            <a
-              href={therapist.website_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-brand-200 bg-white px-4 text-sm font-medium text-brand-800 transition-colors hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
-            >
-              <GlobeIcon className="h-4 w-4 text-brand-500" />
-              {t('visitWebsite')}
-              <ExternalLinkIcon className="h-3.5 w-3.5 text-brand-400" />
-            </a>
-          )}
-          {therapist.instagram_url && (
+      {/* Randevu talebi + Instagram */}
+      <div className="mt-6 flex flex-col gap-3 border-t border-brand-100 pt-6 sm:flex-row">
+        <AppointmentModalButton
+          professionalId={therapist.id}
+          label={t('appointmentCta')}
+          subtitle={tLead('subtitle')}
+          closeLabel={t('close')}
+        />
+        {therapist.instagram_url && (
             <a
               href={therapist.instagram_url}
               target="_blank"
@@ -116,9 +110,8 @@ export default async function MeetingInfoCard({ therapist, locale }: Props) {
               Instagram
               <ExternalLinkIcon className="h-3.5 w-3.5 text-brand-400" />
             </a>
-          )}
-        </div>
-      )}
+        )}
+      </div>
     </Card>
   );
 }

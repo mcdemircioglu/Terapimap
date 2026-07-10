@@ -16,6 +16,7 @@ import MeetingInfoCard from '@/components/therapist/MeetingInfoCard';
 import NearbyTherapistLinks from '@/components/therapist/NearbyTherapistLinks';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
+import { GlobeIcon } from '@/components/ui/icons';
 import Avatar from '@/components/ui/Avatar';
 import { getTherapistBySlug } from '@/lib/queries';
 import { getCitySlug } from '@/lib/cities';
@@ -199,8 +200,8 @@ export default async function PsikologDetailPage({
             {/* Yakındaki Terapistler — internal linking */}
             <NearbyTherapistLinks therapist={therapist} locale={locale} />
 
-            {/* Bu profil size mi ait? */}
-            <div className="px-1">
+            {/* Bu profil size mi ait? + website linki */}
+            <div className="flex flex-col items-start gap-2 px-1">
               <Link
                 href={`/profil-dogrula/${therapist.id}`}
                 className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-brand-600 transition-colors group"
@@ -210,6 +211,17 @@ export default async function PsikologDetailPage({
                 </svg>
                 Bu profil size mi ait? Profilinizi doğrulayın
               </Link>
+              {therapist.website_url && (
+                <a
+                  href={therapist.website_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-brand-600 transition-colors"
+                >
+                  <GlobeIcon className="w-4 h-4 flex-shrink-0" />
+                  {tDetail('visitWebsite')}
+                </a>
+              )}
             </div>
           </div>
 

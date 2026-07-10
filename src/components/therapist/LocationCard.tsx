@@ -18,12 +18,10 @@ import {
   ExternalLinkIcon,
   MapIcon,
   MapPinIcon,
-  NavigationIcon,
   VideoIcon,
 } from '@/components/ui/icons';
 import LocationMap from '@/components/therapist/LocationMap';
 import {
-  buildDirectionsUrl,
   buildEmbedUrl,
   getResolvedMapsData,
   hasDisplayableLocation,
@@ -65,9 +63,6 @@ export default async function LocationCard({ therapist, locale, resolvedMaps: pr
 
   const t = await getTranslations({ locale, namespace: 'detail' });
   const embedUrl = buildEmbedUrl(location, locale);
-  // Yol tarifi CTA'sı kullanıcıya orijinal (kısa) linki açar — Google'da
-  // işletme profiline gider; embed ise çözümlenmiş URL'den beslenir.
-  const directionsUrl = therapist.google_maps_url ?? buildDirectionsUrl(location);
   const areaLine = [therapist.district, therapist.city].filter(Boolean).join(', ');
 
   return (
@@ -137,19 +132,6 @@ export default async function LocationCard({ therapist, locale, resolvedMaps: pr
           {areaLine && <p className="text-sm text-brand-600">{areaLine}</p>}
         </address>
       </div>
-
-      {/* CTA — mobilde tam genişlik */}
-      {directionsUrl && (
-        <a
-          href={directionsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 text-base font-medium text-white shadow-soft transition-colors hover:bg-brand-700 active:bg-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 sm:w-auto"
-        >
-          <NavigationIcon className="h-[18px] w-[18px]" />
-          {t('directions')}
-        </a>
-      )}
     </Card>
   );
 }

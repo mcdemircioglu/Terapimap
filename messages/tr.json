@@ -91,7 +91,9 @@
     "inPersonTherapyHint": "Muayenehanede",
     "visitWebsite": "Websiteyi Ziyaret Et",
     "experienceYears": "{years} yıl",
-    "nearby": "Yakındaki Terapistler"
+    "nearby": "Yakındaki Terapistler",
+    "appointmentCta": "Randevu Talebi Oluştur",
+    "close": "Kapat"
   },
   "lead": {
     "title": "İletişime geç",

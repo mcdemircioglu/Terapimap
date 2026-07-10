@@ -28,6 +28,18 @@ export type MapLocation = {
 const LAT_LNG = String.raw`(-?\d{1,2}(?:\.\d+)?),\s*(-?\d{1,3}(?:\.\d+)?)`;
 
 /**
+ * Resmî Google Maps Embed API anahtarı (ücretsiz ve sınırsız kullanım).
+ * Tanımlıysa embed'ler place_id dahil her URL biçimi için kusursuz çalışır.
+ * Cloud Console'da HTTP referrer kısıtlaması ile korunmalıdır.
+ */
+const EMBED_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_EMBED_API_KEY;
+
+/** Türkiye sınır kutusu — HTML'den kazınan koordinatlar için akıl sağlığı testi. */
+export function isWithinTurkey(c: MapCoordinates): boolean {
+  return c.lat >= 35.5 && c.lat <= 42.5 && c.lng >= 25.5 && c.lng <= 45.0;
+}
+
+/**
  * Bir Google Maps URL'inden koordinat çıkarmayı dener.
  * Desteklenen biçimler: `!3d..!4d..`, `@lat,lng`, `?q|query|ll|destination=lat,lng`.
  * Kısaltılmış linklerde (maps.app.goo.gl) koordinat bulunamaz → null.
@@ -194,6 +206,10 @@ export async function resolveMapsData(url: string): Promise<ResolvedMapsData> {
   let coordinates: MapCoordinates | null = null;
   if (/google\.[a-z.]{2,10}\/maps/i.test(expanded)) {
     coordinates = await fetchCoordinatesFromPage(expanded);
+    // Google, sayfa haritasını istek yapan sunucunun IP konumuna göre
+    // ortalayabilir (ör. Vercel iad1 → Virginia). Türkiye dışına düşen
+    // kazıntı koordinatlar güvenilmezdir → reddet.
+    if (coordinates && !isWithinTurkey(coordinates)) coordinates = null;
   }
   if (process.env.NODE_ENV !== 'production') {
     console.log('[maps] resolveMapsData:', url, '→', expanded, coordinates);
@@ -205,7 +221,7 @@ export async function resolveMapsData(url: string): Promise<ResolvedMapsData> {
  * resolveMapsData'nın cache'li hâli — sonuç (URL + koordinat) 30 gün saklanır,
  * büyük HTML gövdesi asla cache'e girmez. Sayfalar bunu kullanmalıdır.
  */
-export const getResolvedMapsData = unstable_cache(resolveMapsData, ['maps-resolve'], {
+export const getResolvedMapsData = unstable_cache(resolveMapsData, ['maps-resolve-v2'], {
   revalidate: 60 * 60 * 24 * 30,
 });
 
@@ -238,6 +254,23 @@ function buildAddressQuery(location: MapLocation): string | null {
  * Hiçbiri yoksa null döner → arayüz "Google Haritalar'da Görüntüle" düzenine düşer.
  */
 export function buildEmbedUrl(location: MapLocation, hl: string = 'tr'): string | null {
+  const placeId = location.googleMapsUrl ? extractPlaceIdFromUrl(location.googleMapsUrl) : null;
+
+  // ── Resmî Embed API (anahtar varsa) — place_id dahil her biçim desteklenir ──
+  if (EMBED_API_KEY) {
+    const base = `https://www.google.com/maps/embed/v1/place?key=${EMBED_API_KEY}&language=${hl}&region=TR&zoom=16&q=`;
+    if (placeId) return base + encodeURIComponent('place_id:' + placeId);
+    const apiCoords = resolveCoordinates(location);
+    if (apiCoords) return base + `${apiCoords.lat},${apiCoords.lng}`;
+    const apiName = location.googleMapsUrl ? extractPlaceNameFromUrl(location.googleMapsUrl) : null;
+    const apiQuery = apiName
+      ? [apiName, location.district, location.city].filter(Boolean).join(', ')
+      : buildAddressQuery(location);
+    if (apiQuery) return base + encodeURIComponent(apiQuery);
+    return null;
+  }
+
+  // ── Anahtarsız (keyless) yol ──
   const coords = resolveCoordinates(location);
   if (coords) {
     return `https://maps.google.com/maps?q=${coords.lat},${coords.lng}&z=16&hl=${hl}&output=embed`;

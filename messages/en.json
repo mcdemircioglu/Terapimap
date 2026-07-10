@@ -91,7 +91,9 @@
     "inPersonTherapyHint": "At the practice",
     "visitWebsite": "Visit Website",
     "experienceYears": "{years} years",
-    "nearby": "Nearby Therapists"
+    "nearby": "Nearby Therapists",
+    "appointmentCta": "Request an Appointment",
+    "close": "Close"
   },
   "lead": {
     "title": "Get in touch",

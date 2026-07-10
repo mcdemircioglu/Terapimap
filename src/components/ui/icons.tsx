@@ -125,6 +125,30 @@ export function InstagramIcon(props: IconProps) {
   );
 }
 
+export function CalendarPlusIcon(props: IconProps) {
+  return base(
+    props,
+    <>
+      <path d="M16 19h6" />
+      <path d="M19 16v6" />
+      <path d="M21 12.598V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h8.5" />
+      <path d="M3 10h18" />
+      <path d="M8 2v4" />
+      <path d="M16 2v4" />
+    </>,
+  );
+}
+
+export function XIcon(props: IconProps) {
+  return base(
+    props,
+    <>
+      <path d="M18 6 6 18" />
+      <path d="m6 6 12 12" />
+    </>,
+  );
+}
+
 export function MapIcon(props: IconProps) {
   return base(
     props,
