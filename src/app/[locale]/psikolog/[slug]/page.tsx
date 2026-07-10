@@ -19,6 +19,7 @@ import { Card } from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
 import { getTherapistBySlug } from '@/lib/queries';
 import { getCitySlug } from '@/lib/cities';
+import { getResolvedMapsData } from '@/lib/maps';
 import { absUrl, buildTherapistSchema, buildBreadcrumbSchema } from '@/lib/schema';
 
 export async function generateMetadata({
@@ -82,13 +83,21 @@ export default async function PsikologDetailPage({
   const citySlug = getCitySlug(therapist.city) ?? therapist.city.toLowerCase();
   const pageUrl = absUrl('/' + locale + '/psikolog/' + therapist.slug);
 
+  // google_maps_url'i bir kez çözümle (kısa link genişletme + place_id
+  // sayfasından koordinat kazıma; sonuç 30 gün cache'lenir) — hem JSON-LD
+  // geo hem de Konum kartındaki embed bundan beslenir.
+  const resolvedMaps =
+    therapist.is_in_person && therapist.google_maps_url
+      ? await getResolvedMapsData(therapist.google_maps_url)
+      : null;
+
   const breadcrumbLabel =
     locale === 'tr'
       ? { home: 'Ana Sayfa', therapists: 'Terapistler' }
       : { home: 'Home', therapists: 'Therapists' };
 
   const schemas = [
-    buildTherapistSchema(therapist, locale),
+    buildTherapistSchema(therapist, locale, resolvedMaps),
     buildBreadcrumbSchema([
       { name: breadcrumbLabel.home, url: absUrl('/' + locale) },
       { name: breadcrumbLabel.therapists, url: absUrl('/' + locale + '/therapists') },
@@ -179,11 +188,10 @@ export default async function PsikologDetailPage({
                   </p>
                 </section>
               )}
-
             </Card>
 
             {/* 📍 Konum — sadece yüz yüze görüşen uzmanlar için */}
-            <LocationCard therapist={therapist} locale={locale} />
+            <LocationCard therapist={therapist} locale={locale} resolvedMaps={resolvedMaps} />
 
             {/* 🩺 Görüşme Bilgileri */}
             <MeetingInfoCard therapist={therapist} locale={locale} />

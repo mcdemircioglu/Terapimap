@@ -25,33 +25,49 @@ import LocationMap from '@/components/therapist/LocationMap';
 import {
   buildDirectionsUrl,
   buildEmbedUrl,
+  getResolvedMapsData,
   hasDisplayableLocation,
   type MapLocation,
+  type ResolvedMapsData,
 } from '@/lib/maps';
 import type { ProfessionalWithSpecialties } from '@/types/database';
 
 type Props = {
   therapist: ProfessionalWithSpecialties;
   locale: string;
+  /** Sayfa zaten çözümlediyse tekrar fetch edilmez. */
+  resolvedMaps?: ResolvedMapsData | null;
 };
 
-export default async function LocationCard({ therapist, locale }: Props) {
+export default async function LocationCard({ therapist, locale, resolvedMaps: pre }: Props) {
   if (!therapist.is_in_person) return null;
+
+  // Kısa link / place_id linkleri koordinat içermez → sunucuda çözümlenir
+  // (30 gün cache'li), böylece embed her zaman pin gösterebilir.
+  const resolved =
+    pre !== undefined
+      ? pre
+      : therapist.google_maps_url
+      ? await getResolvedMapsData(therapist.google_maps_url)
+      : null;
 
   const location: MapLocation = {
     city: therapist.city,
     district: therapist.district,
     address: therapist.address,
     clinicName: therapist.clinic_name,
-    googleMapsUrl: therapist.google_maps_url,
-    // İleride DB'ye lat/lng eklendiğinde tek satır: coordinates: { lat, lng }
+    googleMapsUrl: resolved?.url ?? therapist.google_maps_url,
+    // İleride DB'ye lat/lng eklendiğinde burası DB'den beslenir
+    coordinates: resolved?.coordinates ?? null,
   };
 
   if (!hasDisplayableLocation(location)) return null;
 
   const t = await getTranslations({ locale, namespace: 'detail' });
   const embedUrl = buildEmbedUrl(location, locale);
-  const directionsUrl = buildDirectionsUrl(location);
+  // Yol tarifi CTA'sı kullanıcıya orijinal (kısa) linki açar — Google'da
+  // işletme profiline gider; embed ise çözümlenmiş URL'den beslenir.
+  const directionsUrl = therapist.google_maps_url ?? buildDirectionsUrl(location);
   const areaLine = [therapist.district, therapist.city].filter(Boolean).join(', ');
 
   return (

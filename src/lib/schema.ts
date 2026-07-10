@@ -34,6 +34,8 @@ export function buildBreadcrumbSchema(
 export function buildTherapistSchema(
   therapist: ProfessionalWithSpecialties,
   locale: string,
+  /** Sunucuda çözümlenmiş harita verisi (URL + koordinat) — geo alanını besler. */
+  resolvedMaps?: { url: string; coordinates: { lat: number; lng: number } | null } | null,
 ) {
   const url = absUrl('/' + locale + '/psikolog/' + therapist.slug);
   const specialtyNames = therapist.specialties.map((s) => s.name);
@@ -54,9 +56,10 @@ export function buildTherapistSchema(
   // Fiziksel konum verisi yalnızca yüz yüze görüşen uzmanlar için yayınlanır.
   const physical = therapist.is_in_person;
   const coords = physical
-    ? resolveCoordinates({
+    ? resolvedMaps?.coordinates ??
+      resolveCoordinates({
         city: therapist.city,
-        googleMapsUrl: therapist.google_maps_url,
+        googleMapsUrl: resolvedMaps?.url ?? therapist.google_maps_url,
         // İleride DB'ye lat/lng eklendiğinde: coordinates: { lat, lng }
       })
     : null;
