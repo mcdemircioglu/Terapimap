@@ -17,7 +17,7 @@ export const PROF_TYPE_TR: Record<ProfessionalType, string> = {
   clinical_psychologist: 'Klinik Psikolog',
   psychiatrist:          'Psikiyatrist',
   family_therapist:      'Aile Terapisti',
-  counselor:             'Psikolojik Danisман',
+  counselor:             'Psikolojik Danışman',
 };
 
 export const PROF_TYPE_EN: Record<ProfessionalType, string> = {

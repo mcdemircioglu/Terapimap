@@ -20,7 +20,7 @@ export const PROFESSIONAL_TYPE_LABELS: Record<ProfessionalType, string> = {
   clinical_psychologist: "Klinik Psikolog",
   psychiatrist: "Psikiyatrist",
   family_therapist: "Aile Terapisti",
-  counselor: "Psikolojik Danisман",
+  counselor: "Psikolojik Danışman",
 };
 
 export type ProfessionalStatus = 'pending' | 'approved' | 'featured' | 'rejected';

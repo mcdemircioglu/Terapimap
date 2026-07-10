@@ -76,7 +76,22 @@
     "price": "Session fee",
     "experience": "Experience",
     "contact": "Get in touch",
-    "contactCta": "Message this therapist"
+    "contactCta": "Message this therapist",
+    "location": "Location",
+    "showMap": "Show map",
+    "mapTitle": "{name} — location map",
+    "viewOnMaps": "View on Google Maps",
+    "directions": "Get Directions on Google Maps",
+    "inPersonBadge": "In-Person Sessions",
+    "onlineBadge": "Online Sessions",
+    "meetingInfo": "Session Information",
+    "onlineTherapy": "Online Therapy",
+    "inPersonTherapy": "In-Person Therapy",
+    "onlineTherapyHint": "Via video call",
+    "inPersonTherapyHint": "At the practice",
+    "visitWebsite": "Visit Website",
+    "experienceYears": "{years} years",
+    "nearby": "Nearby Therapists"
   },
   "lead": {
     "title": "Get in touch",

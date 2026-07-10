@@ -76,7 +76,22 @@
     "price": "Seans ücreti",
     "experience": "Deneyim",
     "contact": "İletişime geç",
-    "contactCta": "Bu terapiste mesaj gönder"
+    "contactCta": "Bu terapiste mesaj gönder",
+    "location": "Konum",
+    "showMap": "Haritayı Göster",
+    "mapTitle": "{name} — konum haritası",
+    "viewOnMaps": "Google Haritalar'da Görüntüle",
+    "directions": "Google Haritalar'da Yol Tarifi Al",
+    "inPersonBadge": "Muayenehanede Görüşme",
+    "onlineBadge": "Online Görüşme",
+    "meetingInfo": "Görüşme Bilgileri",
+    "onlineTherapy": "Online Terapi",
+    "inPersonTherapy": "Yüz Yüze Terapi",
+    "onlineTherapyHint": "Video görüşme ile",
+    "inPersonTherapyHint": "Muayenehanede",
+    "visitWebsite": "Websiteyi Ziyaret Et",
+    "experienceYears": "{years} yıl",
+    "nearby": "Yakındaki Terapistler"
   },
   "lead": {
     "title": "İletişime geç",

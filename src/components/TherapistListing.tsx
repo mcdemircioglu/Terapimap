@@ -109,6 +109,11 @@ export default async function TherapistListing({
     title = t('titleCitySpecialty', { city: cityName, specialty: specialtyName });
   } else if (cityName) {
     title = t('titleCity', { city: cityName });
+  } else if (specialtyName) {
+    title =
+      locale === 'tr'
+        ? `${specialtyName} Terapistleri`
+        : `${specialtyName} Therapists`;
   } else {
     title = t('titleAll');
   }

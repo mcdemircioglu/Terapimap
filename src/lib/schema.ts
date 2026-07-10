@@ -1,4 +1,5 @@
 import type { ProfessionalWithSpecialties } from '@/types/database';
+import { resolveCoordinates } from './maps';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Base URL
@@ -50,6 +51,16 @@ export function buildTherapistSchema(
       : []),
   ];
 
+  // Fiziksel konum verisi yalnızca yüz yüze görüşen uzmanlar için yayınlanır.
+  const physical = therapist.is_in_person;
+  const coords = physical
+    ? resolveCoordinates({
+        city: therapist.city,
+        googleMapsUrl: therapist.google_maps_url,
+        // İleride DB'ye lat/lng eklendiğinde: coordinates: { lat, lng }
+      })
+    : null;
+
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': ['Person', 'MedicalBusiness'],
@@ -57,10 +68,25 @@ export function buildTherapistSchema(
     url,
     address: {
       '@type': 'PostalAddress',
-      addressLocality: therapist.city,
+      // TR idari yapısı: il → addressRegion, ilçe → addressLocality
+      addressLocality: therapist.district ?? therapist.city,
+      addressRegion: therapist.city,
       addressCountry: 'TR',
-      ...(therapist.district ? { addressRegion: therapist.district } : {}),
+      ...(physical && therapist.address ? { streetAddress: therapist.address } : {}),
     },
+    ...(coords
+      ? {
+          geo: {
+            '@type': 'GeoCoordinates',
+            latitude: coords.lat,
+            longitude: coords.lng,
+          },
+        }
+      : {}),
+    ...(physical && therapist.google_maps_url ? { hasMap: therapist.google_maps_url } : {}),
+    ...(physical && therapist.clinic_name
+      ? { location: { '@type': 'Place', name: therapist.clinic_name } }
+      : {}),
     areaServed: {
       '@type': 'City',
       name: therapist.city,
