@@ -105,3 +105,60 @@ export type VerificationRequest = {
 export type VerificationRequestWithProfessional = VerificationRequest & {
   professional: Professional | null;
 };
+
+// ---------------------------------------------------------------------
+// Psikoloji Rehberi — articles
+// ---------------------------------------------------------------------
+
+export const ARTICLE_CATEGORIES = [
+  'terapi-rehberi',
+  'psikolojik-konular',
+  'terapi-yontemleri',
+  'cocuk-ve-ergen',
+  'iliskiler',
+  'genel-psikoloji',
+] as const;
+
+export type ArticleCategory = (typeof ARTICLE_CATEGORIES)[number];
+
+export const ARTICLE_CATEGORY_LABELS: Record<ArticleCategory, string> = {
+  'terapi-rehberi': 'Terapi Rehberi',
+  'psikolojik-konular': 'Psikolojik Konular',
+  'terapi-yontemleri': 'Terapi Yöntemleri',
+  'cocuk-ve-ergen': 'Çocuk ve Ergen',
+  'iliskiler': 'İlişkiler',
+  'genel-psikoloji': 'Genel Psikoloji',
+};
+
+export function isArticleCategory(value: string): value is ArticleCategory {
+  return (ARTICLE_CATEGORIES as readonly string[]).includes(value);
+}
+
+export type ArticleStatus = 'draft' | 'published';
+
+export type Article = {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  /** Markdown formatında içerik gövdesi. */
+  content: string;
+  category: ArticleCategory;
+  cover_image_url: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  status: ArticleStatus;
+  is_featured: boolean;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Liste kartları için — content gövdesi fetch edilmez. */
+export type ArticleListItem = Pick<
+  Article,
+  'id' | 'title' | 'slug' | 'excerpt' | 'category' | 'cover_image_url' | 'is_featured' | 'published_at'
+> & {
+  /** PostgREST computed column (reading_minutes fonksiyonu). */
+  reading_minutes: number;
+};

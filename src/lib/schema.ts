@@ -193,3 +193,41 @@ export function buildFaqSchema(faqs: { q: string; a: string }[]) {
     })),
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Article — Psikoloji Rehberi içerik sayfaları
+// Yalnızca gerçekten var olan veriler kullanılır; yazar/rating/review üretilmez.
+// ─────────────────────────────────────────────────────────────────────────────
+export function buildArticleSchema(
+  article: {
+    title: string;
+    slug: string;
+    excerpt: string;
+    cover_image_url: string | null;
+    published_at: string | null;
+    updated_at: string;
+    category: string;
+  },
+  locale: string,
+  categoryLabel: string,
+) {
+  const url = absUrl('/' + locale + '/psikoloji-rehberi/' + article.slug);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: article.title,
+    description: article.excerpt,
+    url,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+    ...(article.cover_image_url ? { image: article.cover_image_url } : {}),
+    ...(article.published_at ? { datePublished: article.published_at } : {}),
+    dateModified: article.updated_at,
+    articleSection: categoryLabel,
+    inLanguage: locale === 'tr' ? 'tr-TR' : 'en-US',
+    publisher: {
+      '@type': 'Organization',
+      name: 'Terapimap',
+      url: BASE,
+    },
+  };
+}

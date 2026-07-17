@@ -5,6 +5,7 @@ import SearchBar from '@/components/SearchBar';
 import TherapistGrid from '@/components/TherapistGrid';
 import { Button } from '@/components/ui/Button';
 import { getFeaturedTherapists, getSpecialties } from '@/lib/queries';
+import FeaturedArticles from '@/components/guide/FeaturedArticles';
 
 export default async function HomePage({
   params: { locale },
@@ -91,6 +92,9 @@ export default async function HomePage({
           </div>
         </Container>
       </section>
+
+      {/* Psikoloji Rehberi — öne çıkan içerikler (içerik yoksa render edilmez) */}
+      <FeaturedArticles locale={locale} />
 
       {/* CTA */}
       <section>

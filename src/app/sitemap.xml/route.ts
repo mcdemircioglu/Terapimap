@@ -1,6 +1,7 @@
 import { CITIES, getCitySlug } from "@/lib/cities";
 import { getKnownSeoSlugs } from "@/lib/seo-slugs";
 import { getTherapists, getSpecialties } from "@/lib/queries";
+import { getArticlesForSitemap } from "@/lib/articles";
 import { getProfessionalUrlSegment } from "@/lib/utils";
 import { locales } from "@/i18n";
 
@@ -45,9 +46,10 @@ function item(
 }
 
 export async function GET() {
-  const [therapists, specialties] = await Promise.all([
+  const [therapists, specialties, articles] = await Promise.all([
     getTherapists(),
     getSpecialties(),
+    getArticlesForSitemap(),
   ]);
 
   // Onaylı terapist sayıları: yalnızca en az 1 uzman içeren sayfalar
@@ -111,6 +113,19 @@ export async function GET() {
       const typeSegment = getProfessionalUrlSegment(therapist.professional_type);
       items.push(
         item(`/${locale}/${typeSegment}/${therapist.slug}`, "monthly", 0.7, lastmod)
+      );
+    }
+  }
+
+  // Psikoloji Rehberi — yalnızca yayınlanmış içerikler (draft asla girmez)
+  for (const locale of locales) {
+    items.push(item(`/${locale}/psikoloji-rehberi`, "weekly", 0.8));
+  }
+  for (const article of articles) {
+    const lastmod = article.updated_at ? new Date(article.updated_at) : new Date();
+    for (const locale of locales) {
+      items.push(
+        item(`/${locale}/psikoloji-rehberi/${article.slug}`, "monthly", 0.7, lastmod)
       );
     }
   }

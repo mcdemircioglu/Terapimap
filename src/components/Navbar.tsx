@@ -11,11 +11,13 @@ export default async function Navbar({ locale }: { locale: Locale }) {
 
   const home = `/${locale}`;
   const therapists = `/${locale}/therapists`;
+  const guide = `/${locale}/psikoloji-rehberi`;
   const about = `/${locale}/about`;
 
   const navItems = [
     { href: home,        label: t('home') },
     { href: therapists,  label: t('therapists') },
+    { href: guide,       label: t('guide') },
     { href: about,       label: t('about') },
   ];
 
@@ -36,6 +38,7 @@ export default async function Navbar({ locale }: { locale: Locale }) {
         <nav className="hidden items-center gap-6 text-sm md:flex">
           <Link href={home}       className="text-brand-700 hover:text-brand-900">{t('home')}</Link>
           <Link href={therapists} className="text-brand-700 hover:text-brand-900">{t('therapists')}</Link>
+          <Link href={guide}      className="text-brand-700 hover:text-brand-900">{t('guide')}</Link>
           <Link href={about}      className="text-brand-700 hover:text-brand-900">{t('about')}</Link>
         </nav>
 

@@ -4,6 +4,7 @@ import ManageCookiesLink from './cookie-consent/ManageCookiesLink';
 
 export default function Footer() {
   const t = useTranslations('footer');
+  const tNav = useTranslations('nav');
   const tMeta = useTranslations('meta');
   const locale = useLocale();
   const year = new Date().getFullYear();
@@ -21,6 +22,7 @@ export default function Footer() {
             </p>
           </div>
           <ul className="grid grid-cols-1 gap-2 text-sm text-brand-700 sm:grid-cols-2 sm:gap-x-8">
+            <li><a href={`/${locale}/psikoloji-rehberi`} className="hover:text-brand-900">{tNav('guide')}</a></li>
             <li><a href={`/${locale}/iletisim`} className="hover:text-brand-900">{t('contact')}</a></li>
             <li><a href={`/${locale}/kvkk-aydinlatma-metni`} className="hover:text-brand-900">{t('kvkk')}</a></li>
             <li><a href={`/${locale}/gizlilik-politikasi`} className="hover:text-brand-900">{t('privacy')}</a></li>
