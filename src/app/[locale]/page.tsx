@@ -69,8 +69,11 @@ export default async function HomePage({
         </Container>
       </section>
 
+      {/* Psikoloji Rehberi — öne çıkan içerikler (içerik yoksa render edilmez) */}
+      <FeaturedArticles locale={locale} />
+
       {/* Value props */}
-      <section className="bg-brand-50/40">
+      <section>
         <Container className="py-10 md:py-16">
           <h2 className="text-center text-2xl font-semibold text-brand-900 md:text-3xl">
             {t('valueTitle')}
@@ -93,8 +96,6 @@ export default async function HomePage({
         </Container>
       </section>
 
-      {/* Psikoloji Rehberi — öne çıkan içerikler (içerik yoksa render edilmez) */}
-      <FeaturedArticles locale={locale} />
 
       {/* CTA */}
       <section>
