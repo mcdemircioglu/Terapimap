@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import TherapistGrid from '@/components/TherapistGrid';
+import SpecialtyLocationFilter from '@/components/seo/SpecialtyLocationFilter';
 import JsonLd from '@/components/JsonLd';
 import {
   parseSeoSlug,
@@ -103,6 +104,8 @@ export default async function SeoLandingPage({
   let content: Content;
   let therapists: Awaited<ReturnType<typeof getTherapists>>;
   let relatedLinks: { href: string; label: string }[] = [];
+  // Uzmanlık sayfalarında şehir/ilçe seçici için
+  let filterSpecialtySlug: string | null = null;
 
   if (page.kind === 'city-proftype') {
     content = getCityProfTypeContent(page.cityName, page.profType, locale);
@@ -150,6 +153,7 @@ export default async function SeoLandingPage({
 
     content = getSpecialtyContent(specialty.name, locale);
     therapists = await getTherapists({ specialtySlug: specialty.slug });
+    filterSpecialtySlug = specialty.slug;
 
     relatedLinks = [
       {
@@ -217,6 +221,13 @@ export default async function SeoLandingPage({
       {/* ── Professionals grid ── */}
       <section>
         <Container className="py-10 md:py-14">
+          {/* Şehir/ilçe seçici — yalnızca uzmanlık sayfalarında */}
+          {filterSpecialtySlug && (
+            <div className="mb-6 rounded-2xl border border-brand-100 bg-brand-50/40 p-4 md:p-5">
+              <SpecialtyLocationFilter locale={locale} specialtySlug={filterSpecialtySlug} />
+            </div>
+          )}
+
           <div className="mb-6 flex items-center justify-between gap-4">
             <p className="text-sm text-brand-600">{countLabel}</p>
             <Link
