@@ -1,8 +1,12 @@
 -- =====================================================================
--- Psikoloji Rehberi — başlangıç içerik seti (16 makale)
+-- Psikoloji Rehberi — başlangıç içerik seti (16 makale) — v2
+-- Değişiklik: makale içi linkler uzmanlık landing sayfalarına yönlendirildi
+-- (örn. anksiyete makalesi → /tr/anksiyete, çift terapisi → /tr/cift-terapisi).
+--
 -- Supabase SQL Editor'de çalıştırın.
--- Ön koşul: articles_migration.sql çalıştırılmış olmalı.
--- Not: 'on conflict (slug) do nothing' sayesinde tekrar çalıştırmak güvenlidir.
+-- Daha önce v1'i çalıştırdıysanız sorun değil: on conflict bloğu mevcut
+-- kayıtların içerik ve meta alanlarını GÜNCELLER (admin'de elle düzenleme
+-- yaptıysanız o alanlar bu içerikle değişir).
 -- =====================================================================
 
 insert into public.articles
@@ -65,7 +69,7 @@ Terapinin etkinliğini belirleyen en güçlü faktörlerden biri, terapist ile d
   'İlk terapi seansı nasıl geçer? Tanışma, değerlendirme, hedef belirleme ve sık sorulan sorularla adım adım ilk görüşme rehberi.',
   'published',
   false,
-  '2026-07-01 01:11:30+00'
+  '2026-07-01 02:21:27+00'
 ),(
   'Terapi Ücretleri 2026: Seans Fiyatları Neye Göre Belirlenir?',
   'terapi-ucretleri-2026',
@@ -109,7 +113,7 @@ Terapi genellikle haftada bir seans düzeninde ilerler. Bütçe planlaması yapa
   '2026''da terapi seans ücretleri ne kadar? Psikolog fiyatlarını etkileyen faktörler, online-yüz yüze farkı ve bütçenize uygun terapist bulma rehberi.',
   'published',
   false,
-  '2026-07-03 01:11:30+00'
+  '2026-07-03 02:21:27+00'
 ),(
   'Doğru Terapisti Nasıl Seçersiniz? 8 Pratik Kriter',
   'dogru-terapisti-nasil-secersiniz',
@@ -169,7 +173,7 @@ Profesyonel bir terapist gizliliği korur, kesin çözüm/garanti vaat etmez, se
   'Doğru terapisti nasıl seçersiniz? Unvan, uzmanlık alanı, terapi yaklaşımı ve terapötik uyum dahil 8 pratik kritere göre terapist seçme rehberi.',
   'published',
   false,
-  '2026-07-04 01:11:30+00'
+  '2026-07-04 02:21:27+00'
 ),(
   'Psikolog, Psikiyatrist, Klinik Psikolog: Aradaki Fark Nedir?',
   'psikolog-psikiyatrist-klinik-psikolog-farki',
@@ -218,7 +222,7 @@ Emin değilseniz şu pratik kuralı kullanabilirsiniz: belirtiler bedensel ve ş
   'Psikolog, psikiyatrist, klinik psikolog ve psikolojik danışman arasındaki farklar neler? Kim ilaç yazar, kime hangi durumda gidilir? Net rehber.',
   'published',
   false,
-  '2026-07-05 01:11:30+00'
+  '2026-07-05 02:21:27+00'
 ),(
   'Terapi Ne Kadar Sürer? Seans Sıklığı ve Süreç Beklentileri',
   'terapi-ne-kadar-surer',
@@ -266,7 +270,7 @@ Sürecin uzunluğu ne olursa olsun, başlamak en önemli adımdır. [Terapimap''
   'Terapi kaç seans sürer? Seans sıklığı, sürecin aşamaları, süreyi etkileyen faktörler ve terapinin ne zaman biteceğine dair gerçekçi bir rehber.',
   'published',
   false,
-  '2026-07-06 01:11:30+00'
+  '2026-07-06 02:21:27+00'
 ),(
   'Online Terapi Etkili mi? Araştırmalar Ne Diyor?',
   'online-terapi-etkili-mi',
@@ -309,7 +313,7 @@ Online terapi, doğru koşullar sağlandığında yüz yüze terapinin güçlü 
   'Online terapi ne kadar etkili? Araştırma bulguları, avantajlar, sınırlamalar ve verimli bir online terapi süreci için pratik öneriler.',
   'published',
   false,
-  '2026-07-07 01:11:30+00'
+  '2026-07-07 02:21:27+00'
 ),(
   'Anksiyete (Kaygı) Bozukluğu Nedir? Belirtileri ve Başa Çıkma Yolları',
   'anksiyete-bozuklugu-nedir',
@@ -351,13 +355,13 @@ Günlük yaşamda destekleyici alışkanlıklar:
 
 ## Ne Zaman Profesyonel Destek Almalısınız?
 
-Kaygı birkaç aydır sürüyorsa, yaşam alanlarınızı daraltıyorsa veya bedensel belirtiler yoğunsa bir uzmana başvurmak için beklemenize gerek yok. Kaygı bozuklukları, tedaviye en iyi yanıt veren psikolojik durumlar arasındadır. [Kaygı alanında çalışan terapistleri Terapimap''te inceleyebilirsiniz](/tr/terapistler).',
+Kaygı birkaç aydır sürüyorsa, yaşam alanlarınızı daraltıyorsa veya bedensel belirtiler yoğunsa bir uzmana başvurmak için beklemenize gerek yok. Kaygı bozuklukları, tedaviye en iyi yanıt veren psikolojik durumlar arasındadır. [Kaygı alanında çalışan terapistleri Terapimap''te inceleyebilirsiniz](/tr/anksiyete).',
   'psikolojik-konular',
   'Anksiyete (Kaygı) Bozukluğu: Belirtiler ve Tedavi | Terapimap',
   'Anksiyete bozukluğu nedir? Yaygın kaygı, sosyal kaygı ve diğer türlerin belirtileri, günlük hayata etkileri ve terapiyle başa çıkma yolları.',
   'published',
   true,
-  '2026-07-08 01:11:30+00'
+  '2026-07-08 02:21:27+00'
 ),(
   'Depresyon Belirtileri: Ne Zaman Profesyonel Destek Almalısınız?',
   'depresyon-belirtileri',
@@ -404,7 +408,7 @@ Evet. Depresyon, hakkında en çok araştırma yapılmış ve tedavisi en iyi ta
 1. Tek ve küçük bir günlük hedef belirleyin (duş almak, 10 dakika yürümek) — depresyonda küçük adımlar büyüktür.
 2. Güvendiğiniz bir kişiye nasıl hissettiğinizi anlatın; yük değil, bağ kurarsınız.
 3. Uyku saatlerinizi sabitlemeye çalışın.
-4. Ve en önemlisi: profesyonel destek için ilk adımı atın. [Depresyon alanında çalışan uzmanları Terapimap''te bulabilirsiniz](/tr/terapistler).
+4. Ve en önemlisi: profesyonel destek için ilk adımı atın. [Depresyon alanında çalışan uzmanları Terapimap''te bulabilirsiniz](/tr/depresyon).
 
 Depresyon, içinden tek başına "silkinip çıkılması" gereken bir durum değildir. Destek istemek güçsüzlük değil; iyileşmenin ilk adımıdır.',
   'psikolojik-konular',
@@ -412,7 +416,7 @@ Depresyon, içinden tek başına "silkinip çıkılması" gereken bir durum değ
   'Depresyon belirtileri nelerdir? Üzüntüden farkı, duygusal ve bedensel işaretler, ne zaman uzmana başvurulmalı? Kapsamlı depresyon rehberi.',
   'published',
   true,
-  '2026-07-09 01:11:30+00'
+  '2026-07-09 02:21:27+00'
 ),(
   'Panik Atak Anında Ne Yapmalı? Panik Bozukluk Rehberi',
   'panik-atak-aninda-ne-yapmali',
@@ -445,13 +449,13 @@ Panik bozukluk, psikoterapiye **en iyi yanıt veren** durumlardan biridir. Bili�
 
 ## Yaşamınızı Geri Alın
 
-Panik nedeniyle vazgeçtiğiniz her alan geri kazanılabilir. [Kaygı ve panik bozukluk alanında çalışan terapistleri Terapimap''te inceleyin](/tr/terapistler) — çoğu danışan, doğru destekle birkaç ay içinde belirgin özgürleşme yaşar.',
+Panik nedeniyle vazgeçtiğiniz her alan geri kazanılabilir. [Kaygı ve panik bozukluk alanında çalışan terapistleri Terapimap''te inceleyin](/tr/anksiyete) — çoğu danışan, doğru destekle birkaç ay içinde belirgin özgürleşme yaşar.',
   'psikolojik-konular',
   'Panik Atak Anında Ne Yapmalı? | Terapimap',
   'Panik atak belirtileri neler, atak anında ne yapmalı? Nefes teknikleri, topraklama yöntemi ve panik bozukluk tedavisi hakkında kapsamlı rehber.',
   'published',
   true,
-  '2026-07-10 01:11:30+00'
+  '2026-07-10 02:21:27+00'
 ),(
   'Bilişsel Davranışçı Terapi (BDT) Nedir, Nasıl İşler?',
   'bilissel-davranisci-terapi-bdt-nedir',
@@ -495,13 +499,13 @@ Somut hedefleri olan, "neden böyleyim"den çok "bunu nasıl değiştiririm" sor
 
 ## BDT ile Çalışan Bir Uzman Bulun
 
-[Terapimap''te](/tr/terapistler) bilişsel davranışçı terapi ile çalışan uzmanları inceleyebilir, uzmanlık alanlarına ve görüşme türüne göre filtreleyebilirsiniz.',
+[Terapimap''te](/tr/bilissel-davranisci-terapi-bdt) bilişsel davranışçı terapi ile çalışan uzmanları inceleyebilir, uzmanlık alanlarına ve görüşme türüne göre filtreleyebilirsiniz.',
   'terapi-yontemleri',
   'Bilişsel Davranışçı Terapi (BDT) Nedir? | Terapimap',
   'Bilişsel Davranışçı Terapi (BDT) nasıl işler, hangi sorunlarda etkilidir, seanslar nasıl geçer? Kanıta dayalı BDT hakkında kapsamlı rehber.',
   'published',
   false,
-  '2026-07-11 01:11:30+00'
+  '2026-07-11 02:21:27+00'
 ),(
   'EMDR Terapisi Nedir? Travma Tedavisinde Nasıl Kullanılır?',
   'emdr-terapisi-nedir',
@@ -543,13 +547,13 @@ Tek ve yetişkinlikte yaşanmış bir travmada görece kısa sürede (birkaç se
 
 ## Önemli: Eğitimli Uzman Şart
 
-EMDR, yalnızca akredite EMDR eğitimini tamamlamış ruh sağlığı uzmanlarınca uygulanmalıdır. [Terapimap''te](/tr/terapistler) travma ve EMDR alanında çalışan uzmanları inceleyebilir, profillerinden eğitim bilgilerine ulaşabilirsiniz.',
+EMDR, yalnızca akredite EMDR eğitimini tamamlamış ruh sağlığı uzmanlarınca uygulanmalıdır. [Terapimap''te](/tr/emdr) travma ve EMDR alanında çalışan uzmanları inceleyebilir, profillerinden eğitim bilgilerine ulaşabilirsiniz.',
   'terapi-yontemleri',
   'EMDR Terapisi Nedir, Nasıl İşler? | Terapimap',
   'EMDR terapisi nedir? Göz hareketleriyle duyarsızlaştırma yöntemi travmada nasıl çalışır, seanslar nasıl ilerler, kimler için uygundur?',
   'published',
   false,
-  '2026-07-12 01:11:30+00'
+  '2026-07-12 02:21:27+00'
 ),(
   'Şema Terapi Nedir? Kimler İçin Uygundur?',
   'sema-terapi-nedir',
@@ -595,13 +599,13 @@ Süreç, derinlemesine çalışmanın doğası gereği BDT''den daha uzundur; ge
 
 ## Şema Terapistleri
 
-[Terapimap''te](/tr/terapistler) şema terapi eğitimi almış uzmanları inceleyebilir, size uygun olanıyla ilk değerlendirme görüşmesini planlayabilirsiniz.',
+[Terapimap''te](/tr/sema-terapi) şema terapi eğitimi almış uzmanları inceleyebilir, size uygun olanıyla ilk değerlendirme görüşmesini planlayabilirsiniz.',
   'terapi-yontemleri',
   'Şema Terapi Nedir, Kimler İçin Uygundur? | Terapimap',
   'Şema terapi nedir? Erken dönem uyumsuz şemalar, şema modları ve tekrarlayan yaşam örüntülerini değiştirmeye odaklanan bu yaklaşımın kapsamlı rehberi.',
   'published',
   false,
-  '2026-07-13 01:11:30+00'
+  '2026-07-13 02:21:27+00'
 ),(
   'Çocuğunuz İçin Psikolog Seçerken Dikkat Edilmesi Gerekenler',
   'cocuk-icin-psikolog-secimi',
@@ -648,13 +652,13 @@ Uzman size hiç geri bildirim vermiyorsa, kesin çözüm ve garantiler vaat ediy
 
 ## Doğru Uzmanı Bulun
 
-[Terapimap''te](/tr/terapistler) çocuk ve ergen alanında çalışan uzmanları şehrinize ve görüşme türüne göre filtreleyerek inceleyebilirsiniz. Erken ve doğru destek, çocuğunuzun tüm gelişimine yapılmış bir yatırımdır.',
+[Terapimap''te](/tr/cocuk-psikolojisi) çocuk ve ergen alanında çalışan uzmanları şehrinize ve görüşme türüne göre filtreleyerek inceleyebilirsiniz. Erken ve doğru destek, çocuğunuzun tüm gelişimine yapılmış bir yatırımdır.',
   'cocuk-ve-ergen',
   'Çocuk Psikoloğu Seçerken Dikkat Edilmesi Gerekenler | Terapimap',
   'Çocuğunuz için psikolog nasıl seçilir? Çocuk alanında uzmanlık, oyun terapisi, ilk görüşme ve ebeveynin süreçteki rolü hakkında pratik rehber.',
   'published',
   true,
-  '2026-07-14 01:11:30+00'
+  '2026-07-14 02:21:27+00'
 ),(
   'Ergenlik Döneminde Ruh Sağlığı: Ebeveynler İçin İşaretler',
   'ergenlik-doneminde-ruh-sagligi',
@@ -699,13 +703,13 @@ Ergene terapiyi bir ceza ya da "bozukluk" mesajı olarak değil, bir kaynak olar
 
 ## Destek Bir Zayıflık Değil
 
-Ergenlik döneminde alınan doğru destek, yetişkinliğe taşınacak sorunları erken aşamada çözer. [Terapimap''te ergenlerle çalışan uzmanları inceleyebilirsiniz](/tr/terapistler) — hem ergen için hem de bu dönemi yönetmeye çalışan siz ebeveynler için.',
+Ergenlik döneminde alınan doğru destek, yetişkinliğe taşınacak sorunları erken aşamada çözer. [Terapimap''te ergenlerle çalışan uzmanları inceleyebilirsiniz](/tr/ergen-terapisi) — hem ergen için hem de bu dönemi yönetmeye çalışan siz ebeveynler için.',
   'cocuk-ve-ergen',
   'Ergenlerde Ruh Sağlığı: Ebeveyn Rehberi | Terapimap',
   'Ergenlik döneminde hangi davranışlar normal, hangileri uyarı işareti? Ebeveynler için ergen ruh sağlığı, iletişim ve destek alma rehberi.',
   'published',
   true,
-  '2026-07-15 01:11:30+00'
+  '2026-07-15 02:21:27+00'
 ),(
   'Çocuklarda Sınav Kaygısı: Aileler Ne Yapabilir?',
   'cocuklarda-sinav-kaygisi',
@@ -743,13 +747,13 @@ Bir miktar heyecan performansı artırır; sorun, kaygının performansı **boza
 
 Kaygı; bedensel belirtilerle sık tekrarlıyorsa, çocuk sınavlara girmeyi reddetmeye başladıysa, performans ile bilgi arasındaki makas belirgin biçimde açıksa ya da kaygı sınav dışındaki alanlara da yayılıyorsa bir uzman değerlendirmesi faydalı olur. Sınav kaygısı, bilişsel davranışçı tekniklerle **kısa sürede ve yüksek başarıyla** çalışılabilen bir alandır.
 
-[Terapimap''te çocuk ve ergenlerle çalışan, kaygı alanında deneyimli uzmanları bulabilirsiniz](/tr/terapistler).',
+[Terapimap''te çocuk ve ergenlerle çalışan, kaygı alanında deneyimli uzmanları bulabilirsiniz](/tr/cocuk-psikolojisi).',
   'cocuk-ve-ergen',
   'Çocuklarda Sınav Kaygısı ve Aile Tutumları | Terapimap',
   'Çocuklarda sınav kaygısının belirtileri neler? Ailelerin yapması ve yapmaması gerekenler, evde uygulanabilir stratejiler ve destek alma zamanı.',
   'published',
   false,
-  '2026-07-16 01:11:30+00'
+  '2026-07-16 02:21:27+00'
 ),(
   'Çift Terapisi Nedir? Ne Zaman Başvurmalısınız?',
   'cift-terapisi-nedir',
@@ -794,15 +798,22 @@ Altın kural: **"Bunu kendi başımıza çözemiyoruz" cümlesini birkaç aydır
 
 ## İlk Adımı Birlikte Atın
 
-[Terapimap''te çift ve ilişki terapisi alanında çalışan uzmanları inceleyebilirsiniz](/tr/terapistler). İlişkinize yapacağınız bu yatırım, çoğu zaman iki kişinin de bireysel iyilik hâline yapılmış bir yatırımdır.',
+[Terapimap''te çift ve ilişki terapisi alanında çalışan uzmanları inceleyebilirsiniz](/tr/cift-terapisi). İlişkinize yapacağınız bu yatırım, çoğu zaman iki kişinin de bireysel iyilik hâline yapılmış bir yatırımdır.',
   'iliskiler',
   'Çift Terapisi Nedir, Ne Zaman Gidilmeli? | Terapimap',
   'Çift terapisi nasıl işler, hangi sorunlarda etkilidir, ne zaman başvurulmalı? Seans süreci ve sık sorulan sorularla kapsamlı çift terapisi rehberi.',
   'published',
   true,
-  '2026-07-17 01:11:30+00'
+  '2026-07-17 02:21:27+00'
 )
-on conflict (slug) do nothing;
+on conflict (slug) do update set
+  title            = excluded.title,
+  excerpt          = excluded.excerpt,
+  content          = excluded.content,
+  category         = excluded.category,
+  meta_title       = excluded.meta_title,
+  meta_description = excluded.meta_description,
+  is_featured      = excluded.is_featured;
 
 -- Kontrol: 16 satır dönmeli
 select slug, category, is_featured, published_at from public.articles order by published_at desc;

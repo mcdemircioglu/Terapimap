@@ -8,6 +8,15 @@ import { getServerClient } from './supabase/server';
 import { ARTICLE_CATEGORIES } from '@/types/database';
 import type { Article, ArticleCategory, ArticleListItem } from '@/types/database';
 
+/**
+ * Makale kategorisi → uzmanlık landing sayfası (CTA hedefi).
+ * Eşleşme yoksa CTA genel terapist listesine gider.
+ */
+export const CATEGORY_CTA_SPECIALTY: Partial<Record<ArticleCategory, string>> = {
+  'cocuk-ve-ergen': 'cocuk-psikolojisi',
+  'iliskiler': 'cift-terapisi',
+};
+
 function logError(fn: string, error: unknown) {
   console.error(`\n[terapimap:articles] ${fn} failed:`);
   console.error(JSON.stringify(error, null, 2));

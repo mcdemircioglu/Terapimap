@@ -56,7 +56,9 @@ export async function generateMetadata({
     title = c.metaTitle;
     description = c.metaDesc;
   } else {
-    const specialty = await getSpecialtyBySlug(page.specialtySlug);
+    const specialty =
+      (await getSpecialtyBySlug(page.specialtySlug)) ??
+      (await getSpecialtyBySlug(seoSlug));
     if (!specialty) return {};
     const c = getSpecialtyContent(specialty.name, locale);
     title = c.metaTitle;
@@ -139,7 +141,11 @@ export default async function SeoLandingPage({
       label: locale === 'tr' ? c.name + ' terapistleri' : 'Therapists in ' + c.name,
     }));
   } else {
-    const specialty = await getSpecialtyBySlug(page.specialtySlug);
+    // Önce suffix'i ayıklanmış slug (emdr-terapisi → emdr), bulunamazsa
+    // ham slug (cift-terapisi) denenir — DB'de tam adıyla kayıtlı uzmanlıklar.
+    const specialty =
+      (await getSpecialtyBySlug(page.specialtySlug)) ??
+      (await getSpecialtyBySlug(seoSlug));
     if (!specialty) notFound();
 
     content = getSpecialtyContent(specialty.name, locale);

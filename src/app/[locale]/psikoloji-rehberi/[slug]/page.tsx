@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/Badge';
 import ArticleCard from '@/components/guide/ArticleCard';
 import ArticleDisclaimer from '@/components/guide/ArticleDisclaimer';
 import TherapistCta from '@/components/guide/TherapistCta';
-import { calculateReadingMinutes, getArticleBySlug, getRelatedArticles } from '@/lib/articles';
+import { CATEGORY_CTA_SPECIALTY, calculateReadingMinutes, getArticleBySlug, getRelatedArticles } from '@/lib/articles';
 import { absUrl, buildArticleSchema, buildBreadcrumbSchema } from '@/lib/schema';
 import { ARTICLE_CATEGORY_LABELS } from '@/types/database';
 
@@ -199,9 +199,16 @@ export default async function ArticleDetailPage({
             <ArticleDisclaimer />
           </div>
 
-          {/* Terapist CTA */}
+          {/* Terapist CTA — kategoriyle eşleşen uzmanlık sayfasına yönlenir */}
           <div className="mt-8">
-            <TherapistCta locale={locale} />
+            <TherapistCta
+              locale={locale}
+              href={
+                CATEGORY_CTA_SPECIALTY[article.category]
+                  ? `/${locale}/${CATEGORY_CTA_SPECIALTY[article.category]}`
+                  : undefined
+              }
+            />
           </div>
         </div>
 

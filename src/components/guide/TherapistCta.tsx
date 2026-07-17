@@ -6,11 +6,13 @@ import Link from 'next/link';
 
 type Props = {
   locale: string;
+  /** Verilirse CTA bu adrese gider (örn. uzmanlık landing'i); yoksa genel liste. */
+  href?: string;
 };
 
-export default function TherapistCta({ locale }: Props) {
+export default function TherapistCta({ locale, href }: Props) {
   // /tr/therapists kalıcı olarak /tr/terapistler'e yönlenir — direkt hedefe linkle
-  const therapistsHref = locale === 'tr' ? '/tr/terapistler' : `/${locale}/therapists`;
+  const therapistsHref = href ?? (locale === 'tr' ? '/tr/terapistler' : `/${locale}/therapists`);
   return (
     <section className="rounded-2xl border border-brand-100 bg-brand-950 p-8 text-center md:p-10">
       <h2 className="text-xl font-semibold text-white md:text-2xl">
