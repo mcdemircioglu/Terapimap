@@ -16,7 +16,7 @@ export function generateMetadata({
     description:
       '6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında Terapimap aydınlatma metni.',
     alternates: { canonical: absUrl(`/${locale}/kvkk-aydinlatma-metni`) },
-    robots: { index: true, follow: true },
+    robots: { index: locale === 'tr', follow: true },
   };
 }
 

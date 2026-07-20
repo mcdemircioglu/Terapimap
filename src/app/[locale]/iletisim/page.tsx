@@ -15,7 +15,7 @@ export function generateMetadata({
     description:
       'Terapimap ile iletişime geçin: sorularınız, profil doğrulama, güncelleme ve kaldırma talepleriniz için.',
     alternates: { canonical: absUrl(`/${locale}/iletisim`) },
-    robots: { index: true, follow: true },
+    robots: { index: locale === 'tr', follow: true },
   };
 }
 

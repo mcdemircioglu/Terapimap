@@ -9,6 +9,64 @@ import { ARTICLE_CATEGORIES } from '@/types/database';
 import type { Article, ArticleCategory, ArticleListItem } from '@/types/database';
 
 /**
+ * Kategori hub sayfaları (/psikoloji-rehberi/kategori/[kategori]) için
+ * özgün SEO içerikleri. Her kategori kendi indexlenebilir URL'ine sahiptir.
+ */
+export const CATEGORY_CONTENT: Record<
+  ArticleCategory,
+  { title: string; intro: string; metaTitle: string; metaDescription: string }
+> = {
+  'terapi-rehberi': {
+    title: 'Terapi Rehberi',
+    intro:
+      'Terapiye başlamak çoğu insan için belirsizliklerle dolu bir süreçtir: Doğru terapist nasıl seçilir, ilk seansta ne olur, ücretler neye göre belirlenir? Bu kategorideki rehberler, terapi sürecinin pratik yönlerini — uzman seçiminden seans sıklığına, online terapiden ücret planlamasına kadar — net ve güvenilir bir dille anlatır. Amacımız, profesyonel destek almaya karar verdiğinizde yolunuzu kolaylaştırmak.',
+    metaTitle: 'Terapi Rehberi: Terapist Seçimi, Ücretler ve Süreç | Terapimap',
+    metaDescription:
+      'Terapiye başlama, doğru terapist seçimi, seans ücretleri ve terapi süreci hakkında pratik rehberler. Terapimap Psikoloji Rehberi.',
+  },
+  'psikolojik-konular': {
+    title: 'Psikolojik Konular',
+    intro:
+      'Anksiyete, depresyon, panik atak, tükenmişlik… Bu kategorideki içerikler, en sık yaşanan psikolojik zorlukların belirtilerini, nedenlerini ve başa çıkma yollarını bilimsel kaynaklara dayanarak anlatır. Kendi yaşadıklarınızı anlamlandırmanıza ve ne zaman profesyonel destek almanız gerektiğine karar vermenize yardımcı olmayı hedefler; tanı veya tedavi yerine geçmez.',
+    metaTitle: 'Psikolojik Konular: Anksiyete, Depresyon ve Daha Fazlası | Terapimap',
+    metaDescription:
+      'Anksiyete, depresyon, panik atak ve diğer psikolojik konuların belirtileri ve başa çıkma yolları. Anlaşılır ve güvenilir içerikler.',
+  },
+  'terapi-yontemleri': {
+    title: 'Terapi Yöntemleri',
+    intro:
+      "BDT, EMDR, şema terapi, psikodinamik terapi… Farklı terapi ekolleri farklı sorunlara ve farklı kişilere uygundur. Bu kategorideki rehberler her yöntemin nasıl işlediğini, hangi durumlarda etkili olduğunu ve seansların nasıl geçtiğini anlatır — böylece terapist ararken 'hangi yaklaşım bana uygun?' sorusuna bilinçli bir yanıt verebilirsiniz.",
+    metaTitle: 'Terapi Yöntemleri: BDT, EMDR, Şema Terapi | Terapimap',
+    metaDescription:
+      'Bilişsel davranışçı terapi, EMDR, şema terapi ve diğer terapi yöntemleri nasıl işler, kimler için uygundur? Kapsamlı yöntem rehberleri.',
+  },
+  'cocuk-ve-ergen': {
+    title: 'Çocuk ve Ergen',
+    intro:
+      'Çocuğunuzun ya da ergen yaştaki gencinizin ruh sağlığıyla ilgili endişeleriniz mi var? Bu kategorideki içerikler; hangi davranışların gelişimsel olarak normal olduğunu, hangi işaretlerin profesyonel değerlendirme gerektirdiğini ve çocuklar için doğru uzmanın nasıl seçileceğini ebeveyn gözünden, pratik bir dille ele alır.',
+    metaTitle: 'Çocuk ve Ergen Psikolojisi: Ebeveyn Rehberleri | Terapimap',
+    metaDescription:
+      'Çocuk ve ergenlerde ruh sağlığı işaretleri, psikolog seçimi ve sınav kaygısı gibi konularda ebeveynlere yönelik pratik rehberler.',
+  },
+  'iliskiler': {
+    title: 'İlişkiler',
+    intro:
+      'Sağlıklı ilişkiler kendiliğinden oluşmaz; iletişim becerileri, sınırlar ve karşılıklı anlayış ister. Bu kategorideki rehberler çift terapisinden ilişki dinamiklerine, tekrarlayan tartışma döngülerinden bağlanma stillerine kadar ilişkilerin psikolojisini ele alır — ister ilişkinizi güçlendirmek, ister zorlu bir dönemi aşmak istiyor olun.',
+    metaTitle: 'İlişkiler: Çift Terapisi ve İlişki Psikolojisi | Terapimap',
+    metaDescription:
+      'Çift terapisi, iletişim becerileri ve sağlıklı ilişki dinamikleri üzerine rehberler. İlişkinizi güçlendirecek güvenilir içerikler.',
+  },
+  'genel-psikoloji': {
+    title: 'Genel Psikoloji',
+    intro:
+      'Zihnimiz nasıl çalışır, duygularımız bizi nasıl yönlendirir, alışkanlıklar nasıl değişir? Bu kategorideki içerikler psikolojinin günlük yaşama dokunan konularını — öz şefkatten stres yönetimine, motivasyondan uyku psikolojisine — bilimsel ama anlaşılır bir dille ele alır.',
+    metaTitle: 'Genel Psikoloji: Günlük Yaşamın Psikolojisi | Terapimap',
+    metaDescription:
+      'Öz şefkat, stres yönetimi, motivasyon ve günlük yaşam psikolojisi üzerine anlaşılır içerikler. Terapimap Psikoloji Rehberi.',
+  },
+};
+
+/**
  * Makale kategorisi → uzmanlık landing sayfası (CTA hedefi).
  * Eşleşme yoksa CTA genel terapist listesine gider.
  */

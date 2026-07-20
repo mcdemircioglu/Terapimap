@@ -2,8 +2,11 @@ import { CITIES, getCitySlug } from "@/lib/cities";
 import { getKnownSeoSlugs } from "@/lib/seo-slugs";
 import { getTherapists, getSpecialties } from "@/lib/queries";
 import { getArticlesForSitemap } from "@/lib/articles";
+import { ARTICLE_CATEGORIES } from "@/types/database";
 import { getProfessionalUrlSegment } from "@/lib/utils";
-import { locales } from "@/i18n";
+
+// EN locale noindex olduğu için sitemap yalnızca TR URL'leri içerir.
+const locales = ["tr"] as const;
 
 export const revalidate = 3600;
 
@@ -120,6 +123,9 @@ export async function GET() {
   // Psikoloji Rehberi — yalnızca yayınlanmış içerikler (draft asla girmez)
   for (const locale of locales) {
     items.push(item(`/${locale}/psikoloji-rehberi`, "weekly", 0.8));
+    for (const category of ARTICLE_CATEGORIES) {
+      items.push(item(`/${locale}/psikoloji-rehberi/kategori/${category}`, "weekly", 0.6));
+    }
   }
   for (const article of articles) {
     const lastmod = article.updated_at ? new Date(article.updated_at) : new Date();

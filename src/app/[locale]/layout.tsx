@@ -9,6 +9,8 @@ import { notFound } from 'next/navigation';
 import '../globals.css';
 
 import Navbar from '@/components/Navbar';
+import JsonLd from '@/components/JsonLd';
+import { buildOrganizationSchema } from '@/lib/schema';
 import Footer from '@/components/Footer';
 import { CookieConsentProvider } from '@/components/cookie-consent/CookieConsentProvider';
 import CookieBanner from '@/components/cookie-consent/CookieBanner';
@@ -41,18 +43,16 @@ export async function generateMetadata({
       type: 'website',
       locale: locale === 'tr' ? 'tr_TR' : 'en_US',
     },
-    alternates: {
-      languages: {
-        tr: `${siteUrl}/tr`,
-        en: `${siteUrl}/en`,
-      },
-    },
+    // EN locale: içerik henüz çevrilmediği için tamamen noindex —
+    // Türkçe içeriğin duplicate olarak değerlendirilme riskini önler.
+    ...(locale !== 'tr' ? { robots: { index: false, follow: true } } : {}),
     icons: {
       icon: [
         { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
         { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
       ],
       shortcut: '/favicon.ico',
+      apple: '/apple-touch-icon.png',
     },
   };
 }
@@ -72,6 +72,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body>
+        <JsonLd schema={buildOrganizationSchema()} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <CookieConsentProvider>
             <div className="flex min-h-screen flex-col">

@@ -307,6 +307,37 @@ export function buildDirectionsUrl(location: MapLocation): string | null {
   return null;
 }
 
+/**
+ * Kullanıcıya açılacak (dışa giden) Google Maps linki — mobil uyumlu.
+ * DB'deki ham `?q=place_id:` linkleri iOS/Android Maps uygulamasında düz
+ * metin araması olarak yorumlanıp "sonuç bulunamadı" verir. Resmî Maps URLs
+ * formatı (`/maps/search/?api=1&query=...&query_place_id=...`) hem web hem
+ * mobil uygulamalarda place_id'yi doğru çözer.
+ */
+export function buildOutboundMapsUrl(location: MapLocation): string | null {
+  const raw = location.googleMapsUrl ?? null;
+  const placeId = raw ? extractPlaceIdFromUrl(raw) : null;
+
+  if (placeId) {
+    // query zorunlu — en anlamlı metni seç (uygulama pin'i place_id'den bulur)
+    const query =
+      [location.clinicName, location.address].find((v) => v && v.trim() !== '') ??
+      [location.district, location.city].filter(Boolean).join(' ');
+    return (
+      'https://www.google.com/maps/search/?api=1' +
+      `&query=${encodeURIComponent(query || 'Terapist')}` +
+      `&query_place_id=${placeId}`
+    );
+  }
+
+  const coords = resolveCoordinates(location);
+  if (coords) {
+    return `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`;
+  }
+
+  return raw;
+}
+
 /** Konum kartını göstermeye değecek kadar veri var mı? */
 export function hasDisplayableLocation(location: MapLocation): boolean {
   return (

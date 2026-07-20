@@ -54,9 +54,10 @@ export async function generateMetadata({
     title,
     description: copy.metaDescription,
     alternates: { canonical },
-    robots: copy.isIndexable
-      ? { index: true, follow: true }
-      : { index: false, follow: true },
+    robots:
+      copy.isIndexable && locale === 'tr'
+        ? { index: true, follow: true }
+        : { index: false, follow: true },
     openGraph: {
       title,
       description: copy.metaDescription,

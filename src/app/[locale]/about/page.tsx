@@ -15,13 +15,7 @@ export async function generateMetadata({
   return {
     title: t('metaTitle'),
     description: t('metaDescription'),
-    alternates: {
-      canonical: absUrl(`/${locale}/about`),
-      languages: {
-        tr: absUrl('/tr/about'),
-        en: absUrl('/en/about'),
-      },
-    },
+    alternates: { canonical: absUrl(`/${locale}/about`) },
   };
 }
 

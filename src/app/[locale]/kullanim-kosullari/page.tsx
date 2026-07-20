@@ -16,7 +16,7 @@ export function generateMetadata({
     description:
       'Terapimap platformunun kullanım koşulları ve sorumluluk esasları.',
     alternates: { canonical: absUrl(`/${locale}/kullanim-kosullari`) },
-    robots: { index: true, follow: true },
+    robots: { index: locale === 'tr', follow: true },
   };
 }
 

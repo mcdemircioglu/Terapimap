@@ -16,7 +16,7 @@ export function generateMetadata({
     description:
       'Terapimap uzman profillerinin oluşturulması, doğrulanması, güncellenmesi ve kaldırılması süreçleri.',
     alternates: { canonical: absUrl(`/${locale}/terapist-profil-politikasi`) },
-    robots: { index: true, follow: true },
+    robots: { index: locale === 'tr', follow: true },
   };
 }
 

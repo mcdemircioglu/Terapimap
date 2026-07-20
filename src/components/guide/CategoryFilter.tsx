@@ -1,7 +1,6 @@
 /**
- * Kategori filtresi — Link tabanlı (?kategori= query parametresi).
- * SEO notu: filtreli URL'lerin canonical'ı her zaman /psikoloji-rehberi'dir
- * ve sayfa metadata'sında noindex,follow uygulanır (liste sayfasında).
+ * Kategori navigasyonu — her kategori kendi indexlenebilir hub URL'ine
+ * (/psikoloji-rehberi/kategori/[kategori]) linkler.
  */
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -35,7 +34,7 @@ export default function CategoryFilter({ locale, active }: Props) {
     <nav aria-label="Kategori filtreleri" className="flex flex-wrap gap-2">
       {chip('Tümü', base, active === null)}
       {ARTICLE_CATEGORIES.map((cat) =>
-        chip(ARTICLE_CATEGORY_LABELS[cat], `${base}?kategori=${cat}`, active === cat),
+        chip(ARTICLE_CATEGORY_LABELS[cat], `${base}/kategori/${cat}`, active === cat),
       )}
     </nav>
   );

@@ -16,7 +16,7 @@ export function generateMetadata({
     description:
       'Terapimap çerez politikası: platformda kullanılan çerezler ve yönetim seçenekleri.',
     alternates: { canonical: absUrl(`/${locale}/cerez-politikasi`) },
-    robots: { index: true, follow: true },
+    robots: { index: locale === 'tr', follow: true },
   };
 }
 

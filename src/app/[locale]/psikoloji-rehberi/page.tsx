@@ -1,12 +1,11 @@
 /**
- * /[locale]/psikoloji-rehberi — rehber liste sayfası (server component).
- * Kategori filtresi ?kategori= query parametresiyle çalışır:
- *  - canonical her zaman temiz /psikoloji-rehberi URL'idir
- *  - filtreli görünümler noindex,follow alır
- *  - geçersiz kategori değeri sessizce yok sayılır (tümü gösterilir)
+ * /[locale]/psikoloji-rehberi — rehber ana liste sayfası (server component).
+ * Kategoriler artık gerçek URL'lerde yaşar: /psikoloji-rehberi/kategori/[kategori].
+ * Eski ?kategori= linkleri kalıcı olarak yeni URL'e yönlendirilir.
  */
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { permanentRedirect } from 'next/navigation';
 import { unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import JsonLd from '@/components/JsonLd';
@@ -15,33 +14,23 @@ import CategoryFilter from '@/components/guide/CategoryFilter';
 import TherapistCta from '@/components/guide/TherapistCta';
 import { getPublishedArticles } from '@/lib/articles';
 import { absUrl, buildBreadcrumbSchema, buildCollectionPageSchema } from '@/lib/schema';
-import { isArticleCategory, ARTICLE_CATEGORY_LABELS } from '@/types/database';
+import { isArticleCategory } from '@/types/database';
 
 const DESCRIPTION =
   'Terapi süreci, psikolojik konular, terapi yöntemleri ve terapist seçimi hakkında anlaşılır ve güvenilir rehberleri keşfedin.';
 
 export function generateMetadata({
   params: { locale },
-  searchParams,
 }: {
   params: { locale: string };
-  searchParams: { kategori?: string };
 }): Metadata {
   const canonical = absUrl(`/${locale}/psikoloji-rehberi`);
-  const filtered = Boolean(searchParams.kategori);
 
   return {
     title: 'Psikoloji Rehberi | Terapimap',
     description: DESCRIPTION,
-    alternates: {
-      canonical,
-      languages: {
-        tr: absUrl('/tr/psikoloji-rehberi'),
-        en: absUrl('/en/psikoloji-rehberi'),
-      },
-    },
-    // Filtreli query URL'leri indexlenmesin; linkler takip edilsin
-    ...(filtered ? { robots: { index: false, follow: true } } : {}),
+    alternates: { canonical },
+    robots: { index: locale === 'tr', follow: true },
     openGraph: {
       title: 'Psikoloji Rehberi | Terapimap',
       description: DESCRIPTION,
@@ -60,20 +49,14 @@ export default async function PsikolojiRehberiPage({
 }) {
   unstable_setRequestLocale(locale);
 
-  // Geçersiz kategori → filtre yok (hata sayfası üretilmez)
-  const category =
-    searchParams.kategori && isArticleCategory(searchParams.kategori)
-      ? searchParams.kategori
-      : null;
+  // Eski ?kategori= linkleri → yeni gerçek URL (301)
+  if (searchParams.kategori && isArticleCategory(searchParams.kategori)) {
+    permanentRedirect(`/${locale}/psikoloji-rehberi/kategori/${searchParams.kategori}`);
+  }
 
-  const [articles, allArticles] = await Promise.all([
-    category ? getPublishedArticles({ category }) : getPublishedArticles(),
-    Promise.resolve(null),
-  ]);
-  void allArticles;
-
-  const featured = category ? [] : articles.filter((a) => a.is_featured).slice(0, 3);
-  const rest = category ? articles : articles.filter((a) => !featured.some((f) => f.id === a.id));
+  const articles = await getPublishedArticles();
+  const featured = articles.filter((a) => a.is_featured).slice(0, 3);
+  const rest = articles.filter((a) => !featured.some((f) => f.id === a.id));
 
   const homeLabel = locale === 'tr' ? 'Ana Sayfa' : 'Home';
   const pageUrl = absUrl(`/${locale}/psikoloji-rehberi`);
@@ -109,7 +92,7 @@ export default async function PsikolojiRehberiPage({
 
         {/* Kategori filtreleri */}
         <div className="mt-8">
-          <CategoryFilter locale={locale} active={category} />
+          <CategoryFilter locale={locale} active={null} />
         </div>
 
         {/* Öne çıkanlar */}
@@ -137,9 +120,7 @@ export default async function PsikolojiRehberiPage({
             </div>
           ) : (
             <p className="mt-4 rounded-xl border border-brand-100 bg-brand-50/50 p-6 text-sm text-brand-600">
-              {category
-                ? `${ARTICLE_CATEGORY_LABELS[category]} kategorisinde henüz içerik yok.`
-                : 'Henüz yayınlanmış içerik yok. Çok yakında burada olacak.'}
+              Henüz yayınlanmış içerik yok. Çok yakında burada olacak.
             </p>
           )}
         </section>

@@ -43,7 +43,6 @@ export async function generateMetadata({
   if (!page) return {};
 
   const url = absUrl('/' + locale + '/' + seoSlug);
-  const altLocale = locale === 'tr' ? 'en' : 'tr';
 
   let title: string;
   let description: string;
@@ -69,13 +68,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: {
-      canonical: url,
-      languages: {
-        [locale]: url,
-        [altLocale]: absUrl('/' + altLocale + '/' + seoSlug),
-      },
-    },
+    alternates: { canonical: url },
     openGraph: {
       title,
       description,

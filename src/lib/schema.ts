@@ -231,3 +231,24 @@ export function buildArticleSchema(
     },
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Organization — site geneli marka entity'si (logo dahil)
+// ─────────────────────────────────────────────────────────────────────────────
+export function buildOrganizationSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': BASE + '/#organization',
+    name: 'Terapimap',
+    url: BASE,
+    logo: {
+      '@type': 'ImageObject',
+      url: BASE + '/icon-512.png',
+      width: 512,
+      height: 512,
+    },
+    description:
+      'Terapimap, Türkiye genelinde psikolog, klinik psikolog ve psikiyatristleri şehir, uzmanlık alanı ve görüşme türüne göre keşfetmeyi sağlayan bir platformdur.',
+  };
+}

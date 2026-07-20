@@ -36,13 +36,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: {
-      canonical,
-      languages: {
-        tr: absUrl(`/tr/psikoloji-rehberi/${article.slug}`),
-        en: absUrl(`/en/psikoloji-rehberi/${article.slug}`),
-      },
-    },
+    alternates: { canonical },
     openGraph: {
       title,
       description,
@@ -120,7 +114,7 @@ export default async function ArticleDetailPage({
 
           {/* Başlık alanı */}
           <div className="flex flex-wrap items-center gap-3">
-            <Link href={`/${locale}/psikoloji-rehberi?kategori=${article.category}`}>
+            <Link href={`/${locale}/psikoloji-rehberi/kategori/${article.category}`}>
               <Badge variant="brand" className="cursor-pointer hover:bg-brand-200">
                 {categoryLabel}
               </Badge>

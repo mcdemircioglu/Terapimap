@@ -48,19 +48,13 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: {
-      canonical: url,
-      languages: {
-        tr: absUrl('/tr/psikolog/' + slug),
-        en: absUrl('/en/psikolog/' + slug),
-      },
-    },
+    alternates: { canonical: url },
+    // OG görseli: dosya bazlı opengraph-image.tsx (logo temalı) kullanılır
     openGraph: {
       title: therapist.name + ' — ' + location,
       description,
       type: 'profile',
       url,
-      ...(therapist.image_url ? { images: [{ url: therapist.image_url }] } : {}),
     },
   };
 }

@@ -23,6 +23,7 @@ import {
 import LocationMap from '@/components/therapist/LocationMap';
 import {
   buildEmbedUrl,
+  buildOutboundMapsUrl,
   getResolvedMapsData,
   hasDisplayableLocation,
   type MapLocation,
@@ -63,6 +64,8 @@ export default async function LocationCard({ therapist, locale, resolvedMaps: pr
 
   const t = await getTranslations({ locale, namespace: 'detail' });
   const embedUrl = buildEmbedUrl(location, locale);
+  // Mobil Maps uygulamalarında da çalışan, place_id'yi doğru çözen link
+  const outboundUrl = buildOutboundMapsUrl(location);
   const areaLine = [therapist.district, therapist.city].filter(Boolean).join(', ');
 
   return (
@@ -99,9 +102,9 @@ export default async function LocationCard({ therapist, locale, resolvedMaps: pr
             title={t('mapTitle', { name: therapist.name })}
             showMapLabel={t('showMap')}
           />
-        ) : therapist.google_maps_url ? (
+        ) : outboundUrl ? (
           <a
-            href={therapist.google_maps_url}
+            href={outboundUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="group flex h-40 w-full flex-col items-center justify-center gap-3 rounded-xl border border-brand-100 bg-brand-50/60 transition-colors hover:bg-brand-50"

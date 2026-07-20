@@ -56,14 +56,8 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: {
-      canonical,
-      languages: {
-        tr: absUrl('/tr/terapistler') + (page > 1 ? `?page=${page}` : ''),
-        en: absUrl('/en/therapists') + (page > 1 ? `?page=${page}` : ''),
-      },
-    },
-    robots: { index: true, follow: true },
+    alternates: { canonical },
+    robots: { index: locale === 'tr', follow: true },
     openGraph: {
       title,
       description,

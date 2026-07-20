@@ -26,11 +26,10 @@ export default async function Navbar({ locale }: { locale: Locale }) {
       <Container className="flex h-16 items-center justify-between">
         {/* Logo */}
         <Link href={home} className="flex items-center gap-2">
-          <span aria-hidden className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 21s-7-4.5-7-10a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 5.5-7 10-7 10" transform="translate(-2 0)" />
-            </svg>
-          </span>
+          <svg viewBox="0 0 64 64" className="h-8 w-8" aria-hidden="true">
+            <path fill="#316c6f" d="M32 4C19 4 8.5 14.5 8.5 27.5 8.5 44 24 53 30.2 61.2c.9 1.2 2.7 1.2 3.6 0C40 53 55.5 44 55.5 27.5 55.5 14.5 45 4 32 4z" />
+            <path fill="#ffffff" d="M32 38.5c-.5 0-1-.2-1.4-.5-4.7-3.9-9.1-7-9.1-12 0-3.4 2.7-6 6-6 2 0 3.6 1 4.5 2.5.9-1.5 2.5-2.5 4.5-2.5 3.3 0 6 2.6 6 6 0 5-4.4 8.1-9.1 12-.4.3-.9.5-1.4.5z" />
+          </svg>
           <span className="text-base font-semibold text-brand-900">{tMeta('siteName')}</span>
         </Link>
 

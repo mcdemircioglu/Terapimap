@@ -60,7 +60,7 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical },
-    robots: { index: true, follow: true },
+    robots: { index: locale === 'tr', follow: true },
     openGraph: {
       title,
       description,

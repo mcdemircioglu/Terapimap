@@ -16,7 +16,7 @@ export function generateMetadata({
     description:
       'Terapimap gizlilik politikası: kişisel verilerinizin nasıl toplandığı, kullanıldığı ve korunduğu hakkında bilgi.',
     alternates: { canonical: absUrl(`/${locale}/gizlilik-politikasi`) },
-    robots: { index: true, follow: true },
+    robots: { index: locale === 'tr', follow: true },
   };
 }
 
