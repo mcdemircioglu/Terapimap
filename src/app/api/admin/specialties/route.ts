@@ -14,7 +14,8 @@ export async function GET(request: Request) {
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('specialties')
-    .select('id, slug, name')
+    .select('id, slug, name, type, sort_order')
+    .order('sort_order', { ascending: true })
     .order('name', { ascending: true });
 
   if (error) {

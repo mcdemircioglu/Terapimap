@@ -10,7 +10,32 @@ type RequestType = 'update' | 'photo_update' | 'removal' | '';
 interface SpecialtyOption {
   id: string;
   name: string;
+  /** Taksonomi tipi — tanımsızsa 'konu' varsayılır. */
+  type?: 'konu' | 'yontem' | 'kitle' | null;
+  sort_order?: number | null;
 }
+
+const SPECIALTY_GROUPS: {
+  type: 'konu' | 'yontem' | 'kitle';
+  title: string;
+  hint: string;
+}[] = [
+  {
+    type: 'konu',
+    title: 'Çalıştığınız konular',
+    hint: 'Danışanların sizi bu başlıklarla arayacağını unutmayın.',
+  },
+  {
+    type: 'yontem',
+    title: 'Kullandığınız yöntemler',
+    hint: 'Eğitimini aldığınız terapi ekollerini seçin.',
+  },
+  {
+    type: 'kitle',
+    title: 'Çalıştığınız gruplar',
+    hint: 'Hangi yaş ve danışan gruplarıyla çalışıyorsunuz?',
+  },
+];
 
 interface Props {
   professionalId: string;
@@ -487,39 +512,49 @@ export default function VerificationRequestForm({
                 {specialtyOptions.length === 0 ? (
                   <p className="text-sm text-gray-400">Uzmanlık alanları yüklenemedi.</p>
                 ) : (
-                  <>
-                    <p className="text-xs text-gray-400 -mt-1 mb-2">
-                      Profilinizde görünmesini istediğiniz uzmanlık alanlarını seçin.
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {specialtyOptions.map((s) => {
-                        const selected = selectedSpecialties.includes(s.name);
-                        return (
-                          <label
-                            key={s.id}
-                            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border cursor-pointer transition-colors text-sm ${
-                              selected
-                                ? 'border-brand-500 bg-brand-50 text-brand-800'
-                                : 'border-gray-200 text-gray-700 hover:border-brand-300 hover:bg-gray-50'
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selected}
-                              onChange={() => toggleSpecialty(s.name)}
-                              className="rounded text-brand-600 focus:ring-brand-400"
-                            />
-                            {s.name}
-                          </label>
-                        );
-                      })}
-                    </div>
+                  <div className="space-y-5">
+                    {SPECIALTY_GROUPS.map((group) => {
+                      const items = specialtyOptions
+                        .filter((s) => (s.type ?? 'konu') === group.type)
+                        .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+                      if (items.length === 0) return null;
+
+                      return (
+                        <div key={group.type}>
+                          <p className="text-sm font-medium text-gray-800">{group.title}</p>
+                          <p className="text-xs text-gray-400 mt-0.5 mb-2">{group.hint}</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {items.map((s) => {
+                              const selected = selectedSpecialties.includes(s.name);
+                              return (
+                                <label
+                                  key={s.id}
+                                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border cursor-pointer transition-colors text-sm ${
+                                    selected
+                                      ? 'border-brand-500 bg-brand-50 text-brand-800'
+                                      : 'border-gray-200 text-gray-700 hover:border-brand-300 hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selected}
+                                    onChange={() => toggleSpecialty(s.name)}
+                                    className="rounded text-brand-600 focus:ring-brand-400"
+                                  />
+                                  {s.name}
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                     {selectedSpecialties.length > 0 && (
-                      <p className="text-xs text-brand-600 mt-1">
-                        {selectedSpecialties.length} alan seçildi
+                      <p className="text-xs text-brand-600">
+                        Toplam {selectedSpecialties.length} alan seçildi
                       </p>
                     )}
-                  </>
+                  </div>
                 )}
               </Section>
 

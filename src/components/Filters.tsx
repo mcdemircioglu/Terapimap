@@ -6,7 +6,8 @@ import { useTranslations } from "next-intl";
 import { Select } from "./ui/Select";
 import { CITIES } from "@/lib/cities";
 import { slugifyTr } from "@/lib/utils";
-import type { Specialty } from "@/types/database";
+import type { Specialty } from '@/types/database';
+import { groupSpecialties, SPECIALTY_TYPE_LABELS } from '@/types/database';
 
 const PROF_TYPE_OPTIONS = {
   tr: [
@@ -224,10 +225,18 @@ export default function Filters({
               }
             >
               <option value="">{t("all")}</option>
-              {specialties.map((s) => (
-                <option key={s.slug} value={s.slug}>
-                  {s.name}
-                </option>
+              {/* Uzmanlıklar tipe göre gruplanır (konu / yöntem / danışan grubu) */}
+              {groupSpecialties(specialties).map((group) => (
+                <optgroup
+                  key={group.type}
+                  label={SPECIALTY_TYPE_LABELS[group.type].filter}
+                >
+                  {group.items.map((s) => (
+                    <option key={s.slug} value={s.slug}>
+                      {s.name}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </Select>
           </div>

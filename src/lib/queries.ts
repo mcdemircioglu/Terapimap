@@ -54,6 +54,7 @@ export async function getSpecialties(): Promise<Specialty[]> {
   const { data, error } = await supabase
     .from('specialties')
     .select('*')
+    .order('sort_order', { ascending: true })
     .order('name', { ascending: true });
 
   if (error) {

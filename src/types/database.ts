@@ -1,12 +1,56 @@
 // Hand-written DB types. If you generate types via `supabase gen types typescript`,
 // drop them in here and re-export the parts the app uses.
 
+export type SpecialtyType = 'konu' | 'yontem' | 'kitle';
+
+/** Arayüzdeki grup başlıkları ve sıralama. */
+export const SPECIALTY_TYPE_ORDER: SpecialtyType[] = ['konu', 'yontem', 'kitle'];
+
+export const SPECIALTY_TYPE_LABELS: Record<
+  SpecialtyType,
+  { profile: string; filter: string; form: string; formHint: string }
+> = {
+  konu: {
+    profile: 'Çalıştığı konular',
+    filter: 'Konu',
+    form: 'Çalıştığınız konular',
+    formHint: 'Danışanların sizi bu başlıklarla arayacağını unutmayın',
+  },
+  yontem: {
+    profile: 'Kullandığı yöntemler',
+    filter: 'Yöntem',
+    form: 'Kullandığınız yöntemler',
+    formHint: 'Eğitimini aldığınız terapi ekollerini seçin',
+  },
+  kitle: {
+    profile: 'Çalıştığı gruplar',
+    filter: 'Danışan grubu',
+    form: 'Çalıştığınız gruplar',
+    formHint: 'Hangi yaş ve danışan gruplarıyla çalışıyorsunuz?',
+  },
+};
+
 export type Specialty = {
   id: string;
   slug: string;
   name: string;
+  /** Taksonomi tipi — eski kayıtlarda tanımsız olabilir, 'konu' varsayılır. */
+  type?: SpecialtyType | null;
+  sort_order?: number | null;
   created_at: string;
 };
+
+/** Uzmanlıkları tipe göre gruplar; tipi olmayanlar 'konu' sayılır. */
+export function groupSpecialties(
+  specialties: Specialty[],
+): { type: SpecialtyType; items: Specialty[] }[] {
+  return SPECIALTY_TYPE_ORDER.map((type) => ({
+    type,
+    items: specialties
+      .filter((s) => (s.type ?? 'konu') === type)
+      .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999)),
+  })).filter((group) => group.items.length > 0);
+}
 
 export type ProfessionalType =
   | "psychologist"

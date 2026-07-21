@@ -22,6 +22,7 @@ import { getTherapistBySlug } from '@/lib/queries';
 import { getCitySlug } from '@/lib/cities';
 import { getResolvedMapsData } from '@/lib/maps';
 import { absUrl, buildTherapistSchema, buildBreadcrumbSchema } from '@/lib/schema';
+import { groupSpecialties, SPECIALTY_TYPE_LABELS } from '@/types/database';
 
 export async function generateMetadata({
   params: { locale, slug },
@@ -163,13 +164,35 @@ export default async function PsikologDetailPage({
               {therapist.specialties.length > 0 && (
                 <section className="mt-8">
                   <h2 className="text-lg font-semibold text-brand-900">{tDetail('specialties')}</h2>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {therapist.specialties.map((s) => (
-                      <Link key={s.id} href={'/' + locale + '/therapists/' + citySlug + '/' + s.slug}>
-                        <Badge variant="brand" className="cursor-pointer hover:bg-brand-200">
-                          {s.name}
-                        </Badge>
-                      </Link>
+                  {/* Uzmanlıklar tipe göre gruplanır: konu / yöntem / danışan grubu */}
+                  <div className="mt-4 space-y-4">
+                    {groupSpecialties(therapist.specialties).map((group) => (
+                      <div key={group.type}>
+                        <p className="text-xs font-medium uppercase tracking-wide text-brand-500">
+                          {SPECIALTY_TYPE_LABELS[group.type].profile}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {group.items.map((s) => (
+                            <Link
+                              key={s.id}
+                              href={'/' + locale + '/therapists/' + citySlug + '/' + s.slug}
+                            >
+                              <Badge
+                                variant={
+                                  group.type === 'yontem'
+                                    ? 'accent'
+                                    : group.type === 'kitle'
+                                    ? 'soft'
+                                    : 'brand'
+                                }
+                                className="cursor-pointer hover:opacity-80"
+                              >
+                                {s.name}
+                              </Badge>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </section>

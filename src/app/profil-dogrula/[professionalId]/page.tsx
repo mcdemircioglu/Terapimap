@@ -16,7 +16,7 @@ export default async function ProfilDogrulaPage({
       .maybeSingle(),
     supabase
       .from('specialties')
-      .select('id, name')
+      .select('id, name, type, sort_order')
       .order('name', { ascending: true }),
   ]);
 

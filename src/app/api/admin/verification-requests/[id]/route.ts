@@ -109,6 +109,63 @@ export async function PATCH(
       if (profErr) {
         return NextResponse.json({ error: 'Profesyonel güncellenemedi: ' + profErr.message }, { status: 500 });
       }
+
+      // ── Uzmanlık alanları ──────────────────────────────────────────────
+      // Form, uzmanlıkları isim dizisi olarak gönderir (specialties: text[]).
+      // Bunları specialties tablosundaki id'lerle eşleştirip
+      // professional_specialties join tablosunu yeniden kurarız.
+      const requestedNames: string[] = Array.isArray(vr.specialties)
+        ? (vr.specialties as unknown[]).filter(
+            (v): v is string => typeof v === 'string' && v.trim() !== '',
+          )
+        : [];
+
+      if (requestedNames.length > 0) {
+        const { data: matched, error: specErr } = await supabase
+          .from('specialties')
+          .select('id, name')
+          .in('name', requestedNames);
+
+        if (specErr) {
+          return NextResponse.json(
+            { error: 'Uzmanlık alanları okunamadı: ' + specErr.message },
+            { status: 500 },
+          );
+        }
+
+        const specialtyIds: string[] = (matched ?? []).map((row: { id: string }) => row.id);
+
+        if (specialtyIds.length > 0) {
+          // Mevcut bağlantıları temizle, talepteki seçimi yaz (idempotent)
+          const { error: delErr } = await supabase
+            .from('professional_specialties')
+            .delete()
+            .eq('professional_id', vr.professional_id);
+
+          if (delErr) {
+            return NextResponse.json(
+              { error: 'Mevcut uzmanlıklar temizlenemedi: ' + delErr.message },
+              { status: 500 },
+            );
+          }
+
+          const { error: insErr } = await supabase
+            .from('professional_specialties')
+            .insert(
+              specialtyIds.map((specialty_id) => ({
+                professional_id: vr.professional_id,
+                specialty_id,
+              })),
+            );
+
+          if (insErr) {
+            return NextResponse.json(
+              { error: 'Uzmanlık alanları kaydedilemedi: ' + insErr.message },
+              { status: 500 },
+            );
+          }
+        }
+      }
     }
 
     const { error: vrUpdateErr } = await supabase

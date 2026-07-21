@@ -5,7 +5,19 @@ import ImageUpload from '@/components/admin/ImageUpload';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type Specialty = { id: string; slug: string; name: string };
+type Specialty = {
+  id: string;
+  slug: string;
+  name: string;
+  type?: 'konu' | 'yontem' | 'kitle' | null;
+  sort_order?: number | null;
+};
+
+const ADMIN_SPECIALTY_GROUPS: { type: 'konu' | 'yontem' | 'kitle'; title: string }[] = [
+  { type: 'konu', title: 'Çalışılan konular' },
+  { type: 'yontem', title: 'Terapi yöntemleri' },
+  { type: 'kitle', title: 'Danışan grupları' },
+];
 
 type Professional = {
   id: string;
@@ -859,23 +871,39 @@ function ProfessionalForm({
         {specialties.length === 0 ? (
           <p className="text-sm text-gray-400">Uzmanlık alanı bulunamadı.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-            {specialties.map((s) => {
-              const selected = form.specialtyIds.includes(s.id);
+          <div className="space-y-4">
+            {ADMIN_SPECIALTY_GROUPS.map((group) => {
+              const items = specialties
+                .filter((s) => (s.type ?? 'konu') === group.type)
+                .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+              if (items.length === 0) return null;
+
               return (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => toggleSpecialty(s.id)}
-                  className={`px-3 py-2 rounded-lg text-sm text-left transition-all border ${
-                    selected
-                      ? 'bg-brand-600 text-white border-brand-600 font-medium'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-brand-300 hover:bg-brand-50'
-                  }`}
-                >
-                  {selected && <span className="mr-1">✓</span>}
-                  {s.name}
-                </button>
+                <div key={group.type}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                    {group.title}
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                    {items.map((s) => {
+                      const selected = form.specialtyIds.includes(s.id);
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => toggleSpecialty(s.id)}
+                          className={`px-3 py-2 rounded-lg text-sm text-left transition-all border ${
+                            selected
+                              ? 'bg-brand-600 text-white border-brand-600 font-medium'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-brand-300 hover:bg-brand-50'
+                          }`}
+                        >
+                          {selected && <span className="mr-1">✓</span>}
+                          {s.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </div>
