@@ -249,29 +249,10 @@ export async function getTherapistsPaged(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  // Specialty slug → professional IDs (two-step: JS client doesn't support subqueries)
-  let specialtyProfIds: string[] | null = null;
-  if (filters.specialtySlug) {
-    const { data: specData } = await supabase
-      .from('specialties')
-      .select('id')
-      .eq('slug', filters.specialtySlug)
-      .maybeSingle();
-
-    if (specData) {
-      const { data: psData } = await supabase
-        .from('professional_specialties')
-        .select('professional_id')
-        .eq('specialty_id', specData.id);
-      specialtyProfIds = (psData ?? []).map((r: any) => r.professional_id);
-    } else {
-      specialtyProfIds = [];
-    }
-  }
-
-  if (specialtyProfIds !== null && specialtyProfIds.length === 0) {
-    return { therapists: [], total: 0 };
-  }
+  // Uzmanlık filtresi, embed edilen specialties verisi üzerinden uygulanır.
+  // (Önceki iki adımlı ara sorgu — specialties → professional_specialties —
+  //  şema değişikliklerinde sessizce boş dönüp tüm listeyi sıfırlıyordu.)
+  const filterBySpecialty = Boolean(filters.specialtySlug);
 
   let query = supabase
     .from('professionals')
@@ -292,11 +273,10 @@ export async function getTherapistsPaged(
     const term = `%${filters.search}%`;
     query = query.or(`name.ilike.${term},about.ilike.${term}`);
   }
-  if (specialtyProfIds !== null && specialtyProfIds.length > 0) {
-    query = query.in('id', specialtyProfIds);
-  }
+  query = query.order('rating', { ascending: false });
 
-  query = query.order('rating', { ascending: false }).range(from, to);
+  // Uzmanlık filtresi yoksa sayfalamayı veritabanına bırak (verimli yol).
+  if (!filterBySpecialty) query = query.range(from, to);
 
   const { data, error, count } = await query;
 
@@ -305,12 +285,25 @@ export async function getTherapistsPaged(
     return { therapists: [], total: 0 };
   }
 
-  const therapists = (data ?? []).map((row: any) => ({
+  const allRows = (data ?? []).map((row: any) => ({
     ...(row as Professional),
     specialties: flattenSpecialties(row),
   })) as ProfessionalWithSpecialties[];
 
-  return { therapists, total: count ?? 0 };
+  if (!filterBySpecialty) {
+    return { therapists: allRows, total: count ?? 0 };
+  }
+
+  // Uzmanlığa göre süz, sonra JS tarafında sayfala
+  const matched = allRows.filter((r) =>
+    r.specialties.some((sp) => sp.slug === filters.specialtySlug),
+  );
+
+  console.log(
+    `[terapimap:queries] getTherapistsPaged specialty="${filters.specialtySlug}" -> ${matched.length}/${allRows.length} eşleşti`,
+  );
+
+  return { therapists: matched.slice(from, to + 1), total: matched.length };
 }
 
 // ---------------------------------------------------------------------
@@ -323,33 +316,17 @@ export async function getTherapistStats(filters: {
 }): Promise<{ total: number; online: number; inPerson: number }> {
   const supabase = getServerClient();
 
-  // Specialty slug → professional IDs (iki adım)
-  let specialtyProfIds: string[] | null = null;
-  if (filters.specialtySlug) {
-    const { data: specData } = await supabase
-      .from('specialties')
-      .select('id')
-      .eq('slug', filters.specialtySlug)
-      .maybeSingle();
+  // Uzmanlık filtresi embed veri üzerinden uygulanır (ara sorgu yok).
+  const filterBySpecialty = Boolean(filters.specialtySlug);
 
-    if (specData) {
-      const { data: psData } = await supabase
-        .from('professional_specialties')
-        .select('professional_id')
-        .eq('specialty_id', specData.id);
-      specialtyProfIds = (psData ?? []).map((r: any) => r.professional_id);
-    } else {
-      specialtyProfIds = [];
-    }
-  }
-
-  if (specialtyProfIds !== null && specialtyProfIds.length === 0) {
-    return { total: 0, online: 0, inPerson: 0 };
-  }
-
+  // Uzmanlık filtresi varsa join'li select gerekir; yoksa hafif 3 kolon yeter.
   let query = supabase
     .from('professionals')
-    .select('id, is_online, is_in_person')
+    .select(
+      filterBySpecialty
+        ? `id, is_online, is_in_person, professional_specialties ( specialties ( slug ) )`
+        : 'id, is_online, is_in_person',
+    )
     .in('status', ['approved', 'featured'])
     .eq('is_visible', true)
     .is('removed_at', null);
@@ -358,7 +335,6 @@ export async function getTherapistStats(filters: {
     const cityName = getCityName(filters.citySlug);
     if (cityName) query = query.eq('city', cityName);
   }
-  if (specialtyProfIds !== null) query = query.in('id', specialtyProfIds);
 
   const { data, error } = await query;
   if (error) {
@@ -366,7 +342,16 @@ export async function getTherapistStats(filters: {
     return { total: 0, online: 0, inPerson: 0 };
   }
 
-  const rows = data ?? [];
+  let rows: any[] = data ?? [];
+
+  if (filterBySpecialty) {
+    rows = rows.filter((r: any) =>
+      (r.professional_specialties ?? []).some(
+        (ps: any) => ps?.specialties?.slug === filters.specialtySlug,
+      ),
+    );
+  }
+
   return {
     total: rows.length,
     online: rows.filter((r: any) => r.is_online).length,
