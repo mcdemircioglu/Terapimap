@@ -249,10 +249,24 @@ export async function getTherapistsPaged(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  // Uzmanlık filtresi, embed edilen specialties verisi üzerinden uygulanır.
-  // (Önceki iki adımlı ara sorgu — specialties → professional_specialties —
-  //  şema değişikliklerinde sessizce boş dönüp tüm listeyi sıfırlıyordu.)
-  const filterBySpecialty = Boolean(filters.specialtySlug);
+  // ── Uzmanlık filtresi ──────────────────────────────────────────────
+  // getTherapists() specialty'yi embed veri üzerinden süzer ve KANITLI
+  // biçimde çalışır (SEO landing sayfaları onu kullanıyor). Paged sürümde
+  // count:'exact' + embed + range'siz sorgu Supabase'de timeout'a düşüp
+  // sessizce boş dönüyordu; bu yüzden uzmanlık filtresinde getTherapists'e
+  // devredip sayfalamayı JS tarafında yapıyoruz.
+  if (filters.specialtySlug) {
+    const all = await getTherapists({
+      citySlug: filters.citySlug,
+      specialtySlug: filters.specialtySlug,
+      district: filters.district,
+      professionalType: filters.professionalType,
+      online: filters.online,
+      inPerson: filters.inPerson,
+      search: filters.search,
+    });
+    return { therapists: all.slice(from, to + 1), total: all.length };
+  }
 
   let query = supabase
     .from('professionals')
@@ -273,10 +287,7 @@ export async function getTherapistsPaged(
     const term = `%${filters.search}%`;
     query = query.or(`name.ilike.${term},about.ilike.${term}`);
   }
-  query = query.order('rating', { ascending: false });
-
-  // Uzmanlık filtresi yoksa sayfalamayı veritabanına bırak (verimli yol).
-  if (!filterBySpecialty) query = query.range(from, to);
+  query = query.order('rating', { ascending: false }).range(from, to);
 
   const { data, error, count } = await query;
 
@@ -285,25 +296,12 @@ export async function getTherapistsPaged(
     return { therapists: [], total: 0 };
   }
 
-  const allRows = (data ?? []).map((row: any) => ({
+  const therapists = (data ?? []).map((row: any) => ({
     ...(row as Professional),
     specialties: flattenSpecialties(row),
   })) as ProfessionalWithSpecialties[];
 
-  if (!filterBySpecialty) {
-    return { therapists: allRows, total: count ?? 0 };
-  }
-
-  // Uzmanlığa göre süz, sonra JS tarafında sayfala
-  const matched = allRows.filter((r) =>
-    r.specialties.some((sp) => sp.slug === filters.specialtySlug),
-  );
-
-  console.log(
-    `[terapimap:queries] getTherapistsPaged specialty="${filters.specialtySlug}" -> ${matched.length}/${allRows.length} eşleşti`,
-  );
-
-  return { therapists: matched.slice(from, to + 1), total: matched.length };
+  return { therapists, total: count ?? 0 };
 }
 
 // ---------------------------------------------------------------------
@@ -314,19 +312,24 @@ export async function getTherapistStats(filters: {
   citySlug?: string;
   specialtySlug?: string;
 }): Promise<{ total: number; online: number; inPerson: number }> {
+  // Uzmanlık filtresinde getTherapists'e devret (kanıtlı çalışan yol);
+  // aksi hâlde hafif 3 kolonla say.
+  if (filters.specialtySlug) {
+    const rows = await getTherapists({
+      citySlug: filters.citySlug,
+      specialtySlug: filters.specialtySlug,
+    });
+    return {
+      total: rows.length,
+      online: rows.filter((r) => r.is_online).length,
+      inPerson: rows.filter((r) => r.is_in_person).length,
+    };
+  }
+
   const supabase = getServerClient();
-
-  // Uzmanlık filtresi embed veri üzerinden uygulanır (ara sorgu yok).
-  const filterBySpecialty = Boolean(filters.specialtySlug);
-
-  // Uzmanlık filtresi varsa join'li select gerekir; yoksa hafif 3 kolon yeter.
   let query = supabase
     .from('professionals')
-    .select(
-      filterBySpecialty
-        ? `id, is_online, is_in_person, professional_specialties ( specialties ( slug ) )`
-        : 'id, is_online, is_in_person',
-    )
+    .select('id, is_online, is_in_person')
     .in('status', ['approved', 'featured'])
     .eq('is_visible', true)
     .is('removed_at', null);
@@ -342,16 +345,7 @@ export async function getTherapistStats(filters: {
     return { total: 0, online: 0, inPerson: 0 };
   }
 
-  let rows: any[] = data ?? [];
-
-  if (filterBySpecialty) {
-    rows = rows.filter((r: any) =>
-      (r.professional_specialties ?? []).some(
-        (ps: any) => ps?.specialties?.slug === filters.specialtySlug,
-      ),
-    );
-  }
-
+  const rows = data ?? [];
   return {
     total: rows.length,
     online: rows.filter((r: any) => r.is_online).length,
