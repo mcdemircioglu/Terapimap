@@ -65,6 +65,31 @@ export async function getSpecialties(): Promise<Specialty[]> {
   return data ?? [];
 }
 
+/**
+ * Ana sayfa istatistikleri — hafif sayımlar (embed yok).
+ * Görünür/onaylı uzman sayısı ve kaç farklı ilde uzman olduğu.
+ */
+export async function getHomeStats(): Promise<{
+  totalTherapists: number;
+  cityCount: number;
+}> {
+  const supabase = getServerClient();
+  const { data, error, count } = await supabase
+    .from('professionals')
+    .select('city', { count: 'exact' })
+    .in('status', ['approved', 'featured'])
+    .eq('is_visible', true)
+    .is('removed_at', null);
+
+  if (error) {
+    logError('getHomeStats', error);
+    return { totalTherapists: 0, cityCount: 0 };
+  }
+
+  const cities = new Set((data ?? []).map((r: any) => r.city).filter(Boolean));
+  return { totalTherapists: count ?? 0, cityCount: cities.size };
+}
+
 export async function getDistricts(citySlug?: string): Promise<string[]> {
   const supabase = getServerClient();
   let query = supabase

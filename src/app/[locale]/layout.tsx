@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Lora } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import {
   getMessages,
@@ -16,6 +17,14 @@ import { CookieConsentProvider } from '@/components/cookie-consent/CookieConsent
 import CookieBanner from '@/components/cookie-consent/CookieBanner';
 import CookiePreferencesModal from '@/components/cookie-consent/CookiePreferencesModal';
 import ConsentScripts from '@/components/cookie-consent/ConsentScripts';
+
+// Editoryal başlıklar için serif — markaya sıcaklık katar
+const lora = Lora({
+  subsets: ['latin', 'latin-ext'],
+  weight: ['500', '600'],
+  variable: '--font-serif',
+  display: 'swap',
+});
 import { locales, type Locale } from '@/i18n';
 
 export function generateStaticParams() {
@@ -70,7 +79,7 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={lora.variable}>
       <body>
         <JsonLd schema={buildOrganizationSchema()} />
         <NextIntlClientProvider locale={locale} messages={messages}>

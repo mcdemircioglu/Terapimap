@@ -1,10 +1,13 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import SearchBar from '@/components/SearchBar';
 import TherapistGrid from '@/components/TherapistGrid';
+import PopularSearches from '@/components/home/PopularSearches';
 import { Button } from '@/components/ui/Button';
-import { getFeaturedTherapists, getSpecialties } from '@/lib/queries';
+import { UsersIcon, MapPinIcon, VideoIcon } from '@/components/ui/icons';
+import { getFeaturedTherapists, getSpecialties, getHomeStats } from '@/lib/queries';
 import FeaturedArticles from '@/components/guide/FeaturedArticles';
 
 export default async function HomePage({
@@ -13,61 +16,109 @@ export default async function HomePage({
   params: { locale: string };
 }) {
   unstable_setRequestLocale(locale);
-  const [t, specialties, featured] = await Promise.all([
+  const [t, specialties, featured, stats] = await Promise.all([
     getTranslations({ locale, namespace: 'home' }),
     getSpecialties(),
     getFeaturedTherapists(6),
+    getHomeStats(),
   ]);
+
+  const statItems = [
+    { icon: UsersIcon, value: `${stats.totalTherapists}+`, label: t('statTherapists') },
+    { icon: MapPinIcon, value: String(stats.cityCount), label: t('statCities') },
+    { icon: VideoIcon, value: String(specialties.length), label: t('statSpecialties') },
+  ];
 
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-brand-950">
-        <Container className="relative py-16 md:py-32">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="mb-5 text-xs font-semibold uppercase tracking-widest text-brand-400">
-              Terapimap
-            </p>
-            <h1 className="whitespace-pre-line text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl md:text-6xl">
-              {t('heroTitle')}
-            </h1>
-            <p className="mt-5 text-base leading-relaxed text-brand-300 md:mt-6 md:text-lg">
-              {t('heroSubtitle')}
-            </p>
-          </div>
-          <div className="mx-auto mt-8 max-w-3xl md:mt-12">
-            <SearchBar locale={locale} specialties={specialties} dark />
+      <section className="bg-brand-50/60">
+        <Container className="py-12 md:py-16 lg:py-20">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
+            {/* Sol: metin + arama + istatistik */}
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-brand-500">
+                Terapimap
+              </p>
+              <h1 className="mt-4 font-serif text-4xl leading-[1.1] tracking-tight text-brand-950 sm:text-5xl md:text-[3.4rem]">
+                {t('heroTitleLead')}{' '}
+                <span className="text-brand-600">{t('heroTitleEmph')}</span>{' '}
+                {t('heroTitleTrail')}
+              </h1>
+              <p className="mt-5 max-w-lg text-base leading-relaxed text-brand-700 md:text-lg">
+                {t('heroSubtitleNew')}
+              </p>
+
+              <div className="mt-7">
+                <SearchBar locale={locale} specialties={specialties} />
+              </div>
+
+              {/* İstatistik bandı */}
+              <dl className="mt-8 flex flex-wrap gap-x-8 gap-y-4">
+                {statItems.map((s) => (
+                  <div key={s.label} className="flex items-center gap-3">
+                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-600">
+                      <s.icon className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <dd className="text-xl font-semibold leading-none text-brand-900">
+                        {s.value}
+                      </dd>
+                      <dt className="mt-1 text-xs text-brand-600">{s.label}</dt>
+                    </div>
+                  </div>
+                ))}
+              </dl>
+            </div>
+
+            {/* Sağ: illüstrasyon */}
+            <div className="relative hidden lg:block">
+              <Image
+                src="/hero-illustration.png"
+                alt=""
+                width={1000}
+                height={800}
+                priority
+                unoptimized
+                className="w-full rounded-3xl"
+              />
+            </div>
           </div>
         </Container>
       </section>
 
-      {/* Featured therapists */}
-      <section>
-        <Container className="py-10 md:py-16">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-semibold text-brand-900 md:text-3xl">
-                {t('featuredTitle')}
-              </h2>
-              <p className="mt-2 text-sm text-brand-700 md:text-base">{t('featuredSubtitle')}</p>
+      {/* Popüler aramalar */}
+      <PopularSearches locale={locale} />
+
+      {/* Öne çıkan terapist yoksa bölüm gizlenir; bu durumda rehber yukarı çıkar */}
+      {featured.length > 0 && (
+        <section>
+          <Container className="py-10 md:py-16">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-brand-900 md:text-3xl">
+                  {t('featuredTitle')}
+                </h2>
+                <p className="mt-2 text-sm text-brand-700 md:text-base">{t('featuredSubtitle')}</p>
+              </div>
+              <Link
+                href={`/${locale}/therapists`}
+                className="hidden shrink-0 text-sm font-medium text-brand-700 hover:text-brand-900 md:inline"
+              >
+                {t('featuredCta')} →
+              </Link>
             </div>
-            <Link
-              href={`/${locale}/therapists`}
-              className="hidden shrink-0 text-sm font-medium text-brand-700 hover:text-brand-900 md:inline"
-            >
-              {t('featuredCta')} →
-            </Link>
-          </div>
-          <div className="mt-6 md:mt-8">
-            <TherapistGrid therapists={featured} locale={locale} />
-          </div>
-          <div className="mt-6 md:hidden">
-            <Link href={`/${locale}/therapists`}>
-              <Button variant="outline" className="w-full">{t('featuredCta')}</Button>
-            </Link>
-          </div>
-        </Container>
-      </section>
+            <div className="mt-6 md:mt-8">
+              <TherapistGrid therapists={featured} locale={locale} />
+            </div>
+            <div className="mt-6 md:hidden">
+              <Link href={`/${locale}/therapists`}>
+                <Button variant="outline" className="w-full">{t('featuredCta')}</Button>
+              </Link>
+            </div>
+          </Container>
+        </section>
+      )}
 
       {/* Psikoloji Rehberi — öne çıkan içerikler (içerik yoksa render edilmez) */}
       <FeaturedArticles locale={locale} />

@@ -41,7 +41,17 @@
     "value3Body": "Size uygun görüşme türünü seçin; şehir farketmeksizin destek alın.",
     "ctaTitle": "Bugün ilk adımı atın",
     "ctaBody": "İhtiyaçlarınıza uygun terapisti bulun, doğrudan iletişime geçin.",
-    "ctaButton": "Terapistleri keşfet"
+    "ctaButton": "Terapistleri keşfet",
+    "heroTitleLead": "Size uygun psikoloğu",
+    "heroTitleEmph": "kolay ve güvenle",
+    "heroTitleTrail": "bulun.",
+    "heroSubtitleNew": "Uzmanlık alanı, şehir ve görüşme türüne göre yüzlerce psikoloğu inceleyin. Doğru kişiyle ilk adımı bugün atın.",
+    "statTherapists": "Kayıtlı Uzman",
+    "statCities": "İl",
+    "statOnline": "Online Görüşme",
+    "popularTitle": "Popüler aramalar",
+    "popularSeeAll": "Tümünü gör",
+    "statSpecialties": "Uzmanlık Alanı"
   },
   "filters": {
     "title": "Filtreler",
