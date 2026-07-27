@@ -21,7 +21,9 @@ export async function GET(request: Request) {
          specialties ( id, slug, name )
        )`,
     )
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    // Supabase varsayılan 1000 satır limitini aş — admin tüm kayıtları görür.
+    .range(0, 99999);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
