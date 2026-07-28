@@ -13,24 +13,33 @@ export async function GET(request: Request) {
   }
 
   const supabase = getServiceClient();
-  const { data, error } = await supabase
-    .from('professionals')
-    .select(
-      `*,
-       professional_specialties (
-         specialties ( id, slug, name )
-       )`,
-    )
-    .order('created_at', { ascending: false })
-    // Supabase varsayılan 1000 satır limitini aş — admin tüm kayıtları görür.
-    .range(0, 99999);
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  // Supabase/PostgREST tek istekte en fazla 1000 satır döndürür (sunucu max_rows).
+  // Tüm kayıtları almak için 1000'erlik gruplar hâlinde çekip birleştiriyoruz.
+  const PAGE = 1000;
+  const rows: any[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await supabase
+      .from('professionals')
+      .select(
+        `*,
+         professional_specialties (
+           specialties ( id, slug, name )
+         )`,
+      )
+      .order('created_at', { ascending: false })
+      .range(from, from + PAGE - 1);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    if (!data || data.length === 0) break;
+    rows.push(...data);
+    if (data.length < PAGE) break;
   }
 
   // Flatten specialty join into a simple array on each professional
-  const professionals = (data ?? []).map((row: any) => {
+  const professionals = rows.map((row: any) => {
     const { professional_specialties, ...rest } = row;
     return {
       ...rest,

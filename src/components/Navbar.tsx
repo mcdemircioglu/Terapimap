@@ -13,12 +13,14 @@ export default async function Navbar({ locale }: { locale: Locale }) {
   const therapists = `/${locale}/therapists`;
   const guide = `/${locale}/psikoloji-rehberi`;
   const about = `/${locale}/about`;
+  const applyExpert = `/${locale}/uzman-basvuru`;
 
   const navItems = [
     { href: home,        label: t('home') },
     { href: therapists,  label: t('therapists') },
     { href: guide,       label: t('guide') },
     { href: about,       label: t('about') },
+    { href: applyExpert, label: t('applyExpert') },
   ];
 
   return (
@@ -41,8 +43,14 @@ export default async function Navbar({ locale }: { locale: Locale }) {
           <Link href={about}      className="text-brand-700 hover:text-brand-900">{t('about')}</Link>
         </nav>
 
-        {/* Right side: locale switcher + mobile hamburger */}
+        {/* Right side: CTA + locale switcher + mobile hamburger */}
         <div className="flex items-center gap-2">
+          <Link
+            href={applyExpert}
+            className="hidden rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700 md:inline-flex"
+          >
+            {t('applyExpert')}
+          </Link>
           <LocaleSwitcher current={locale} />
           <MobileMenu items={navItems} />
         </div>

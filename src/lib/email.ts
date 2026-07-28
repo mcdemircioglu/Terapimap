@@ -169,6 +169,101 @@ export async function sendLeadToTherapist({ lead, professional }: LeadEmailInput
   });
 }
 
+/* ── Admin'e: yeni uzman başvurusu ──────────────────────────────────── */
+
+export type ApplicationEmailInput = {
+  fullName: string;
+  email: string;
+  phone: string;
+  title: string;
+  city: string;
+  district: string;
+  bio: string;
+  specialties: string[];
+  website?: string | null;
+  instagram?: string | null;
+  clinicName?: string | null;
+  offersOnline?: boolean;
+  offersInPerson?: boolean;
+};
+
+export async function sendApplicationNotification(app: ApplicationEmailInput) {
+  const adminAddr = process.env.GMAIL_USER;
+  if (!adminAddr) {
+    throw new Error('GMAIL_USER ortam değişkeni tanımlı değil.');
+  }
+
+  const adminUrl = `${BASE}/admin/basvurular`;
+  const meeting = [
+    app.offersOnline ? 'Online' : null,
+    app.offersInPerson ? 'Yüz yüze' : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  const rows = [
+    infoRow('Ad Soyad', escapeHtml(app.fullName)),
+    infoRow('Unvan', escapeHtml(app.title)),
+    infoRow('E-posta', `<a href="mailto:${escapeHtml(app.email)}" style="color:${C.primary};">${escapeHtml(app.email)}</a>`),
+    infoRow('Telefon', escapeHtml(app.phone)),
+    infoRow('Şehir / İlçe', escapeHtml([app.city, app.district].filter(Boolean).join(' / '))),
+    app.clinicName ? infoRow('Kurum', escapeHtml(app.clinicName)) : '',
+    meeting ? infoRow('Görüşme', escapeHtml(meeting)) : '',
+    app.website ? infoRow('Web', `<a href="${escapeHtml(app.website)}" style="color:${C.primary};">${escapeHtml(app.website)}</a>`) : '',
+    app.instagram ? infoRow('Instagram', escapeHtml(app.instagram)) : '',
+    app.specialties.length ? infoRow('Uzmanlıklar', escapeHtml(app.specialties.join(', '))) : '',
+    infoRow('Hakkında', escapeHtml(app.bio).replace(/\n/g, '<br>')),
+  ].join('');
+
+  const html = layout(
+    'Yeni uzman başvurusu',
+    `<p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
+      Terapimap üzerinden yeni bir uzman üyelik başvurusu alındı. Başvuru bilgileri aşağıdadır.
+      Onaylamak veya reddetmek için admin panelindeki
+      <a href="${adminUrl}" style="color:${C.primary};">Başvurular</a> bölümünü kullanın.
+      Başvuru siz onaylayana kadar yayınlanmaz.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+      style="background:${C.bg};border:1px solid ${C.border};border-radius:10px;">
+      ${rows}
+    </table>
+    <div style="margin-top:24px;">
+      ${button(adminUrl, 'Başvuruları Görüntüle')}
+    </div>`,
+  );
+
+  const text = [
+    'Terapimap — yeni uzman başvurusu alındı:',
+    '',
+    `Ad Soyad: ${app.fullName}`,
+    `Unvan: ${app.title}`,
+    `E-posta: ${app.email}`,
+    `Telefon: ${app.phone}`,
+    `Şehir / İlçe: ${[app.city, app.district].filter(Boolean).join(' / ')}`,
+    app.clinicName ? `Kurum: ${app.clinicName}` : null,
+    meeting ? `Görüşme: ${meeting}` : null,
+    app.website ? `Web: ${app.website}` : null,
+    app.instagram ? `Instagram: ${app.instagram}` : null,
+    app.specialties.length ? `Uzmanlıklar: ${app.specialties.join(', ')}` : null,
+    `Hakkında: ${app.bio}`,
+    '',
+    `Başvuruları görüntüle: ${adminUrl}`,
+    '',
+    'Terapimap — terapimap.com',
+  ]
+    .filter((l) => l !== null)
+    .join('\n');
+
+  await getTransport().sendMail({
+    from: { name: FROM_NAME, address: adminAddr },
+    to: adminAddr,
+    replyTo: app.email,
+    subject: `Uzman Başvuru İsteği — ${app.fullName}`,
+    html,
+    text,
+  });
+}
+
 /* ── Danışana: talebiniz iletildi ───────────────────────────────────── */
 
 export async function sendConfirmationToClient({ lead, professional }: LeadEmailInput) {

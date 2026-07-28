@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
+import { sendApplicationNotification } from '@/lib/email';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -17,11 +18,14 @@ export async function POST(request: Request) {
   // ── Required field validation ──
   const { professional_id, request_type, full_name, email, phone } = body as Record<string, string>;
 
-  if (!professional_id) {
-    return NextResponse.json({ error: 'Terapist ID zorunludur.' }, { status: 400 });
-  }
-  if (!request_type || !['update', 'photo_update', 'removal'].includes(request_type)) {
+  const isNewApplication = request_type === 'new';
+
+  if (!request_type || !['new', 'update', 'photo_update', 'removal'].includes(request_type)) {
     return NextResponse.json({ error: 'Geçerli bir talep tipi seçiniz.' }, { status: 400 });
+  }
+  // Yeni başvuru dışındaki talepler mevcut bir profile bağlanmalı.
+  if (!isNewApplication && !professional_id) {
+    return NextResponse.json({ error: 'Terapist ID zorunludur.' }, { status: 400 });
   }
   if (!full_name?.trim()) {
     return NextResponse.json({ error: 'Ad Soyad zorunludur.' }, { status: 400 });
@@ -36,18 +40,42 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Profil kaldırma talebinde ek açıklama zorunludur.' }, { status: 400 });
   }
 
+  // ── Yeni başvuru için ek zorunlu alanlar ──
+  if (isNewApplication) {
+    const req = (label: string, v: unknown) =>
+      typeof v === 'string' && v.trim() !== ''
+        ? null
+        : NextResponse.json({ error: `${label} zorunludur.` }, { status: 400 });
+    const missing =
+      req('Şehir', body.city) ??
+      req('İlçe', body.district) ??
+      req('Unvan', body.title) ??
+      req('Hakkında', body.bio);
+    if (missing) return missing;
+    const specs = body.specialties;
+    if (!Array.isArray(specs) || specs.length === 0) {
+      return NextResponse.json(
+        { error: 'En az bir uzmanlık alanı seçmelisiniz.' },
+        { status: 400 },
+      );
+    }
+  }
+
   const supabase = getServiceClient();
 
-  // ── Duplicate check: same professional_id + email, pending in last 24h ──
+  // ── Duplicate check: son 24 saatte aynı e-posta + tip, bekleyen talep ──
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: existing } = await supabase
+  let dupQuery = supabase
     .from('therapist_verification_requests')
     .select('id')
-    .eq('professional_id', professional_id)
     .eq('email', email.trim().toLowerCase())
+    .eq('request_type', request_type)
     .eq('status', 'pending')
-    .gte('created_at', cutoff)
-    .maybeSingle();
+    .gte('created_at', cutoff);
+  dupQuery = isNewApplication
+    ? dupQuery.is('professional_id', null)
+    : dupQuery.eq('professional_id', professional_id);
+  const { data: existing } = await dupQuery.maybeSingle();
 
   if (existing) {
     return NextResponse.json(
@@ -58,7 +86,7 @@ export async function POST(request: Request) {
 
   // ── Build insert payload ──
   const payload: Record<string, unknown> = {
-    professional_id,
+    professional_id: isNewApplication ? null : professional_id,
     request_type,
     full_name: full_name.trim(),
     email: email.trim().toLowerCase(),
@@ -86,6 +114,32 @@ export async function POST(request: Request) {
   if (error) {
     console.error('[verification-requests] insert error:', error);
     return NextResponse.json({ error: 'Talep kaydedilemedi. Lütfen tekrar deneyin.' }, { status: 500 });
+  }
+
+  // ── Yeni başvurularda admin'e bildirim e-postası gönder ──
+  // E-posta hatası başvuruyu bozmasın: sadece logla, kullanıcıya başarı dön.
+  if (isNewApplication) {
+    try {
+      await sendApplicationNotification({
+        fullName: full_name.trim(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        title: (body.title as string)?.trim() ?? '',
+        city: (body.city as string)?.trim() ?? '',
+        district: (body.district as string)?.trim() ?? '',
+        bio: (body.bio as string)?.trim() ?? '',
+        specialties: Array.isArray(body.specialties)
+          ? (body.specialties as unknown[]).filter((s): s is string => typeof s === 'string')
+          : [],
+        website: (body.website as string) ?? null,
+        instagram: (body.instagram as string) ?? null,
+        clinicName: (body.clinic_name as string) ?? null,
+        offersOnline: body.offers_online === true,
+        offersInPerson: body.offers_in_person === true,
+      });
+    } catch (mailErr) {
+      console.error('[verification-requests] bildirim e-postası gönderilemedi:', mailErr);
+    }
   }
 
   return NextResponse.json({ ok: true, id: data.id }, { status: 201 });

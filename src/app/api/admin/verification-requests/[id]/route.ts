@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
+import { slugifyTr } from '@/lib/utils';
 
 function verifyAuth(request: Request): boolean {
   const pw = request.headers.get('x-admin-password');
@@ -78,6 +79,91 @@ export async function PATCH(
     // ── Approve update / photo_update ──
     if (vr.request_type === 'removal') {
       return NextResponse.json({ error: 'Kaldırma talebi için "remove" aksiyonunu kullanın.' }, { status: 400 });
+    }
+
+    // ── YENİ BAŞVURU: professional_id yok → sıfırdan profil oluştur ──
+    if (!vr.professional_id) {
+      // Benzersiz slug üret (isim + gerekirse kısa sayı eki)
+      const baseSlug = slugifyTr(vr.full_name || 'terapist') || 'terapist';
+      let slug = baseSlug;
+      for (let i = 0; i < 20; i++) {
+        const { data: clash } = await supabase
+          .from('professionals')
+          .select('id')
+          .eq('slug', slug)
+          .maybeSingle();
+        if (!clash) break;
+        slug = `${baseSlug}-${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+
+      const insertPayload: Record<string, unknown> = {
+        slug,
+        name: vr.full_name,
+        city: vr.city ?? '',
+        status: 'approved',
+        is_visible: true,
+        is_verified: true,
+        verification_status: 'verified',
+        is_online: vr.offers_online ?? false,
+        is_in_person: vr.offers_in_person ?? false,
+      };
+      if (vr.title) insertPayload.title = vr.title;
+      if (vr.district) insertPayload.district = vr.district;
+      if (vr.clinic_name) insertPayload.clinic_name = vr.clinic_name;
+      if (vr.address) insertPayload.address = vr.address;
+      if (vr.website) insertPayload.website_url = vr.website;
+      if (vr.instagram) insertPayload.instagram_url = vr.instagram;
+      if (vr.bio) insertPayload.about = vr.bio;
+      if (vr.photo_url) insertPayload.image_url = vr.photo_url;
+      if (vr.email) insertPayload.email = vr.email;
+      if (vr.phone) insertPayload.phone = vr.phone;
+
+      const { data: created, error: createErr } = await supabase
+        .from('professionals')
+        .insert(insertPayload)
+        .select('id')
+        .single();
+
+      if (createErr || !created) {
+        return NextResponse.json(
+          { error: 'Yeni profil oluşturulamadı: ' + (createErr?.message ?? 'bilinmeyen hata') },
+          { status: 500 },
+        );
+      }
+
+      // Uzmanlıkları isimden id'ye eşleyip bağla
+      const names: string[] = Array.isArray(vr.specialties)
+        ? (vr.specialties as unknown[]).filter(
+            (v): v is string => typeof v === 'string' && v.trim() !== '',
+          )
+        : [];
+      if (names.length > 0) {
+        const { data: matched } = await supabase
+          .from('specialties')
+          .select('id, name')
+          .in('name', names);
+        const specialtyIds: string[] = (matched ?? []).map((r: { id: string }) => r.id);
+        if (specialtyIds.length > 0) {
+          await supabase.from('professional_specialties').insert(
+            specialtyIds.map((specialty_id) => ({
+              professional_id: created.id,
+              specialty_id,
+            })),
+          );
+        }
+      }
+
+      // Talebi profile bağla + onaylandı işaretle
+      await supabase
+        .from('therapist_verification_requests')
+        .update({
+          status: 'approved',
+          professional_id: created.id,
+          admin_note: admin_note ?? null,
+        })
+        .eq('id', params.id);
+
+      return NextResponse.json({ ok: true, action: 'approved', professionalId: created.id });
     }
 
     if (vr.professional_id) {

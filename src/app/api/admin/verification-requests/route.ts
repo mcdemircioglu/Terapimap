@@ -14,6 +14,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const status = searchParams.get('status') ?? 'pending';
+  const type = searchParams.get('type'); // 'new' → yeni başvurular; boş → hepsi
 
   const supabase = getServiceClient();
 
@@ -24,6 +25,9 @@ export async function GET(request: Request) {
 
   if (status !== 'all') {
     query = query.eq('status', status);
+  }
+  if (type) {
+    query = query.eq('request_type', type);
   }
 
   const { data, error } = await query;

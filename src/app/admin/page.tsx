@@ -1042,6 +1042,12 @@ export default function AdminPage() {
             </Btn>
           )}
           <a
+            href="/admin/basvurular"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+          >
+            Başvurular
+          </a>
+          <a
             href="/admin/articles"
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
           >
