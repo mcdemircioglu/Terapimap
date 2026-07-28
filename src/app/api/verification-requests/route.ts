@@ -96,7 +96,7 @@ export async function POST(request: Request) {
 
   const optionalFields = [
     'title', 'city', 'district', 'clinic_name', 'address',
-    'website', 'instagram', 'bio', 'message', 'photo_url',
+    'website', 'instagram', 'google_maps_url', 'bio', 'message', 'photo_url',
     'offers_online', 'offers_in_person', 'specialties',
   ];
   for (const f of optionalFields) {
@@ -133,6 +133,7 @@ export async function POST(request: Request) {
           : [],
         website: (body.website as string) ?? null,
         instagram: (body.instagram as string) ?? null,
+        googleMapsUrl: (body.google_maps_url as string) ?? null,
         clinicName: (body.clinic_name as string) ?? null,
         offersOnline: body.offers_online === true,
         offersInPerson: body.offers_in_person === true,

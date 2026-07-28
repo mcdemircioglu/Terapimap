@@ -24,11 +24,19 @@ export default function SearchBar({
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const qs = new URLSearchParams();
-    if (city) qs.set('city', city);
-    if (specialty) qs.set('specialty', specialty);
-    const search = qs.toString();
-    router.push(search ? '/' + locale + '/therapists?' + search : '/' + locale + '/therapists');
+    // Arama SEO landing sayfalarına yönlendirir (özgün içerik + FAQ + iç linkler).
+    const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
+    let path: string;
+    if (city && specialty) {
+      path = `/${locale}/${listBase}/${city}/${specialty}`;
+    } else if (city) {
+      path = `/${locale}/${listBase}/${city}`;
+    } else if (specialty) {
+      path = `/${locale}/${specialty}`;
+    } else {
+      path = `/${locale}/${listBase}`;
+    }
+    router.push(path);
   }
 
   return (

@@ -182,6 +182,7 @@ export type ApplicationEmailInput = {
   specialties: string[];
   website?: string | null;
   instagram?: string | null;
+  googleMapsUrl?: string | null;
   clinicName?: string | null;
   offersOnline?: boolean;
   offersInPerson?: boolean;
@@ -211,6 +212,7 @@ export async function sendApplicationNotification(app: ApplicationEmailInput) {
     meeting ? infoRow('Görüşme', escapeHtml(meeting)) : '',
     app.website ? infoRow('Web', `<a href="${escapeHtml(app.website)}" style="color:${C.primary};">${escapeHtml(app.website)}</a>`) : '',
     app.instagram ? infoRow('Instagram', escapeHtml(app.instagram)) : '',
+    app.googleMapsUrl ? infoRow('Google Haritalar', `<a href="${escapeHtml(app.googleMapsUrl)}" style="color:${C.primary};">Konumu aç</a>`) : '',
     app.specialties.length ? infoRow('Uzmanlıklar', escapeHtml(app.specialties.join(', '))) : '',
     infoRow('Hakkında', escapeHtml(app.bio).replace(/\n/g, '<br>')),
   ].join('');
@@ -244,6 +246,7 @@ export async function sendApplicationNotification(app: ApplicationEmailInput) {
     meeting ? `Görüşme: ${meeting}` : null,
     app.website ? `Web: ${app.website}` : null,
     app.instagram ? `Instagram: ${app.instagram}` : null,
+    app.googleMapsUrl ? `Google Haritalar: ${app.googleMapsUrl}` : null,
     app.specialties.length ? `Uzmanlıklar: ${app.specialties.join(', ')}` : null,
     `Hakkında: ${app.bio}`,
     '',

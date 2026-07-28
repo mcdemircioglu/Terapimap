@@ -19,3 +19,7 @@ create index if not exists tvr_type_status_idx
 -- Başvuruda meslek türü (Psikolog / Klinik Psikolog / Psikiyatrist / ...)
 alter table public.therapist_verification_requests
   add column if not exists professional_type text;
+
+-- Başvuruda Google Haritalar bağlantısı (opsiyonel) — onaylanınca profile taşınır.
+alter table public.therapist_verification_requests
+  add column if not exists google_maps_url text;

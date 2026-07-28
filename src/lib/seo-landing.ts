@@ -1,6 +1,9 @@
 import { getServerClient } from '@/lib/supabase/server';
 import { getLocativeSuffix } from '@/lib/utils';
 import { absUrl } from '@/lib/schema';
+import { CITIES } from '@/lib/cities';
+import type { ArticleCategory } from '@/types/database';
+import type { Specialty } from '@/types/database';
 
 /**
  * Şehir + uzmanlık SEO landing içeriği üretimi.
@@ -211,6 +214,75 @@ export function buildTemplateCopy({
   };
 }
 
+/* ── Şehir (uzmanlık yok) landing içeriği ──────────────────────────── */
+
+/**
+ * Yalnızca şehir landing sayfaları için özgün içerik + SSS üretir.
+ * (Uzmanlık boyutu olmadığı için şehir odaklı, genel bir şablondur.)
+ */
+export function buildCityLandingCopy({
+  cityName,
+  total,
+  onlineCount,
+}: {
+  cityName: string;
+  total: number;
+  onlineCount: number;
+}): LandingCopy {
+  const da = getLocativeSuffix(cityName);
+  const daki = getLocativeSuffix(cityName, true);
+
+  const metaTitle = `${cityName} Terapistleri ve Psikologları | Terapimap`;
+  const metaDescription = `${cityName}${da} psikolog, klinik psikolog ve psikiyatristleri inceleyin. Uzmanlık alanı ve görüşme türüne göre filtreleyin, size uygun uzmanı seçin.`;
+  const h1 = `${cityName} Terapistleri`;
+  const intro = `${cityName}${da} çalışan psikolog, klinik psikolog, psikiyatrist ve terapistleri Terapimap üzerinden inceleyebilir; uzmanlık alanına, ilçeye ve görüşme türüne göre filtreleyebilirsiniz.`;
+
+  const sections: LandingSection[] = [
+    {
+      heading: `${cityName}${da} Terapist ve Psikolog Bulmak`,
+      paragraphs: [
+        total > 0
+          ? `Terapimap'te şu anda ${cityName}${da} ${total} uzman listeleniyor${onlineCount > 0 ? ` ve bunların ${onlineCount} tanesi online görüşme seçeneği sunuyor` : ''}. Uzman profillerinde eğitim bilgileri, deneyim, çalışılan alanlar ve iletişim seçenekleri yer alır. İlçeye, uzmanlık alanına veya görüşme türüne göre filtreleyerek size en uygun uzmana kolayca ulaşabilirsiniz.`
+          : `${cityName}${da} kayıtlı uzman sayısı henüz sınırlı. Online çalışan uzmanları inceleyebilir veya yakın şehirlerdeki uzmanlara göz atabilirsiniz; yeni uzmanlar eklendikçe bu sayfa güncellenir.`,
+      ],
+    },
+    {
+      heading: 'Terapist Seçerken Nelere Dikkat Etmelisiniz?',
+      paragraphs: [
+        `Uzmanın eğitimi ve unvanı (psikolog, klinik psikolog, psikiyatrist, psikolojik danışman), çalıştığı alanlar ve deneyimi ilk bakılacak noktalar arasındadır. Görüşme ücreti, seans formatı ve uzmanla kurduğunuz iletişimin size iyi hissettirip hissettirmediği de önemlidir. İlk seanslar hem uzmanı tanımak hem de birlikte çalışıp çalışamayacağınızı değerlendirmek için bir fırsattır.`,
+        `Terapimap bir sağlık hizmeti sağlayıcısı değildir; uzman profillerini bir araya getiren bir platformdur. Profildeki bilgileri inceleyip iletişim formu üzerinden dilediğiniz uzmana ulaşabilirsiniz.`,
+      ],
+    },
+    {
+      heading: `${cityName}${da} Online Terapi`,
+      paragraphs: [
+        `${cityName}${daki} birçok uzman görüntülü görüşme yoluyla online terapi seçeneği de sunmaktadır. Online terapi; ulaşım, zaman veya konum kısıtı olanlar için pratik bir alternatif olabilir. Hangi formatın size uygun olduğunu ilk görüşmede uzmanla birlikte değerlendirebilirsiniz.`,
+      ],
+    },
+  ];
+
+  const faqs: LandingFaq[] = [
+    {
+      q: `${cityName}${da} terapist nasıl seçilir?`,
+      a: `Uzmanın eğitim ve deneyim bilgilerini, çalıştığı alanları ve görüşme seçeneklerini profil sayfasından inceleyebilirsiniz. İlçe, uzmanlık alanı ve görüşme türü filtreleriyle aramanızı daraltabilir, size uygun hissettiren uzmanla ilk görüşmeyi planlayabilirsiniz.`,
+    },
+    {
+      q: `${cityName}${da} online terapi mümkün mü?`,
+      a: `Evet, birçok uzman online görüşme seçeneği sunmaktadır. Listede "Online" filtresini kullanarak görüntülü görüşme yapan terapistleri görebilirsiniz.`,
+    },
+    {
+      q: 'Terapi kaç seans sürer?',
+      a: `Seans sayısı; ihtiyaca, hedefe ve kullanılan yaklaşıma göre kişiden kişiye değişir. Net bir süre önceden garanti edilemez; uzmanınız ilk görüşmelerde sizinle birlikte bir plan oluşturacaktır.`,
+    },
+    {
+      q: 'Terapimap üzerinden uzmanlarla nasıl iletişime geçebilirim?',
+      a: `Size uygun uzmanın profil sayfasındaki iletişim formunu doldurmanız yeterli. Bilgileriniz yalnızca seçtiğiniz uzmana iletilir; uzman sizinle paylaştığınız bilgiler üzerinden iletişime geçer.`,
+    },
+  ];
+
+  return { h1, metaTitle, metaDescription, intro, sections, faqs, isIndexable: total > 0 };
+}
+
 /* ── DB override'larıyla birleştirilmiş nihai içerik ───────────────── */
 
 export async function getLandingCopy(params: {
@@ -313,6 +385,99 @@ export function buildInternalLinks({
   });
 
   return links;
+}
+
+/* ── Uzmanlık → Rehber kategorisi eşlemesi ─────────────────────────── */
+
+/**
+ * Bir uzmanlık alanını ("anksiyete", "bdt", "cift-terapisi") en ilgili
+ * Psikoloji Rehberi kategorisine eşler. Landing sayfasında o kategoriden
+ * makaleler "Rehber içerikleri" olarak gösterilir.
+ */
+export function specialtyToArticleCategory(
+  specialty: { slug: string; name?: string; type?: string | null },
+): ArticleCategory {
+  const slug = specialty.slug.toLocaleLowerCase('tr');
+
+  // Açık slug eşleşmeleri (tip ne olursa olsun önceliklidir)
+  if (/(cocuk|çocuk|ergen|genc|genç|ogrenci|öğrenci)/.test(slug)) return 'cocuk-ve-ergen';
+  if (/(cift|çift|evlilik|iliski|ilişki|aile|bosanma|boşanma|gottman|eft)/.test(slug)) return 'iliskiler';
+
+  const type = specialty.type ?? 'konu';
+  if (type === 'yontem') return 'terapi-yontemleri';
+  if (type === 'kitle') return 'psikolojik-konular';
+  return 'psikolojik-konular';
+}
+
+/* ── Benzer şehirler ───────────────────────────────────────────────── */
+
+/**
+ * Aynı uzmanlık (varsa) için diğer şehir landing linkleri.
+ * Mevcut şehir hariç, CITIES sırasıyla (kabaca nüfus/büyüklük) ilk N şehir.
+ */
+export function buildSimilarCityLinks({
+  locale,
+  currentCitySlug,
+  specialtySlug,
+  specialtyName,
+  limit = 8,
+}: {
+  locale: string;
+  currentCitySlug: string;
+  specialtySlug?: string;
+  specialtyName?: string;
+  limit?: number;
+}): InternalLink[] {
+  const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
+  return CITIES.filter((c) => c.slug !== currentCitySlug)
+    .slice(0, limit)
+    .map((c) => ({
+      label:
+        specialtySlug && specialtyName
+          ? `${c.name} ${specialtyName} Terapistleri`
+          : `${c.name} Terapistleri`,
+      href: specialtySlug
+        ? `/${locale}/${listBase}/${c.slug}/${specialtySlug}`
+        : `/${locale}/${listBase}/${c.slug}`,
+    }));
+}
+
+/* ── Benzer uzmanlıklar (aynı şehirde) ─────────────────────────────── */
+
+/**
+ * Aynı şehirdeki diğer uzmanlık alanlarına landing linkleri.
+ * Popüler alanlar öne alınır; mevcut uzmanlık hariç tutulur.
+ */
+export function buildSpecialtyLinks({
+  locale,
+  citySlug,
+  cityName,
+  currentSpecialtySlug,
+  specialties,
+  limit = 8,
+}: {
+  locale: string;
+  citySlug: string;
+  cityName: string;
+  currentSpecialtySlug?: string;
+  specialties: Pick<Specialty, 'slug' | 'name'>[];
+  limit?: number;
+}): InternalLink[] {
+  const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
+  const priority = ['anksiyete', 'depresyon', 'emdr', 'cift-terapisi', 'travma', 'panik-atak'];
+
+  return [...specialties]
+    .filter((s) => s.slug !== currentSpecialtySlug)
+    .sort((a, b) => {
+      const ai = priority.indexOf(a.slug);
+      const bi = priority.indexOf(b.slug);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    })
+    .slice(0, limit)
+    .map((s) => ({
+      label: `${cityName} ${s.name} Terapistleri`,
+      href: `/${locale}/${listBase}/${citySlug}/${s.slug}`,
+    }));
 }
 
 /* ── Canonical yardımcıları ────────────────────────────────────────── */

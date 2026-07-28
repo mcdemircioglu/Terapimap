@@ -338,6 +338,19 @@ export function buildOutboundMapsUrl(location: MapLocation): string | null {
   return raw;
 }
 
+/**
+ * Şehir merkezli embed URL'i — SEO landing sayfalarındaki genel harita için.
+ * Tek tek terapist pinlemek yerine şehri ortalar. Embed API anahtarı varsa
+ * resmî embed, yoksa anahtarsız maps.google.com embed kullanılır.
+ */
+export function buildCityEmbedUrl(cityName: string, hl: string = 'tr'): string {
+  const q = encodeURIComponent(`${cityName}, Türkiye`);
+  if (EMBED_API_KEY) {
+    return `https://www.google.com/maps/embed/v1/place?key=${EMBED_API_KEY}&q=${q}&zoom=11&language=${hl}&region=TR`;
+  }
+  return `https://maps.google.com/maps?q=${q}&z=11&hl=${hl}&output=embed`;
+}
+
 /** Konum kartını göstermeye değecek kadar veri var mı? */
 export function hasDisplayableLocation(location: MapLocation): boolean {
   return (

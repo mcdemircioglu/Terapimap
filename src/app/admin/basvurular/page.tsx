@@ -19,6 +19,7 @@ type Application = {
   bio: string | null;
   website: string | null;
   instagram: string | null;
+  google_maps_url: string | null;
   offers_online: boolean | null;
   offers_in_person: boolean | null;
   specialties: string[] | null;
@@ -215,6 +216,7 @@ export default function BasvurularPage() {
                     <p><span className="text-gray-400">Görüşme:</span> {[a.offers_in_person && 'Yüz yüze', a.offers_online && 'Online'].filter(Boolean).join(', ') || '—'}</p>
                     {a.website && <p><span className="text-gray-400">Website:</span> <a href={a.website} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">{a.website}</a></p>}
                     {a.instagram && <p><span className="text-gray-400">Instagram:</span> <a href={a.instagram} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">{a.instagram}</a></p>}
+                    {a.google_maps_url && <p><span className="text-gray-400">Google Haritalar:</span> <a href={a.google_maps_url} target="_blank" rel="noopener noreferrer" className="text-brand-600 hover:underline">Konumu aç</a></p>}
                   </div>
 
                   {a.specialties && a.specialties.length > 0 && (

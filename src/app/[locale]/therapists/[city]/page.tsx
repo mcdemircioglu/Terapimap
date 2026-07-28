@@ -4,15 +4,25 @@ import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import TherapistListing from '@/components/TherapistListing';
 import JsonLd from '@/components/JsonLd';
 import SeoLandingHeader from '@/components/seo/SeoLandingHeader';
+import SeoLandingSections from '@/components/seo/SeoLandingSections';
 import { CITIES, getCityName, isKnownCity } from '@/lib/cities';
 import { getDistricts, getSpecialties, getTherapists, getTherapistStats } from '@/lib/queries';
+import { getFeaturedArticles } from '@/lib/articles';
+import { buildCityEmbedUrl } from '@/lib/maps';
 import {
   absUrl,
   buildCollectionPageSchema,
   buildBreadcrumbSchema,
+  buildFaqSchema,
   buildItemListSchema,
 } from '@/lib/schema';
-import { buildInternalLinks, landingCanonical } from '@/lib/seo-landing';
+import {
+  buildInternalLinks,
+  buildCityLandingCopy,
+  buildSimilarCityLinks,
+  buildSpecialtyLinks,
+  landingCanonical,
+} from '@/lib/seo-landing';
 import { findBySlug, getLocativeSuffix } from '@/lib/utils';
 import SeoEmptySuggestions from '@/components/seo/SeoEmptySuggestions';
 
@@ -101,11 +111,18 @@ export default async function CityPage({
   const homeLabel = locale === 'tr' ? 'Ana Sayfa' : 'Home';
   const listLabel = locale === 'tr' ? 'Terapistler' : 'Therapists';
 
-  const [stats, specialties, listTherapists] = await Promise.all([
+  const [stats, specialties, listTherapists, articles] = await Promise.all([
     getTherapistStats({ citySlug: city }),
     getSpecialties(),
     getTherapists({ citySlug: city, limit: 24 }),
+    getFeaturedArticles(3),
   ]);
+
+  const copy = buildCityLandingCopy({
+    cityName,
+    total: stats.total,
+    onlineCount: stats.online,
+  });
 
   const description =
     locale === 'tr'
@@ -124,6 +141,7 @@ export default async function CityPage({
       { name: listLabel, url: absUrl(`/${locale}/${listBase}`) },
       { name: cityName, url: pageUrl },
     ]),
+    ...(copy.faqs.length ? [buildFaqSchema(copy.faqs)] : []),
     ...(listTherapists.length
       ? [
           buildItemListSchema({
@@ -142,6 +160,11 @@ export default async function CityPage({
     cityName,
     specialties,
   });
+
+  const cityLinks = buildSimilarCityLinks({ locale, currentCitySlug: city });
+  const specialtyLinks = buildSpecialtyLinks({ locale, citySlug: city, cityName, specialties });
+  const mapEmbedUrl = buildCityEmbedUrl(cityName, locale);
+  const mapTitle = `${cityName} Haritası`;
 
   const intro =
     locale === 'tr'
@@ -175,6 +198,19 @@ export default async function CityPage({
               inPersonCount={stats.inPerson}
               ctaHref={`/${locale}/${listBase}/${city}?online=1`}
               ctaLabel="Online Uzmanları Gör"
+            />
+          ) : undefined
+        }
+        belowResults={
+          useLandingHeader ? (
+            <SeoLandingSections
+              locale={locale}
+              copy={copy}
+              mapEmbedUrl={mapEmbedUrl}
+              mapTitle={mapTitle}
+              articles={articles}
+              cityLinks={cityLinks}
+              specialtyLinks={specialtyLinks}
             />
           ) : undefined
         }

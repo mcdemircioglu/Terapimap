@@ -68,6 +68,7 @@ export default function TherapistApplicationForm({
   const [bio, setBio] = useState('');
   const [website, setWebsite] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [googleMapsUrl, setGoogleMapsUrl] = useState('');
   const [online, setOnline] = useState(false);
   const [inPerson, setInPerson] = useState(true);
   const [selected, setSelected] = useState<string[]>([]);
@@ -114,6 +115,7 @@ export default function TherapistApplicationForm({
           bio: bio.trim(),
           website: website.trim() || undefined,
           instagram: instagram.trim() || undefined,
+          google_maps_url: googleMapsUrl.trim() || undefined,
           offers_online: online,
           offers_in_person: inPerson,
           specialties: selected,
@@ -264,6 +266,18 @@ export default function TherapistApplicationForm({
             <Input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="https://instagram.com/..." />
           </Field>
         </div>
+
+        <Field
+          label="Google Haritalar bağlantısı (opsiyonel)"
+          hint="Ofisinizin Google Haritalar linki. Yüz yüze görüşme yapıyorsanız profilinizde harita olarak gösterilir."
+        >
+          <Input
+            type="url"
+            value={googleMapsUrl}
+            onChange={(e) => setGoogleMapsUrl(e.target.value)}
+            placeholder="https://maps.app.goo.gl/... veya https://www.google.com/maps/place/..."
+          />
+        </Field>
 
         <label className="flex items-start gap-2.5 text-xs leading-relaxed text-brand-600">
           <input type="checkbox" checked={kvkk} onChange={(e) => setKvkk(e.target.checked)} className="mt-0.5 h-4 w-4 rounded border-brand-300 text-brand-600 focus:ring-brand-400" />

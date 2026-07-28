@@ -4,10 +4,12 @@ import { unstable_setRequestLocale } from 'next-intl/server';
 import TherapistListing from '@/components/TherapistListing';
 import JsonLd from '@/components/JsonLd';
 import SeoLandingHeader from '@/components/seo/SeoLandingHeader';
-import SeoContentSection from '@/components/seo/SeoContentSection';
+import SeoLandingSections from '@/components/seo/SeoLandingSections';
 import SeoEmptySuggestions from '@/components/seo/SeoEmptySuggestions';
 import { getCityName, isKnownCity } from '@/lib/cities';
 import { getSpecialties, getTherapists, getTherapistStats } from '@/lib/queries';
+import { getPublishedArticles } from '@/lib/articles';
+import { buildCityEmbedUrl } from '@/lib/maps';
 import {
   absUrl,
   buildCollectionPageSchema,
@@ -18,6 +20,9 @@ import {
 import {
   getLandingCopy,
   buildInternalLinks,
+  buildSimilarCityLinks,
+  buildSpecialtyLinks,
+  specialtyToArticleCategory,
   landingCanonical,
 } from '@/lib/seo-landing';
 import { getLocativeSuffix } from '@/lib/utils';
@@ -97,10 +102,11 @@ export default async function CitySpecialtyPage({
   if (!s) notFound();
   const specialtyName = s.name;
 
-  // İstatistik + JSON-LD ItemList için ilk terapistler (paralel)
-  const [stats, listTherapists] = await Promise.all([
+  // İstatistik + JSON-LD ItemList için ilk terapistler + rehber içerikleri (paralel)
+  const [stats, listTherapists, articles] = await Promise.all([
     getTherapistStats({ citySlug: city, specialtySlug: specialty }),
     getTherapists({ citySlug: city, specialtySlug: specialty, limit: 24 }),
+    getPublishedArticles({ category: specialtyToArticleCategory(s), limit: 3 }),
   ]);
 
   const copy = await getLandingCopy({
@@ -153,6 +159,22 @@ export default async function CitySpecialtyPage({
     specialties,
   });
 
+  const cityLinks = buildSimilarCityLinks({
+    locale,
+    currentCitySlug: city,
+    specialtySlug: specialty,
+    specialtyName,
+  });
+  const specialtyLinks = buildSpecialtyLinks({
+    locale,
+    citySlug: city,
+    cityName,
+    currentSpecialtySlug: specialty,
+    specialties,
+  });
+  const mapEmbedUrl = buildCityEmbedUrl(cityName, locale);
+  const mapTitle = `${cityName} Haritası`;
+
   const emptyMessage = `${cityName}${getLocativeSuffix(cityName)} ${specialtyName.toLocaleLowerCase('tr')} alanında kayıtlı uzman şu anda bulunmuyor. Online çalışan uzmanları inceleyebilir veya aşağıdaki ilgili alanlara göz atabilirsiniz; yeni uzmanlar eklendikçe bu sayfa güncellenir.`;
 
   return (
@@ -181,7 +203,15 @@ export default async function CitySpecialtyPage({
           />
         }
         belowResults={
-          <SeoContentSection copy={copy} internalLinks={internalLinks} />
+          <SeoLandingSections
+            locale={locale}
+            copy={copy}
+            mapEmbedUrl={mapEmbedUrl}
+            mapTitle={mapTitle}
+            articles={articles}
+            cityLinks={cityLinks}
+            specialtyLinks={specialtyLinks}
+          />
         }
         emptyExtra={
           <SeoEmptySuggestions message={emptyMessage} links={internalLinks} />
