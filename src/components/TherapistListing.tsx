@@ -5,6 +5,7 @@ import { getTranslations } from 'next-intl/server';
 import Container from './Container';
 import Filters from './Filters';
 import TherapistGrid from './TherapistGrid';
+import TherapistSearchBar from './TherapistSearchBar';
 import Pagination from './Pagination';
 import { getDistricts, getSpecialties, getTherapistsPaged } from '@/lib/queries';
 import { getCityName } from '@/lib/cities';
@@ -33,6 +34,7 @@ export default async function TherapistListing({
     type?: string;
     inPerson?: string;
     page?: string;
+    q?: string;
   };
   /** SEO landing sayfalarında varsayılan başlığın yerine geçen header (tek H1 kuralı). */
   headerOverride?: React.ReactNode;
@@ -49,6 +51,7 @@ export default async function TherapistListing({
   const inPerson = searchParams.inPerson === '1';
   const districtSlug = searchParams.district || undefined;
   const professionalType = (searchParams.type || undefined) as ProfessionalType | undefined;
+  const search = searchParams.q?.trim() || undefined;
   const rawPage = parseInt(searchParams.page ?? '1', 10) || 1;
 
   // ?page=1 → canonical base URL (duplicate content önlemi)
@@ -58,6 +61,7 @@ export default async function TherapistListing({
     if (searchParams.district) qs.set('district', searchParams.district);
     if (searchParams.type) qs.set('type', searchParams.type);
     if (searchParams.inPerson) qs.set('inPerson', searchParams.inPerson);
+    if (searchParams.q) qs.set('q', searchParams.q);
     const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
     let base = '/' + locale + '/' + listBase;
     if (citySlug) base += '/' + citySlug;
@@ -89,6 +93,7 @@ export default async function TherapistListing({
       professionalType,
       online,
       inPerson,
+      search,
       page,
       pageSize: PAGE_SIZE,
     }),
@@ -145,6 +150,11 @@ export default async function TherapistListing({
           selectedSpecialty={effectiveSpecialty}
         />
         <div>
+          <TherapistSearchBar
+            placeholder={locale === 'tr' ? 'Terapist adı ara…' : 'Search by name…'}
+            submitLabel={locale === 'tr' ? 'Ara' : 'Search'}
+            clearLabel={locale === 'tr' ? 'Temizle' : 'Clear'}
+          />
           {therapists.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-brand-200 bg-white p-12 text-center">
               <svg

@@ -50,6 +50,7 @@ export default function Filters({
   const inPerson = params.get("inPerson") === "1";
   const selectedDistrict = params.get("district") ?? "";
   const selectedType = params.get("type") ?? "";
+  const searchQ = params.get("q") ?? "";
 
   const profTypeOptions =
     locale === "tr" ? PROF_TYPE_OPTIONS.tr : PROF_TYPE_OPTIONS.en;
@@ -61,6 +62,7 @@ export default function Filters({
     selectedType,
     online ? "1" : "",
     inPerson ? "1" : "",
+    searchQ,
   ].filter(Boolean).length;
   const hasActive = activeCount > 0;
 
@@ -71,6 +73,7 @@ export default function Filters({
     type,
     isOnline,
     isInPerson,
+    q,
   }: {
     city?: string;
     specialty?: string;
@@ -78,6 +81,7 @@ export default function Filters({
     type?: string;
     isOnline?: boolean;
     isInPerson?: boolean;
+    q?: string;
   }) {
     // City ve specialty → clean path: /therapists/istanbul/anksiyete
     const listBase = locale === "tr" ? "terapistler" : "therapists";
@@ -92,6 +96,7 @@ export default function Filters({
     if (type) qs.set("type", type);
     if (isOnline) qs.set("online", "1");
     if (isInPerson) qs.set("inPerson", "1");
+    if (q) qs.set("q", q);
     const search = qs.toString();
     return search ? base + "?" + search : base;
   }
@@ -103,6 +108,7 @@ export default function Filters({
     type?: string;
     isOnline?: boolean;
     isInPerson?: boolean;
+    q?: string;
   }) {
     startTransition(() =>
       router.push(
@@ -113,6 +119,7 @@ export default function Filters({
           type: selectedType || undefined,
           isOnline: online,
           isInPerson: inPerson,
+          q: searchQ || undefined,
           ...overrides,
         }),
       ),

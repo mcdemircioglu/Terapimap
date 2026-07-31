@@ -10,6 +10,70 @@ import ImageUpload from '@/components/admin/ImageUpload';
 import { ARTICLE_CATEGORIES, ARTICLE_CATEGORY_LABELS } from '@/types/database';
 import type { ArticleCategory, ArticleStatus } from '@/types/database';
 
+/**
+ * psikoloji-rehberi pipeline çıktısını (frontmatter + markdown) forma çevirir.
+ * Frontmatter yoksa tüm metin içerik kabul edilir, ilk # başlık title olur.
+ * Basit YAML alt-kümesi: `anahtar: değer` (tırnaklı/booleanolabilir).
+ */
+function parseArticleMarkdown(raw: string): { fields: Partial<FormState>; categoryOk: boolean } {
+  const text = raw.replace(/\r\n/g, '\n').trim();
+  const fm = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+
+  if (!fm) {
+    let bodyText = text;
+    let title = '';
+    const bodyH1 = bodyText.match(/^#\s+(.+)\n?/);
+    if (bodyH1) {
+      title = bodyH1[1].trim();
+      bodyText = bodyText.slice(bodyH1[0].length).trim();
+    }
+    return { fields: { content: bodyText, title }, categoryOk: false };
+  }
+
+  const [, yaml, body] = fm;
+  const data: Record<string, string | boolean> = {};
+  for (const line of yaml.split('\n')) {
+    const m = line.match(/^([a-zA-Z_]+):\s*(.*)$/);
+    if (!m) continue;
+    let v: string | boolean = m[2].trim();
+    if (
+      (v.startsWith('"') && v.endsWith('"')) ||
+      (v.startsWith("'") && v.endsWith("'"))
+    ) {
+      v = v.slice(1, -1);
+    }
+    if (v === 'true') v = true;
+    else if (v === 'false') v = false;
+    data[m[1]] = v;
+  }
+
+  const fields: Partial<FormState> = {};
+  if (typeof data.title === 'string') fields.title = data.title;
+
+  // Gövdedeki ilk # H1'i çıkar: yoksa başlık olarak kullan, varsa tekrarı önle
+  let bodyText = body.trim();
+  const bodyH1 = bodyText.match(/^#\s+(.+)\n?/);
+  if (bodyH1) {
+    if (!fields.title) fields.title = bodyH1[1].trim();
+    bodyText = bodyText.slice(bodyH1[0].length).trim();
+  }
+  fields.content = bodyText;
+
+  if (typeof data.slug === 'string') fields.slug = slugify(data.slug);
+  if (typeof data.excerpt === 'string') fields.excerpt = data.excerpt;
+  if (typeof data.meta_title === 'string') fields.meta_title = data.meta_title;
+  if (typeof data.meta_description === 'string') fields.meta_description = data.meta_description;
+  if (typeof data.cover_image_url === 'string') fields.cover_image_url = data.cover_image_url;
+  if (typeof data.is_featured === 'boolean') fields.is_featured = data.is_featured;
+
+  const categoryOk =
+    typeof data.category === 'string' &&
+    (ARTICLE_CATEGORIES as readonly string[]).includes(data.category);
+  if (categoryOk) fields.category = data.category as ArticleCategory;
+
+  return { fields, categoryOk };
+}
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 type ArticleRow = {
@@ -204,6 +268,8 @@ export default function AdminArticlesPage() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [slugTouched, setSlugTouched] = useState(false);
   const [flash, setFlash] = useState<Flash | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState('');
   const flashTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
@@ -259,6 +325,31 @@ export default function AdminArticlesPage() {
     setEditingId(null);
     setSlugTouched(false);
     setView('form');
+  };
+
+  /** pipeline .md'sini (frontmatter + markdown) forma taslak olarak aktar. */
+  const applyImport = () => {
+    if (!importText.trim()) {
+      showFlash({ type: 'error', text: 'Lütfen içeriği yapıştırın.' });
+      return;
+    }
+    const { fields, categoryOk } = parseArticleMarkdown(importText);
+    if (!fields.content) {
+      showFlash({ type: 'error', text: 'İçerik (markdown gövdesi) bulunamadı.' });
+      return;
+    }
+    setForm({ ...EMPTY_FORM, ...fields, status: 'draft' });
+    setEditingId(null);
+    setSlugTouched(true); // slug frontmatter'dan/elle geldi; başlıktan üzerine yazma
+    setImportOpen(false);
+    setImportText('');
+    setView('form');
+    showFlash({
+      type: 'success',
+      text: categoryOk
+        ? 'İçerik forma aktarıldı (taslak). Gözden geçirip kaydedin.'
+        : 'İçerik aktarıldı ama kategori otomatik seçilemedi — lütfen kategoriyi seçin.',
+    });
   };
 
   const startEdit = async (id: string) => {
@@ -384,6 +475,9 @@ export default function AdminArticlesPage() {
               <a href="/admin/leads" className="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors">
                 Leads
               </a>
+              <Btn variant="secondary" onClick={() => { setImportText(''); setImportOpen(true); }}>
+                İçe Aktar
+              </Btn>
               <Btn onClick={startNew}>+ Yeni İçerik</Btn>
             </>
           )}
@@ -556,6 +650,48 @@ export default function AdminArticlesPage() {
           </form>
         )}
       </div>
+
+      {/* ── İçe Aktar modalı ── */}
+      {importOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:p-8">
+          <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl border border-gray-100">
+            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+              <h2 className="text-base font-semibold text-gray-900">İçeriği İçe Aktar</h2>
+              <Btn variant="ghost" onClick={() => setImportOpen(false)} className="!px-2 !py-1">✕</Btn>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <p className="text-sm text-gray-600">
+                Rehber pipeline&apos;ının ürettiği <code>.md</code> dosyasını (frontmatter + markdown)
+                buraya yapıştırın. Başlık, slug, excerpt, kategori ve meta alanları otomatik dolar;
+                içerik <strong>taslak</strong> olarak forma aktarılır — gözden geçirip kaydedersiniz.
+              </p>
+              <div className="rounded-lg bg-gray-50 border border-gray-200 px-3 py-2.5 text-xs text-gray-500">
+                <p className="font-medium text-gray-600 mb-1">Beklenen frontmatter:</p>
+                <pre className="whitespace-pre-wrap font-mono leading-relaxed">{`---
+title: "Sosyal Anksiyete Nedir?"
+slug: "sosyal-anksiyete-nedir"
+excerpt: "Kısa özet…"
+category: "psikolojik-konular"
+meta_title: "…"
+meta_description: "…"
+---
+## Giriş
+Makale gövdesi…`}</pre>
+              </div>
+              <textarea
+                className={`${inputCls} min-h-[280px] font-mono text-xs`}
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                placeholder="---&#10;title: ...&#10;---&#10;## Başlık ..."
+              />
+            </div>
+            <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
+              <Btn variant="secondary" onClick={() => setImportOpen(false)}>Vazgeç</Btn>
+              <Btn onClick={applyImport}>Forma Aktar</Btn>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

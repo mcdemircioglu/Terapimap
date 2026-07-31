@@ -138,8 +138,10 @@ export async function getTherapists(
   if (filters.online === true) query = query.eq('is_online', true);
   if (filters.inPerson === true) query = query.eq('is_in_person', true);
   if (filters.search) {
-    const term = `%${filters.search}%`;
-    query = query.or(`name.ilike.${term},about.ilike.${term}`);
+    // İsimle arama (terapist adı). Virgül/yüzde gibi PostgREST'i bozabilecek
+    // karakterleri temizle; ilike ile kısmi eşleşme yap.
+    const clean = filters.search.replace(/[%,()]/g, ' ').trim();
+    if (clean) query = query.ilike('name', `%${clean}%`);
   }
 
   query = query.order('rating', { ascending: false });
@@ -309,8 +311,10 @@ export async function getTherapistsPaged(
   if (filters.online === true) query = query.eq('is_online', true);
   if (filters.inPerson === true) query = query.eq('is_in_person', true);
   if (filters.search) {
-    const term = `%${filters.search}%`;
-    query = query.or(`name.ilike.${term},about.ilike.${term}`);
+    // İsimle arama (terapist adı). Virgül/yüzde gibi PostgREST'i bozabilecek
+    // karakterleri temizle; ilike ile kısmi eşleşme yap.
+    const clean = filters.search.replace(/[%,()]/g, ' ').trim();
+    if (clean) query = query.ilike('name', `%${clean}%`);
   }
   query = query.order('rating', { ascending: false }).range(from, to);
 
