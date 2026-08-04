@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
-import SearchBar from '@/components/SearchBar';
+import HeroSearch from '@/components/home/HeroSearch';
 import TherapistGrid from '@/components/TherapistGrid';
 import PopularSearches from '@/components/home/PopularSearches';
 import { Button } from '@/components/ui/Button';
@@ -25,65 +25,61 @@ export default async function HomePage({
 
   const statItems = [
     { icon: UsersIcon, value: `${stats.totalTherapists}+`, label: t('statTherapists') },
-    { icon: MapPinIcon, value: String(stats.cityCount), label: t('statCities') },
     { icon: VideoIcon, value: String(specialties.length), label: t('statSpecialties') },
+    { icon: MapPinIcon, value: String(stats.cityCount), label: t('statCities') },
+    { icon: ShieldIcon, value: locale === 'tr' ? 'Ücretsiz' : 'Free', label: locale === 'tr' ? 'Danışan İçin' : 'For clients' },
   ];
 
   return (
     <>
-      {/* Hero */}
-      <section className="bg-brand-50/60">
-        <Container className="py-12 md:py-16 lg:py-20">
-          <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12">
-            {/* Sol: metin + arama + istatistik */}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-brand-500">
-                Terapimap
-              </p>
-              <h1 className="mt-4 font-serif text-4xl leading-[1.1] tracking-tight text-brand-950 sm:text-5xl md:text-[3.4rem]">
-                {t('heroTitleLead')}{' '}
-                <span className="text-brand-600">{t('heroTitleEmph')}</span>{' '}
-                {t('heroTitleTrail')}
-              </h1>
-              <p className="mt-5 max-w-lg text-base leading-relaxed text-brand-700 md:text-lg">
-                {t('heroSubtitleNew')}
-              </p>
+      {/* Hero — koyu, fotoğraf zeminli */}
+      <section className="relative overflow-hidden bg-brand-950">
+        {/* Arka plan görseli + koyu scrim */}
+        <div className="absolute inset-0">
+          <Image
+            src="/hero-room.jpg"
+            alt=""
+            fill
+            priority
+            unoptimized
+            className="object-cover object-right"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-brand-950 via-brand-950/92 to-brand-950/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-brand-950 via-brand-950/10 to-brand-950/40" />
+        </div>
 
-              <div className="mt-7">
-                <SearchBar locale={locale} specialties={specialties} />
-              </div>
+        <Container className="relative py-16 md:py-24 lg:py-28">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#7ee6cf]">
+            Terapimap
+          </p>
+          <h1 className="mt-4 max-w-2xl font-serif text-4xl leading-[1.1] tracking-tight text-white sm:text-5xl md:text-[3.4rem]">
+            {t('heroTitleLead')}{' '}
+            <span className="text-[#7ee6cf]">{t('heroTitleEmph')}</span>{' '}
+            {t('heroTitleTrail')}
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-brand-100/90 md:text-lg">
+            {t('heroSubtitleNew')}
+          </p>
 
-              {/* İstatistik bandı */}
-              <dl className="mt-8 flex flex-wrap gap-x-8 gap-y-4">
-                {statItems.map((s) => (
-                  <div key={s.label} className="flex items-center gap-3">
-                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-600">
-                      <s.icon className="h-5 w-5" />
-                    </span>
-                    <div>
-                      <dd className="text-xl font-semibold leading-none text-brand-900">
-                        {s.value}
-                      </dd>
-                      <dt className="mt-1 text-xs text-brand-600">{s.label}</dt>
-                    </div>
-                  </div>
-                ))}
-              </dl>
-            </div>
-
-            {/* Sağ: illüstrasyon */}
-            <div className="relative hidden lg:block">
-              <Image
-                src="/hero-illustration.png"
-                alt=""
-                width={1000}
-                height={800}
-                priority
-                unoptimized
-                className="w-full rounded-3xl"
-              />
-            </div>
+          {/* Arama */}
+          <div className="mt-8">
+            <HeroSearch locale={locale} specialties={specialties} />
           </div>
+
+          {/* İstatistik bandı */}
+          <dl className="mt-8 grid grid-cols-2 gap-x-8 gap-y-5 sm:mt-10 sm:flex sm:flex-wrap sm:gap-x-12">
+            {statItems.map((s) => (
+              <div key={s.label} className="flex items-center gap-3">
+                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-[#7ee6cf] ring-1 ring-white/15">
+                  <s.icon className="h-5 w-5" />
+                </span>
+                <div>
+                  <dd className="text-xl font-semibold leading-none text-white">{s.value}</dd>
+                  <dt className="mt-1 text-xs text-brand-100/70">{s.label}</dt>
+                </div>
+              </div>
+            ))}
+          </dl>
         </Container>
       </section>
 

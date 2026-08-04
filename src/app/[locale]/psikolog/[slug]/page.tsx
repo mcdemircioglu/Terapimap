@@ -217,29 +217,42 @@ export default async function PsikologDetailPage({
             {/* Yakındaki Terapistler — internal linking */}
             <NearbyTherapistLinks therapist={therapist} locale={locale} />
 
-            {/* Bu profil size mi ait? + website linki */}
-            <div className="flex flex-col items-start gap-2 px-1">
-              <Link
-                href={`/profil-dogrula/${therapist.id}`}
-                className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-brand-600 transition-colors group"
-              >
-                <svg className="w-4 h-4 flex-shrink-0 group-hover:text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+            {/* Bu profil size mi ait? — belirgin doğrulama kartı */}
+            <Link
+              href={`/profil-dogrula/${therapist.id}`}
+              className="group flex items-center gap-4 rounded-2xl border-2 border-brand-200 bg-brand-50 p-5 transition-colors hover:border-brand-400 hover:bg-brand-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 md:p-6"
+            >
+              <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-brand-600 text-white shadow-sm md:h-14 md:w-14">
+                <svg className="h-6 w-6 md:h-7 md:w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                Bu profil size mi ait? Profilinizi doğrulayın
-              </Link>
-              {therapist.website_url && (
-                <a
-                  href={therapist.website_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-brand-600 transition-colors"
-                >
-                  <GlobeIcon className="w-4 h-4 flex-shrink-0" />
-                  {tDetail('visitWebsite')}
-                </a>
-              )}
-            </div>
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-bold text-brand-900 md:text-xl">Bu profil size mi ait?</p>
+                <p className="mt-1 text-sm leading-relaxed text-brand-700 md:text-base">
+                  Profilinizi <strong>ücretsiz</strong> doğrulayın; bilgilerinizi güncelleyin ve
+                  &quot;Doğrulanmış Profil&quot; rozeti kazanın.
+                </p>
+              </div>
+              <span className="hidden flex-shrink-0 items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors group-hover:bg-brand-700 sm:inline-flex">
+                Doğrula
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </span>
+            </Link>
+
+            {therapist.website_url && (
+              <a
+                href={therapist.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-1 text-sm text-gray-400 transition-colors hover:text-brand-600"
+              >
+                <GlobeIcon className="h-4 w-4 flex-shrink-0" />
+                {tDetail('visitWebsite')}
+              </a>
+            )}
           </div>
 
           {/* Lead form */}
