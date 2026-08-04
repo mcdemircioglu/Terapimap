@@ -7,6 +7,7 @@ import {
   unstable_setRequestLocale,
 } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import { Analytics } from '@vercel/analytics/next';
 import '../globals.css';
 
 import Navbar from '@/components/Navbar';
@@ -94,6 +95,7 @@ export default async function LocaleLayout({
             <ConsentScripts />
           </CookieConsentProvider>
         </NextIntlClientProvider>
+        <Analytics />
       </body>
     </html>
   );
