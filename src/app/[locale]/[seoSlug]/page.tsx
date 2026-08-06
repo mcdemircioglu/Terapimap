@@ -1,9 +1,13 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import TherapistGrid from '@/components/TherapistGrid';
+import Pagination from '@/components/Pagination';
+
+const PAGE_SIZE = 12;
 import SpecialtyLocationFilter from '@/components/seo/SpecialtyLocationFilter';
 import JsonLd from '@/components/JsonLd';
 import {
@@ -36,13 +40,18 @@ export function generateStaticParams() {
 // ─────────────────────────────────────────────────────────────────────────────
 export async function generateMetadata({
   params: { locale, seoSlug },
+  searchParams,
 }: {
   params: { locale: string; seoSlug: string };
+  searchParams: { page?: string };
 }): Promise<Metadata> {
   const page = parseSeoSlug(seoSlug);
   if (!page) return {};
 
-  const url = absUrl('/' + locale + '/' + seoSlug);
+  const baseUrl = absUrl('/' + locale + '/' + seoSlug);
+  const pageNo = parseInt(searchParams?.page ?? '1', 10) || 1;
+  const url = pageNo > 1 ? baseUrl + '?page=' + pageNo : baseUrl;
+  const pageSuffix = pageNo > 1 ? ' — Sayfa ' + pageNo : '';
 
   let title: string;
   let description: string;
@@ -66,11 +75,11 @@ export async function generateMetadata({
   }
 
   return {
-    title,
+    title: title + pageSuffix,
     description,
     alternates: { canonical: url },
     openGraph: {
-      title,
+      title: title + pageSuffix,
       description,
       url,
       type: 'website',
@@ -84,8 +93,10 @@ export async function generateMetadata({
 // ─────────────────────────────────────────────────────────────────────────────
 export default async function SeoLandingPage({
   params: { locale, seoSlug },
+  searchParams,
 }: {
   params: { locale: string; seoSlug: string };
+  searchParams: { page?: string };
 }) {
   unstable_setRequestLocale(locale);
 
@@ -99,6 +110,11 @@ export default async function SeoLandingPage({
   let relatedLinks: { href: string; label: string }[] = [];
   // Uzmanlık sayfalarında şehir/ilçe seçici için
   let filterSpecialtySlug: string | null = null;
+  // Uzmanlık sayfalarında üstte gösterilen "şehre göre" hızlı linkleri
+  let cityLinks: { href: string; label: string }[] = [];
+  let cityLinksHeading = '';
+
+  const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
 
   if (page.kind === 'city-proftype') {
     content = getCityProfTypeContent(page.cityName, page.profType, locale);
@@ -148,26 +164,46 @@ export default async function SeoLandingPage({
     therapists = await getTherapists({ specialtySlug: specialty.slug });
     filterSpecialtySlug = specialty.slug;
 
+    // Üstte gösterilecek "şehre göre" hızlı linkler (canonical /terapistler yolu)
+    cityLinks = CITIES.map((c) => ({
+      href: '/' + locale + '/' + listBase + '/' + c.slug + '/' + specialty.slug,
+      label:
+        locale === 'tr'
+          ? c.name + ' ' + specialty.name
+          : specialty.name + ' in ' + c.name,
+    }));
+    cityLinksHeading =
+      locale === 'tr' ? 'Şehre Göre ' + specialty.name : specialty.name + ' by City';
+
     relatedLinks = [
       {
         href: '/' + locale + '/therapists',
-        label: locale === 'tr' ? 'Tum terapistler' : 'All therapists',
+        label: locale === 'tr' ? 'Tüm terapistler' : 'All therapists',
       },
-      ...CITIES.map((c) => ({
-        href: '/' + locale + '/therapists/' + c.slug + '/' + specialty.slug,
-        label:
-          locale === 'tr'
-            ? c.name + ' — ' + specialty.name
-            : specialty.name + ' in ' + c.name,
-      })),
     ];
   }
 
   const pageUrl = absUrl('/' + locale + '/' + seoSlug);
+
+  // ── Sayfalama ──────────────────────────────────────────────────────────────
+  const totalCount = therapists.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const currentPage = Math.min(
+    totalPages,
+    Math.max(1, parseInt(searchParams?.page ?? '1', 10) || 1),
+  );
+  const pageTherapists = therapists.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+  const from = totalCount === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const to = Math.min(currentPage * PAGE_SIZE, totalCount);
+
   const countLabel =
     locale === 'tr'
-      ? therapists.length + ' uzman bulundu'
-      : therapists.length + ' specialist' + (therapists.length !== 1 ? 's' : '') + ' found';
+      ? totalCount + ' uzman' + (totalPages > 1 ? ` · ${from}–${to} gösteriliyor` : '')
+      : totalCount + ' specialist' + (totalCount !== 1 ? 's' : '') +
+        (totalPages > 1 ? ` · showing ${from}–${to}` : '');
 
   // ── Breadcrumb labels ────────────────────────────────────────────────────
   const homeLabel = locale === 'tr' ? 'Ana Sayfa' : 'Home';
@@ -211,6 +247,29 @@ export default async function SeoLandingPage({
         </Container>
       </section>
 
+      {/* ── Şehre göre hızlı linkler (yalnızca uzmanlık sayfaları) ── */}
+      {cityLinks.length > 0 && (
+        <section className="border-b border-brand-100 bg-white">
+          <Container className="py-5 md:py-6">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-brand-500">
+              {cityLinksHeading}
+            </h2>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {cityLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="inline-block rounded-full border border-brand-200 bg-brand-50/60 px-3.5 py-1.5 text-sm font-medium text-brand-700 transition-colors hover:border-brand-400 hover:bg-brand-50 hover:text-brand-900"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Container>
+        </section>
+      )}
+
       {/* ── Professionals grid ── */}
       <section>
         <Container className="py-10 md:py-14">
@@ -231,14 +290,19 @@ export default async function SeoLandingPage({
             </Link>
           </div>
 
-          {therapists.length === 0 ? (
+          {totalCount === 0 ? (
             <div className="rounded-2xl border border-dashed border-brand-200 bg-white p-12 text-center text-brand-600">
               {locale === 'tr'
                 ? 'Bu kriterlere uyan terapist bulunamadi.'
                 : 'No therapists matched these filters.'}
             </div>
           ) : (
-            <TherapistGrid therapists={therapists} locale={locale} />
+            <>
+              <TherapistGrid therapists={pageTherapists} locale={locale} />
+              <Suspense>
+                <Pagination currentPage={currentPage} totalPages={totalPages} />
+              </Suspense>
+            </>
           )}
         </Container>
       </section>
