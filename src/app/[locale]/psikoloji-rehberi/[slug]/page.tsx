@@ -21,6 +21,9 @@ import { CATEGORY_CTA_SPECIALTY, calculateReadingMinutes, getArticleBySlug, getR
 import { absUrl, buildArticleSchema, buildBreadcrumbSchema } from '@/lib/schema';
 import { ARTICLE_CATEGORY_LABELS } from '@/types/database';
 
+// ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
+export const revalidate = 3600;
+
 export async function generateMetadata({
   params: { locale, slug },
 }: {

@@ -16,6 +16,9 @@ import { getPublishedArticles } from '@/lib/articles';
 import { absUrl, buildBreadcrumbSchema, buildCollectionPageSchema } from '@/lib/schema';
 import { isArticleCategory } from '@/types/database';
 
+// ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
+export const revalidate = 3600;
+
 const DESCRIPTION =
   'Terapi süreci, psikolojik konular, terapi yöntemleri ve terapist seçimi hakkında anlaşılır ve güvenilir rehberleri keşfedin.';
 

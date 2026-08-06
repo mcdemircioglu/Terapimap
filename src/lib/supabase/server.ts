@@ -1,5 +1,25 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
+
+/**
+ * Cookie'siz public okuma istemcisi (yalnızca anon key).
+ * `cookies()` çağırmadığı için bu istemciyi kullanan sayfalar STATİK/ISR
+ * olarak önbelleğe alınabilir ve `unstable_cache` içinde güvenle kullanılır.
+ * Yalnızca herkese açık (RLS ile korunan) verileri okumak içindir.
+ */
+let _publicClient: ReturnType<typeof createServerClient> | null = null;
+export function getPublicClient() {
+  if (_publicClient) return _publicClient;
+  // createClient (supabase-js) ile aynı sorgu API'si; tip uyumu için
+  // createServerClient'ın döndürdüğü gevşek tipe hizalıyoruz.
+  _publicClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  ) as unknown as ReturnType<typeof createServerClient>;
+  return _publicClient;
+}
 
 /**
  * Server-side Supabase client for Server Components, Server Actions, and Route Handlers.

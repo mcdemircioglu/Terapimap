@@ -1,4 +1,5 @@
-import { getServerClient } from './supabase/server';
+import { unstable_cache } from 'next/cache';
+import { getPublicClient } from './supabase/server';
 import { getCityName, getCitySlug } from './cities';
 import type {
   Professional,
@@ -49,21 +50,24 @@ export type TherapistFilters = {
 // Reads
 // ---------------------------------------------------------------------
 
-export async function getSpecialties(): Promise<Specialty[]> {
-  const supabase = getServerClient();
-  const { data, error } = await supabase
-    .from('specialties')
-    .select('*')
-    .order('sort_order', { ascending: true })
-    .order('name', { ascending: true });
+export const getSpecialties = unstable_cache(
+  async (): Promise<Specialty[]> => {
+    const supabase = getPublicClient();
+    const { data, error } = await supabase
+      .from('specialties')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true });
 
-  if (error) {
-    logError('getSpecialties', error);
-    return [];
-  }
-  console.log(`[terapimap:queries] getSpecialties -> ${data?.length ?? 0} rows`);
-  return data ?? [];
-}
+    if (error) {
+      logError('getSpecialties', error);
+      return [];
+    }
+    return (data ?? []) as Specialty[];
+  },
+  ['getSpecialties'],
+  { revalidate: 3600 },
+);
 
 /**
  * Ana sayfa istatistikleri — hafif sayımlar (embed yok).
@@ -73,7 +77,7 @@ export async function getHomeStats(): Promise<{
   totalTherapists: number;
   cityCount: number;
 }> {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   const { data, error, count } = await supabase
     .from('professionals')
     .select('city', { count: 'exact' })
@@ -91,7 +95,7 @@ export async function getHomeStats(): Promise<{
 }
 
 export async function getDistricts(citySlug?: string): Promise<string[]> {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   let query = supabase
     .from('professionals')
     .select('district')
@@ -117,10 +121,11 @@ export async function getDistricts(citySlug?: string): Promise<string[]> {
   return unique;
 }
 
-export async function getTherapists(
-  filters: TherapistFilters = {},
-): Promise<ProfessionalWithSpecialties[]> {
-  const supabase = getServerClient();
+export const getTherapists = unstable_cache(
+  async (
+    filters: TherapistFilters = {},
+  ): Promise<ProfessionalWithSpecialties[]> => {
+  const supabase = getPublicClient();
 
   let query = supabase
     .from('professionals')
@@ -169,13 +174,16 @@ export async function getTherapists(
     );
   }
 
-  return rows;
-}
+    return rows;
+  },
+  ['getTherapists'],
+  { revalidate: 600 },
+);
 
 export async function getFeaturedTherapists(
   count = 6,
 ): Promise<ProfessionalWithSpecialties[]> {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
 
   const { data, error } = await supabase
     .from('professionals')
@@ -204,7 +212,7 @@ export async function getFeaturedTherapists(
 export async function getTherapistBySlug(
   slug: string,
 ): Promise<ProfessionalWithSpecialties | null> {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   const { data, error } = await supabase
     .from('professionals')
     .select(PROFESSIONAL_SELECT)
@@ -231,7 +239,7 @@ export async function getTherapistBySlug(
 }
 
 export async function getSpecialtyBySlug(slug: string): Promise<Specialty | null> {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   const { data, error } = await supabase
     .from('specialties')
     .select('*')
@@ -242,7 +250,7 @@ export async function getSpecialtyBySlug(slug: string): Promise<Specialty | null
 }
 
 export async function getCityCounts(): Promise<Record<string, number>> {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   const { data, error } = await supabase
     .from('professionals')
     .select('city')
@@ -270,7 +278,7 @@ export type TherapistPagedFilters = TherapistFilters & {
 export async function getTherapistsPaged(
   filters: TherapistPagedFilters = {},
 ): Promise<{ therapists: ProfessionalWithSpecialties[]; total: number }> {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   const page = Math.max(1, filters.page ?? 1);
   const pageSize = filters.pageSize ?? 12;
   const from = (page - 1) * pageSize;
@@ -355,7 +363,7 @@ export async function getTherapistStats(filters: {
     };
   }
 
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   let query = supabase
     .from('professionals')
     .select('id, is_online, is_in_person')
@@ -393,7 +401,7 @@ export async function createLead(input: {
   phone?: string | null;
   message: string;
 }) {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   const { error } = await supabase.from('leads').insert({
     professional_id: input.professional_id,
     name: input.name,

@@ -24,6 +24,9 @@ import { getResolvedMapsData } from '@/lib/maps';
 import { absUrl, buildTherapistSchema, buildBreadcrumbSchema } from '@/lib/schema';
 import { groupSpecialties, SPECIALTY_TYPE_LABELS } from '@/types/database';
 
+// ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
+export const revalidate = 3600;
+
 export async function generateMetadata({
   params: { locale, slug },
 }: {

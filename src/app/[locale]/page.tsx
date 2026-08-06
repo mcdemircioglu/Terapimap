@@ -10,6 +10,9 @@ import { UsersIcon, MapPinIcon, VideoIcon } from '@/components/ui/icons';
 import { getFeaturedTherapists, getSpecialties, getHomeStats } from '@/lib/queries';
 import FeaturedArticles from '@/components/guide/FeaturedArticles';
 
+// ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
+export const revalidate = 3600;
+
 export default async function HomePage({
   params: { locale },
 }: {

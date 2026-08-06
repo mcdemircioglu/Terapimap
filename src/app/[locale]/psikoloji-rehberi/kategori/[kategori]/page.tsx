@@ -20,6 +20,9 @@ import {
 import { absUrl, buildBreadcrumbSchema, buildCollectionPageSchema } from '@/lib/schema';
 import { isArticleCategory } from '@/types/database';
 
+// ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
+export const revalidate = 3600;
+
 type Params = { params: { locale: string; kategori: string } };
 
 export function generateMetadata({ params: { locale, kategori } }: Params): Metadata {

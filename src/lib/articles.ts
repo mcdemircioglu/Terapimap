@@ -4,7 +4,7 @@
  * içerikleri döndürür. Yine de sorgularda status/published_at filtresi
  * açıkça uygulanır (defense in depth).
  */
-import { getServerClient } from './supabase/server';
+import { getPublicClient } from './supabase/server';
 import { ARTICLE_CATEGORIES } from '@/types/database';
 import type { Article, ArticleCategory, ArticleListItem } from '@/types/database';
 
@@ -90,7 +90,7 @@ export async function getPublishedArticles(opts?: {
   category?: ArticleCategory;
   limit?: number;
 }): Promise<ArticleListItem[]> {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   let query = supabase
     .from('articles')
     .select(ARTICLE_LIST_SELECT)
@@ -112,7 +112,7 @@ export async function getPublishedArticles(opts?: {
 
 /** Öne çıkanlar; yeterli featured içerik yoksa en yeni yayınlarla tamamlanır. */
 export async function getFeaturedArticles(limit = 4): Promise<ArticleListItem[]> {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   const { data, error } = await supabase
     .from('articles')
     .select(ARTICLE_LIST_SELECT)
@@ -132,7 +132,7 @@ export async function getFeaturedArticles(limit = 4): Promise<ArticleListItem[]>
 
 /** Detay sayfası — tam satır. Draft içerikler RLS + filtre ile asla dönmez. */
 export async function getArticleBySlug(slug: string): Promise<Article | null> {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   const { data, error } = await supabase
     .from('articles')
     .select('*')
@@ -155,7 +155,7 @@ export async function getRelatedArticles(
   excludeId: string,
   limit = 3,
 ): Promise<ArticleListItem[]> {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   const { data, error } = await supabase
     .from('articles')
     .select(ARTICLE_LIST_SELECT)
@@ -178,7 +178,7 @@ export async function getRelatedArticles(
 export async function getArticlesForSitemap(): Promise<
   { slug: string; updated_at: string; published_at: string | null }[]
 > {
-  const supabase = getServerClient();
+  const supabase = getPublicClient();
   const { data, error } = await supabase
     .from('articles')
     .select('slug, updated_at, published_at')

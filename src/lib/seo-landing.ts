@@ -1,4 +1,4 @@
-import { getServerClient } from '@/lib/supabase/server';
+import { getPublicClient } from '@/lib/supabase/server';
 import { getLocativeSuffix } from '@/lib/utils';
 import { absUrl } from '@/lib/schema';
 import { CITIES } from '@/lib/cities';
@@ -297,7 +297,7 @@ export async function getLandingCopy(params: {
 
   // Özel içerik (migration çalıştırılmadıysa hata yutulur → şablon kullanılır)
   try {
-    const supabase = getServerClient();
+    const supabase = getPublicClient();
 
     const [{ data: custom }, { data: spec }] = await Promise.all([
       supabase
