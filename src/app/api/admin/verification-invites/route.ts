@@ -46,10 +46,26 @@ export async function GET(request: Request) {
     .select('id', { count: 'exact', head: true })
     .not('verification_invited_at', 'is', null);
 
-  if (pErr || iErr) {
-    return NextResponse.json({ error: (pErr ?? iErr)?.message }, { status: 500 });
+  // Outreach kohortu (doğrulanmamış + geçerli e-postalı) — davet gönderilenler
+  // ve bekleyenler birlikte; bekleyenler (invited_at null) en üstte.
+  const { data: list, error: lErr } = await supabase
+    .from('professionals')
+    .select('id, name, city, email, verification_invited_at')
+    .in('status', ['approved', 'featured'])
+    .eq('is_visible', true)
+    .is('removed_at', null)
+    .eq('is_verified', false)
+    .not('email', 'is', null)
+    .neq('email', '')
+    .like('email', '%@%')
+    .order('verification_invited_at', { ascending: true, nullsFirst: true })
+    .order('city', { ascending: true })
+    .limit(2000);
+
+  if (pErr || iErr || lErr) {
+    return NextResponse.json({ error: (pErr ?? iErr ?? lErr)?.message }, { status: 500 });
   }
-  return NextResponse.json({ pending: pending ?? 0, invited: invited ?? 0 });
+  return NextResponse.json({ pending: pending ?? 0, invited: invited ?? 0, list: list ?? [] });
 }
 
 /* ── POST: sıradaki grubu gönder ──────────────────────────────────────── */

@@ -8,8 +8,15 @@
 import { useState, useEffect, useCallback } from 'react';
 
 type Result = { name: string; email: string; ok: boolean; error?: string };
-type Counts = { pending: number; invited: number };
+type ListItem = { id: string; name: string; city: string | null; email: string; verification_invited_at: string | null };
+type Counts = { pending: number; invited: number; list: ListItem[] };
 const SESSION_KEY = 'terapimap_admin_pw';
+
+function fmt(dt: string | null): string {
+  if (!dt) return '';
+  try { return new Date(dt).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }); }
+  catch { return ''; }
+}
 
 function Btn({
   children, onClick, disabled, variant = 'primary', className,
@@ -65,6 +72,7 @@ export default function DavetlerPage() {
   const [sending, setSending] = useState(false);
   const [results, setResults] = useState<Result[] | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
+  const [filter, setFilter] = useState<'all' | 'pending' | 'sent'>('all');
 
   useEffect(() => {
     const s = sessionStorage.getItem(SESSION_KEY);
@@ -162,29 +170,72 @@ export default function DavetlerPage() {
           )}
         </div>
 
-        {/* Sonuçlar */}
-        {results && results.length > 0 && (
-          <div className="mt-6 rounded-xl border border-gray-200 bg-white overflow-hidden">
-            <div className="px-4 py-3 border-b border-gray-100 text-sm font-medium text-gray-700">
-              Bu gruptaki sonuçlar
-            </div>
-            <ul className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
-              {results.map((r, i) => (
-                <li key={i} className="flex items-center justify-between gap-3 px-4 py-2 text-sm">
-                  <span className="min-w-0">
-                    <span className="font-medium text-gray-900">{r.name}</span>
-                    <span className="text-gray-400"> · {r.email}</span>
-                  </span>
-                  {r.ok ? (
-                    <span className="shrink-0 text-green-600">✓ gönderildi</span>
-                  ) : (
-                    <span className="shrink-0 text-red-600" title={r.error}>✕ hata</span>
-                  )}
-                </li>
+        {/* Son gruptaki hata varsa göster */}
+        {results && results.some((r) => !r.ok) && (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            <p className="font-medium mb-1">Bu grupta gönderilemeyenler:</p>
+            <ul className="list-disc pl-5">
+              {results.filter((r) => !r.ok).map((r, i) => (
+                <li key={i}>{r.name} · {r.email} — {r.error}</li>
               ))}
             </ul>
           </div>
         )}
+
+        {/* Terapist listesi */}
+        <div className="mt-6 rounded-xl border border-gray-200 bg-white overflow-hidden">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-gray-100">
+            <span className="text-sm font-medium text-gray-700">
+              E-posta hedef listesi{counts ? ` (${counts.list.length})` : ''}
+            </span>
+            <div className="flex gap-1.5">
+              {([['all', 'Tümü'], ['pending', 'Bekleyen'], ['sent', 'Gönderilen']] as const).map(([k, lbl]) => (
+                <button key={k} onClick={() => setFilter(k)}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium border transition-colors ${
+                    filter === k ? 'bg-brand-600 text-white border-brand-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  }`}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          </div>
+          {!counts ? (
+            <p className="p-6 text-sm text-gray-500">Yükleniyor…</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
+                  <tr>
+                    <th className="px-4 py-2">#</th>
+                    <th className="px-4 py-2">Ad Soyad</th>
+                    <th className="px-4 py-2">Şehir</th>
+                    <th className="px-4 py-2">E-posta</th>
+                    <th className="px-4 py-2">Durum</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {counts.list
+                    .filter((p) => filter === 'all' || (filter === 'sent' ? p.verification_invited_at : !p.verification_invited_at))
+                    .map((p, i) => (
+                      <tr key={p.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 text-gray-400">{i + 1}</td>
+                        <td className="px-4 py-2 font-medium text-gray-900">{p.name}</td>
+                        <td className="px-4 py-2 text-gray-600">{p.city ?? '—'}</td>
+                        <td className="px-4 py-2 text-gray-600">{p.email}</td>
+                        <td className="px-4 py-2 whitespace-nowrap">
+                          {p.verification_invited_at ? (
+                            <span className="text-green-700">✓ Gönderildi · {fmt(p.verification_invited_at)}</span>
+                          ) : (
+                            <span className="text-yellow-700">Bekliyor</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
