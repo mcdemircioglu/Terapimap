@@ -14,13 +14,13 @@ function verifyAuth(request: Request): boolean {
 }
 
 /**
- * Outreach hedefi: onaylı + görünür + kaldırılmamış + doğrulanmamış +
+ * Outreach hedef filtresi: onaylı + görünür + kaldırılmamış + doğrulanmamış +
  * daveti gönderilmemiş + geçerli görünen e-postası olan profiller.
+ * Filtreler tek bir select üzerine uygulanır (çift .select() sayımı bozuyordu).
  */
-function pendingQuery(supabase: ReturnType<typeof getServiceClient>) {
-  return supabase
-    .from('professionals')
-    .select('id, name, email')
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyPending(q: any) {
+  return q
     .in('status', ['approved', 'featured'])
     .eq('is_visible', true)
     .is('removed_at', null)
@@ -38,16 +38,17 @@ export async function GET(request: Request) {
   }
   const supabase = getServiceClient();
 
-  const { count: pending } = await pendingQuery(supabase).select('id', {
-    count: 'exact',
-    head: true,
-  });
-
-  const { count: invited } = await supabase
+  const { count: pending, error: pErr } = await applyPending(
+    supabase.from('professionals').select('id', { count: 'exact', head: true }),
+  );
+  const { count: invited, error: iErr } = await supabase
     .from('professionals')
     .select('id', { count: 'exact', head: true })
     .not('verification_invited_at', 'is', null);
 
+  if (pErr || iErr) {
+    return NextResponse.json({ error: (pErr ?? iErr)?.message }, { status: 500 });
+  }
   return NextResponse.json({ pending: pending ?? 0, invited: invited ?? 0 });
 }
 
@@ -63,7 +64,9 @@ export async function POST(request: Request) {
 
   const supabase = getServiceClient();
 
-  const { data: rows, error } = await pendingQuery(supabase)
+  const { data: rows, error } = await applyPending(
+    supabase.from('professionals').select('id, name, email'),
+  )
     .order('created_at', { ascending: true })
     .limit(limit);
 
@@ -101,10 +104,9 @@ export async function POST(request: Request) {
     await new Promise((r) => setTimeout(r, 350));
   }
 
-  const { count: remaining } = await pendingQuery(supabase).select('id', {
-    count: 'exact',
-    head: true,
-  });
+  const { count: remaining } = await applyPending(
+    supabase.from('professionals').select('id', { count: 'exact', head: true }),
+  );
 
   return NextResponse.json({ sent, failed, remaining: remaining ?? 0, results });
 }
