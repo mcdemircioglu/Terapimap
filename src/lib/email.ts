@@ -267,6 +267,59 @@ export async function sendApplicationNotification(app: ApplicationEmailInput) {
   });
 }
 
+/* ── Terapiste: profil doğrulama daveti (outreach) ──────────────────── */
+
+export type VerificationInviteInput = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+export async function sendVerificationInvite({ id, name, email }: VerificationInviteInput) {
+  const verifyUrl = `${BASE}/profil-dogrula/${id}`;
+
+  const html = layout(
+    'Terapimap profilinizi doğrulayın',
+    `<p style="margin:0 0 16px;font-size:14px;color:${C.text};line-height:1.7;">
+      Sayın ${escapeHtml(name)},<br><br>
+      Terapimap, danışanların şehir ve uzmanlık alanına göre terapist bulabildiği ücretsiz bir
+      dizin platformudur. Adınıza kayıtlı bir profil hâlihazırda Terapimap&#39;te yayında.
+    </p>
+    <p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
+      Profilinizi <strong>ücretsiz</strong> doğrulayarak bilgilerinizi (uzmanlık alanları, iletişim,
+      hakkında metni) güncelleyebilir, &quot;Doğrulanmış Profil&quot; rozeti kazanabilir ve size
+      ulaşmak isteyen danışan taleplerini doğrudan yönetebilirsiniz. Doğrulama birkaç dakika sürer.
+    </p>
+    ${button(verifyUrl, 'Profilimi Doğrula')}
+    <p style="margin:20px 0 0;font-size:12px;color:${C.muted};line-height:1.6;">
+      Profilinizin güncellenmesini veya kaldırılmasını isterseniz de yukarıdaki bağlantıdan talep
+      edebilirsiniz. Bu e-postayı yanıtlayarak da bize ulaşabilirsiniz.
+    </p>`,
+  );
+
+  const text = [
+    `Sayın ${name},`,
+    '',
+    'Terapimap, danışanların terapist bulabildiği ücretsiz bir dizin platformudur. Adınıza kayıtlı bir profil hâlihazırda yayında.',
+    '',
+    'Profilinizi ücretsiz doğrulayarak bilgilerinizi güncelleyebilir, "Doğrulanmış Profil" rozeti kazanabilir ve danışan taleplerini doğrudan yönetebilirsiniz.',
+    '',
+    `Doğrulama bağlantısı: ${verifyUrl}`,
+    '',
+    'Profilin kaldırılmasını da aynı bağlantıdan talep edebilirsiniz.',
+    '',
+    'Terapimap — terapimap.com',
+  ].join('\n');
+
+  await getTransport().sendMail({
+    from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
+    to: email,
+    subject: `${name}, Terapimap profilinizi doğrulayın`,
+    html,
+    text,
+  });
+}
+
 /* ── Danışana: talebiniz iletildi ───────────────────────────────────── */
 
 export async function sendConfirmationToClient({ lead, professional }: LeadEmailInput) {
