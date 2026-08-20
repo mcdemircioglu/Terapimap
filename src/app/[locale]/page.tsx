@@ -30,7 +30,7 @@ export default async function HomePage({
     { icon: UsersIcon, value: `${stats.totalTherapists}+`, label: t('statTherapists') },
     { icon: VideoIcon, value: String(specialties.length), label: t('statSpecialties') },
     { icon: MapPinIcon, value: String(stats.cityCount), label: t('statCities') },
-    { icon: ShieldIcon, value: locale === 'tr' ? 'Ücretsiz' : 'Free', label: locale === 'tr' ? 'Danışan İçin' : 'For clients' },
+    { icon: ShieldIcon, value: locale === 'tr' ? 'Doğrulanmış' : 'Verified', label: locale === 'tr' ? 'Profiller' : 'Profiles' },
   ];
 
   return (
