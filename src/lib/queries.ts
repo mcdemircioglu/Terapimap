@@ -31,6 +31,23 @@ const PROFESSIONAL_SELECT = `
   )
 `;
 
+/**
+ * Liste/kart görünümleri (grid, SEO landing, sayfalı liste) için daraltılmış
+ * kolon seti — Supabase egress'ini düşürür. Kartta (TherapistCard),
+ * buildItemListSchema'da ve sitemap.xml'de kullanılan alanların hepsini
+ * kapsar. Tekil profil sayfası (getTherapistBySlug) hâlâ tam satırı
+ * (PROFESSIONAL_SELECT) çeker; about/adres/iletişim gibi alanlar yalnızca
+ * orada gerekir.
+ */
+const PROFESSIONAL_LIST_SELECT = `
+  id, slug, name, title, professional_type, city, district,
+  is_online, is_in_person, is_verified, is_featured,
+  experience_years, price_range, rating, image_url, updated_at,
+  professional_specialties (
+    specialties ( id, name, slug, type, sort_order )
+  )
+`;
+
 // ---------------------------------------------------------------------
 // Filters
 // ---------------------------------------------------------------------
@@ -94,32 +111,41 @@ export async function getHomeStats(): Promise<{
   return { totalTherapists: count ?? 0, cityCount: cities.size };
 }
 
-export async function getDistricts(citySlug?: string): Promise<string[]> {
-  const supabase = getPublicClient();
-  let query = supabase
-    .from('professionals')
-    .select('district')
-    .in('status', ['approved', 'featured'])
-    .eq('is_visible', true)
-    .is('removed_at', null);
-  if (citySlug) {
-    const cityName = getCityName(citySlug);
-    if (cityName) query = query.eq('city', cityName);
-  }
-  const { data, error } = await query;
-  if (error) {
-    logError('getDistricts', error);
-    return [];
-  }
-  const unique = Array.from(
-    new Set(
-      (data ?? [])
-        .map((r: any) => r.district as string | null)
-        .filter((d): d is string => typeof d === 'string' && d.trim() !== ''),
-    ),
-  ).sort((a, b) => a.localeCompare(b));
-  return unique;
-}
+/**
+ * İlçe listesi — filtre sayfalarında (searchParams okuduğu için dinamik
+ * render edilen /therapists rotalarında) her istekte çağrılır; egress'i
+ * önlemek için önbelleklenir.
+ */
+export const getDistricts = unstable_cache(
+  async (citySlug?: string): Promise<string[]> => {
+    const supabase = getPublicClient();
+    let query = supabase
+      .from('professionals')
+      .select('district')
+      .in('status', ['approved', 'featured'])
+      .eq('is_visible', true)
+      .is('removed_at', null);
+    if (citySlug) {
+      const cityName = getCityName(citySlug);
+      if (cityName) query = query.eq('city', cityName);
+    }
+    const { data, error } = await query;
+    if (error) {
+      logError('getDistricts', error);
+      return [];
+    }
+    const unique = Array.from(
+      new Set(
+        (data ?? [])
+          .map((r: any) => r.district as string | null)
+          .filter((d): d is string => typeof d === 'string' && d.trim() !== ''),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+    return unique;
+  },
+  ['getDistricts'],
+  { revalidate: 600 },
+);
 
 export const getTherapists = unstable_cache(
   async (
@@ -129,7 +155,7 @@ export const getTherapists = unstable_cache(
 
   let query = supabase
     .from('professionals')
-    .select(PROFESSIONAL_SELECT)
+    .select(PROFESSIONAL_LIST_SELECT)
     .in('status', ['approved', 'featured'])
     .eq('is_visible', true)
     .is('removed_at', null);
@@ -187,7 +213,7 @@ export async function getFeaturedTherapists(
 
   const { data, error } = await supabase
     .from('professionals')
-    .select(PROFESSIONAL_SELECT)
+    .select(PROFESSIONAL_LIST_SELECT)
     .in('status', ['approved', 'featured'])
     .eq('is_visible', true)
     .is('removed_at', null)
@@ -275,9 +301,17 @@ export type TherapistPagedFilters = TherapistFilters & {
   pageSize?: number;
 };
 
-export async function getTherapistsPaged(
-  filters: TherapistPagedFilters = {},
-): Promise<{ therapists: ProfessionalWithSpecialties[]; total: number }> {
+/**
+ * searchParams okuyan /therapists rotaları her istekte dinamik render
+ * edildiği için (Next.js App Router bunu ISR dışına çıkarır) bu fonksiyon
+ * önbelleklenmezse her sayfa görüntülemesi Supabase'e canlı sorgu atar.
+ * unstable_cache burada Next'in veri önbelleğini devreye sokup aynı
+ * filtre/sayfa kombinasyonu için tekrar eden istekleri karşılar.
+ */
+export const getTherapistsPaged = unstable_cache(
+  async (
+    filters: TherapistPagedFilters = {},
+  ): Promise<{ therapists: ProfessionalWithSpecialties[]; total: number }> => {
   const supabase = getPublicClient();
   const page = Math.max(1, filters.page ?? 1);
   const pageSize = filters.pageSize ?? 12;
@@ -305,7 +339,7 @@ export async function getTherapistsPaged(
 
   let query = supabase
     .from('professionals')
-    .select(PROFESSIONAL_SELECT, { count: 'exact' })
+    .select(PROFESSIONAL_LIST_SELECT, { count: 'exact' })
     .in('status', ['approved', 'featured'])
     .eq('is_visible', true)
     .is('removed_at', null);
@@ -338,17 +372,21 @@ export async function getTherapistsPaged(
     specialties: flattenSpecialties(row),
   })) as ProfessionalWithSpecialties[];
 
-  return { therapists, total: count ?? 0 };
-}
+    return { therapists, total: count ?? 0 };
+  },
+  ['getTherapistsPaged'],
+  { revalidate: 600 },
+);
 
 // ---------------------------------------------------------------------
 // SEO landing istatistikleri — hafif sayım (yalnızca 3 kolon çeker)
 // ---------------------------------------------------------------------
 
-export async function getTherapistStats(filters: {
-  citySlug?: string;
-  specialtySlug?: string;
-}): Promise<{ total: number; online: number; inPerson: number }> {
+export const getTherapistStats = unstable_cache(
+  async (filters: {
+    citySlug?: string;
+    specialtySlug?: string;
+  }): Promise<{ total: number; online: number; inPerson: number }> => {
   // Uzmanlık filtresinde getTherapists'e devret (kanıtlı çalışan yol);
   // aksi hâlde hafif 3 kolonla say.
   if (filters.specialtySlug) {
@@ -383,12 +421,15 @@ export async function getTherapistStats(filters: {
   }
 
   const rows = data ?? [];
-  return {
-    total: rows.length,
-    online: rows.filter((r: any) => r.is_online).length,
-    inPerson: rows.filter((r: any) => r.is_in_person).length,
-  };
-}
+    return {
+      total: rows.length,
+      online: rows.filter((r: any) => r.is_online).length,
+      inPerson: rows.filter((r: any) => r.is_in_person).length,
+    };
+  },
+  ['getTherapistStats'],
+  { revalidate: 600 },
+);
 
 // ---------------------------------------------------------------------
 // Writes

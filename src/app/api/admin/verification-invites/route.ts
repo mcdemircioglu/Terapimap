@@ -75,6 +75,28 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
+
+  // ── Test gönderimi: belirtilen adrese örnek bir davet yollar, DB'ye dokunmaz.
+  if (body.test) {
+    const testEmail = String(body.email ?? '').trim();
+    if (!testEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testEmail)) {
+      return NextResponse.json({ error: 'Geçerli bir test e-postası girin.' }, { status: 400 });
+    }
+    try {
+      await sendVerificationInvite({
+        id: 'ornek-profil',
+        name: 'Uzm. Kln. Psk. Ayşe Yılmaz',
+        email: testEmail,
+      });
+      return NextResponse.json({ test: true, sent: 1, email: testEmail });
+    } catch (e) {
+      return NextResponse.json(
+        { error: e instanceof Error ? e.message : 'Test gönderilemedi.' },
+        { status: 500 },
+      );
+    }
+  }
+
   let limit = parseInt(String(body.limit ?? DEFAULT_BATCH), 10) || DEFAULT_BATCH;
   limit = Math.max(1, Math.min(MAX_BATCH, limit));
 

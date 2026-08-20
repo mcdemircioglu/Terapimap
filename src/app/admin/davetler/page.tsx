@@ -73,6 +73,8 @@ export default function DavetlerPage() {
   const [results, setResults] = useState<Result[] | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'pending' | 'sent'>('all');
+  const [testEmail, setTestEmail] = useState('');
+  const [testing, setTesting] = useState(false);
 
   useEffect(() => {
     const s = sessionStorage.getItem(SESSION_KEY);
@@ -110,6 +112,18 @@ export default function DavetlerPage() {
       setFlash(`${d.sent} gönderildi, ${d.failed} başarısız. Kalan: ${d.remaining}.`);
       loadCounts();
     } finally { setSending(false); }
+  };
+
+  const sendTest = async () => {
+    setTesting(true); setFlash(null);
+    try {
+      const res = await apiFetch('/api/admin/verification-invites', {
+        method: 'POST', body: JSON.stringify({ test: true, email: testEmail.trim() }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setFlash(d.error ?? 'Test gönderilemedi.'); return; }
+      setFlash(`Test e-postası ${d.email} adresine gönderildi. Gelen kutunu (ve Spam'i) kontrol et.`);
+    } finally { setTesting(false); }
   };
 
   if (!password) return <LoginForm onAuth={setPassword} />;
@@ -168,6 +182,23 @@ export default function DavetlerPage() {
               {flash}
             </div>
           )}
+        </div>
+
+        {/* Test gönderimi */}
+        <div className="mt-4 rounded-xl border border-gray-200 bg-white p-5">
+          <div className="text-sm font-medium text-gray-700 mb-1">Önce kendine test gönder</div>
+          <p className="text-xs text-gray-500 mb-3">
+            Gerçek gönderime başlamadan e-postanın nasıl göründüğünü görmek için kendi adresine örnek bir davet yolla. Kimseye gitmez, listeyi etkilemez.
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input type="email" value={testEmail} onChange={(e) => setTestEmail(e.target.value)}
+              placeholder="senin@epostan.com"
+              className="flex-1 min-w-[220px] border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400" />
+            <Btn variant="secondary" onClick={sendTest}
+              disabled={testing || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testEmail.trim())}>
+              {testing ? 'Gönderiliyor…' : 'Test gönder'}
+            </Btn>
+          </div>
         </div>
 
         {/* Son gruptaki hata varsa göster */}

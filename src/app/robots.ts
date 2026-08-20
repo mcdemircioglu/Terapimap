@@ -19,6 +19,17 @@ export default function robots(): MetadataRoute.Robots {
           '/dogrulama',       // doğrulama (tr)
           '/profil-dogrula/', // terapist profil doğrulama formu
           '/leads',           // lead yönetimi
+          // Filtre query-string'leri: /therapists rotaları bu parametreleri
+          // okuduğu an dinamik (önbelleksiz) render'a düşüyor. Her kombinasyon
+          // ayrı bir crawl = ayrı bir Supabase sorgusu demek; bunları tarattırmak
+          // hem Vercel CPU hem Supabase egress'ini gereksiz şişiriyor. Canonical
+          // zaten bu parametreler olmadan base sayfayı gösteriyor, indekslenen
+          // içerik kaybolmaz.
+          '/*?*online=',
+          '/*?*inPerson=',
+          '/*?*type=',
+          '/*?*district=',
+          '/*?*q=',
         ],
       },
     ],

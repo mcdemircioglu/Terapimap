@@ -290,10 +290,11 @@ export async function sendVerificationInvite({ id, name, email }: VerificationIn
       hakkında metni) güncelleyebilir, &quot;Doğrulanmış Profil&quot; rozeti kazanabilir ve size
       ulaşmak isteyen danışan taleplerini doğrudan yönetebilirsiniz. Doğrulama birkaç dakika sürer.
     </p>
-    ${button(verifyUrl, 'Profilimi Doğrula')}
+    ${button(verifyUrl, 'Profilimi Ücretsiz Doğrula')}
     <p style="margin:20px 0 0;font-size:12px;color:${C.muted};line-height:1.6;">
-      Profilinizin güncellenmesini veya kaldırılmasını isterseniz de yukarıdaki bağlantıdan talep
-      edebilirsiniz. Bu e-postayı yanıtlayarak da bize ulaşabilirsiniz.
+      Bu profilin size ait olduğunu düşünmüyorsanız ya da <strong>profilinizin kaldırılmasını</strong>
+      isterseniz, yukarıdaki bağlantıdan kaldırma talebi oluşturabilirsiniz. Bilgi güncelleme
+      talepleriniz için de aynı bağlantıyı kullanabilir ya da bu e-postayı yanıtlayabilirsiniz.
     </p>`,
   );
 
