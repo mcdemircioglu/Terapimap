@@ -8,7 +8,10 @@ import { getProfessionalUrlSegment } from "@/lib/utils";
 // EN locale noindex olduğu için sitemap yalnızca TR URL'leri içerir.
 const locales = ["tr"] as const;
 
-export const revalidate = 3600;
+// Sitemap her zaman güncel veriyi yansıtmalı. ISR önbeği (revalidate)
+// deploy'lar arası "yapışıp" eski çıktıyı servis edebildiği için route'u
+// tam dinamik yapıyoruz; ağır sorgular zaten unstable_cache'te tutuluyor.
+export const dynamic = "force-dynamic";
 
 const BASE = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://terapimap.com"
@@ -107,7 +110,10 @@ export async function GET() {
     }
   }
 
+  // Bireysel terapist profilleri — asıl "ürün" sayfaları. lastmod = updated_at
+  // (terapist profilini güncelleyince/doğrulayınca Google yeniden tarar).
   for (const therapist of therapists) {
+    if (!therapist.slug) continue;
     const lastmod = therapist.updated_at
       ? new Date(therapist.updated_at)
       : new Date();
@@ -115,7 +121,7 @@ export async function GET() {
     for (const locale of locales) {
       const typeSegment = getProfessionalUrlSegment(therapist.professional_type);
       items.push(
-        item(`/${locale}/${typeSegment}/${therapist.slug}`, "monthly", 0.7, lastmod)
+        item(`/${locale}/${typeSegment}/${therapist.slug}`, "monthly", 0.8, lastmod)
       );
     }
   }
