@@ -8,10 +8,7 @@ import { getProfessionalUrlSegment } from "@/lib/utils";
 // EN locale noindex olduğu için sitemap yalnızca TR URL'leri içerir.
 const locales = ["tr"] as const;
 
-// Sitemap her zaman güncel veriyi yansıtmalı. ISR önbeği (revalidate)
-// deploy'lar arası "yapışıp" eski çıktıyı servis edebildiği için route'u
-// tam dinamik yapıyoruz; ağır sorgular zaten unstable_cache'te tutuluyor.
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 const BASE = (
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://terapimap.com"

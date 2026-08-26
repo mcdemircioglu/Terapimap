@@ -273,41 +273,104 @@ export type VerificationInviteInput = {
   id: string;
   name: string;
   email: string;
+  title?: string | null;
+  city?: string | null;
+  district?: string | null;
+  slug?: string | null;
+  imageUrl?: string | null;
 };
 
-export async function sendVerificationInvite({ id, name, email }: VerificationInviteInput) {
+function checkItem(text: string): string {
+  return `<tr>
+    <td style="padding:5px 10px 5px 0;vertical-align:top;width:20px;">
+      <span style="color:${C.primary};font-weight:bold;font-size:15px;line-height:1.5;">&#10003;</span>
+    </td>
+    <td style="padding:5px 0;font-size:14px;color:${C.text};line-height:1.55;">${text}</td>
+  </tr>`;
+}
+
+export async function sendVerificationInvite({
+  id,
+  name,
+  email,
+  title,
+  city,
+  district,
+  slug,
+  imageUrl,
+}: VerificationInviteInput) {
   const verifyUrl = `${BASE}/profil-dogrula/${id}`;
+  const profileUrl = slug ? `${BASE}/tr/psikolog/${slug}` : null;
+  const location = [city, district].filter(Boolean).join(' · ');
+
+  const avatar = imageUrl
+    ? `<img src="${imageUrl}" width="52" height="52" alt="" style="width:52px;height:52px;border-radius:50%;object-fit:cover;display:block;border:1px solid ${C.border};">`
+    : `<div style="width:52px;height:52px;border-radius:50%;background:${C.bg};color:${C.primary};font-weight:bold;font-size:20px;line-height:52px;text-align:center;">${escapeHtml(
+        name.trim().charAt(0).toUpperCase() || 'T',
+      )}</div>`;
+
+  const previewCard = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${C.border};border-radius:10px;margin:0 0 8px;background:#fbfdfd;">
+    <tr>
+      <td style="padding:14px 14px 14px 16px;width:56px;vertical-align:middle;">${avatar}</td>
+      <td style="padding:14px 16px 14px 0;vertical-align:middle;">
+        <div style="font-size:15px;font-weight:bold;color:${C.dark};">${escapeHtml(name)}</div>
+        ${title ? `<div style="font-size:13px;color:${C.primary};margin-top:2px;">${escapeHtml(title)}</div>` : ''}
+        ${location ? `<div style="font-size:13px;color:${C.muted};margin-top:2px;">${escapeHtml(location)}</div>` : ''}
+      </td>
+    </tr>
+  </table>`;
+
+  const viewLink = profileUrl
+    ? `<p style="margin:0 0 20px;font-size:13px;">
+        <a href="${profileUrl}" style="color:${C.primary};font-weight:bold;text-decoration:none;">&rarr; Profilinizi Terapimap&#39;te görüntüleyin</a>
+      </p>`
+    : '<div style="height:12px;"></div>';
 
   const html = layout(
-    'Terapimap profilinizi doğrulayın',
+    'Terapimap profiliniz yayında',
     `<p style="margin:0 0 16px;font-size:14px;color:${C.text};line-height:1.7;">
       Sayın ${escapeHtml(name)},<br><br>
-      Terapimap, danışanların şehir ve uzmanlık alanına göre terapist bulabildiği ücretsiz bir
-      dizin platformudur. Adınıza kayıtlı bir profil hâlihazırda Terapimap&#39;te yayında.
+      Terapimap, danışanların şehir ve uzmanlık alanına göre terapist bulduğu <strong>ücretsiz</strong>
+      bir dizin platformudur. Adınıza kayıtlı bir profil şu anda yayında ve danışanlar aramalarında
+      bu profille karşılaşıyor:
     </p>
-    <p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
-      Profilinizi <strong>ücretsiz</strong> doğrulayarak bilgilerinizi (uzmanlık alanları, iletişim,
-      hakkında metni) güncelleyebilir, &quot;Doğrulanmış Profil&quot; rozeti kazanabilir ve size
-      ulaşmak isteyen danışan taleplerini doğrudan yönetebilirsiniz. Doğrulama birkaç dakika sürer.
+    ${previewCard}
+    ${viewLink}
+    <p style="margin:0 0 12px;font-size:14px;color:${C.text};line-height:1.7;">
+      Profilinizi <strong>ücretsiz</strong> doğrulayarak:
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;">
+      ${checkItem('Bilgilerinizi güncelleyin — uzmanlık alanları, iletişim, hakkında metni ve fotoğrafınız')}
+      ${checkItem('<strong>&quot;Doğrulanmış Profil&quot;</strong> rozeti kazanın — danışan güvenini artırır')}
+      ${checkItem('Size ulaşmak isteyen danışan taleplerini doğrudan yönetin')}
+      ${checkItem('Tamamen ücretsiz — kredi kartı ya da herhangi bir ödeme gerekmez')}
+    </table>
+    <p style="margin:0 0 20px;font-size:13px;color:${C.muted};line-height:1.6;">
+      Doğrulama yalnızca birkaç dakika sürer.
     </p>
     ${button(verifyUrl, 'Profilimi Ücretsiz Doğrula')}
-    <p style="margin:20px 0 0;font-size:12px;color:${C.muted};line-height:1.6;">
-      Bu profilin size ait olduğunu düşünmüyorsanız ya da <strong>profilinizin kaldırılmasını</strong>
-      isterseniz, yukarıdaki bağlantıdan kaldırma talebi oluşturabilirsiniz. Bilgi güncelleme
-      talepleriniz için de aynı bağlantıyı kullanabilir ya da bu e-postayı yanıtlayabilirsiniz.
+    <p style="margin:22px 0 0;font-size:12px;color:${C.muted};line-height:1.6;">
+      Bu e-postayı, adınıza kayıtlı profil Terapimap&#39;te yayında olduğu için aldınız. Profilin size
+      ait olmadığını düşünüyorsanız ya da <strong>kaldırılmasını</strong> isterseniz, yukarıdaki
+      bağlantıdan talep oluşturabilir ya da bu e-postayı yanıtlayabilirsiniz.
     </p>`,
   );
 
   const text = [
     `Sayın ${name},`,
     '',
-    'Terapimap, danışanların terapist bulabildiği ücretsiz bir dizin platformudur. Adınıza kayıtlı bir profil hâlihazırda yayında.',
+    'Terapimap, danışanların şehir ve uzmanlık alanına göre terapist bulduğu ücretsiz bir dizin platformudur. Adınıza kayıtlı bir profil şu anda yayında ve danışanlar aramalarında bu profille karşılaşıyor.',
+    ...(profileUrl ? ['', `Profiliniz: ${profileUrl}`] : []),
     '',
-    'Profilinizi ücretsiz doğrulayarak bilgilerinizi güncelleyebilir, "Doğrulanmış Profil" rozeti kazanabilir ve danışan taleplerini doğrudan yönetebilirsiniz.',
+    'Profilinizi ücretsiz doğrulayarak:',
+    '- Bilgilerinizi güncelleyin (uzmanlık, iletişim, hakkında, fotoğraf)',
+    '- "Doğrulanmış Profil" rozeti kazanın',
+    '- Danışan taleplerini doğrudan yönetin',
+    '- Tamamen ücretsiz, ödeme gerekmez',
     '',
     `Doğrulama bağlantısı: ${verifyUrl}`,
     '',
-    'Profilin kaldırılmasını da aynı bağlantıdan talep edebilirsiniz.',
+    'Profilin size ait olmadığını düşünüyorsanız ya da kaldırılmasını isterseniz aynı bağlantıdan talep edebilir veya bu e-postayı yanıtlayabilirsiniz.',
     '',
     'Terapimap — terapimap.com',
   ].join('\n');
@@ -315,7 +378,7 @@ export async function sendVerificationInvite({ id, name, email }: VerificationIn
   await getTransport().sendMail({
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: email,
-    subject: `${name}, Terapimap profilinizi doğrulayın`,
+    subject: `${name}, Terapimap profiliniz yayında — ücretsiz doğrulayın`,
     html,
     text,
   });

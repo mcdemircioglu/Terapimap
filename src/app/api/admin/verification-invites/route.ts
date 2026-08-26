@@ -87,6 +87,9 @@ export async function POST(request: Request) {
         id: 'ornek-profil',
         name: 'Uzm. Kln. Psk. Ayşe Yılmaz',
         email: testEmail,
+        title: 'Uzman Klinik Psikolog',
+        city: 'İstanbul',
+        district: 'Kadıköy',
       });
       return NextResponse.json({ test: true, sent: 1, email: testEmail });
     } catch (e) {
@@ -103,7 +106,9 @@ export async function POST(request: Request) {
   const supabase = getServiceClient();
 
   const { data: rows, error } = await applyPending(
-    supabase.from('professionals').select('id, name, email'),
+    supabase
+      .from('professionals')
+      .select('id, name, email, title, city, district, slug, image_url'),
   )
     .order('created_at', { ascending: true })
     .limit(limit);
@@ -119,9 +124,27 @@ export async function POST(request: Request) {
   let failed = 0;
   const results: { name: string; email: string; ok: boolean; error?: string }[] = [];
 
-  for (const p of rows as { id: string; name: string; email: string }[]) {
+  for (const p of rows as {
+    id: string;
+    name: string;
+    email: string;
+    title: string | null;
+    city: string | null;
+    district: string | null;
+    slug: string | null;
+    image_url: string | null;
+  }[]) {
     try {
-      await sendVerificationInvite({ id: p.id, name: p.name, email: p.email });
+      await sendVerificationInvite({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        title: p.title,
+        city: p.city,
+        district: p.district,
+        slug: p.slug,
+        imageUrl: p.image_url,
+      });
       // Yalnızca gönderim başarılıysa damgala → çifte gönderim olmaz.
       await supabase
         .from('professionals')
