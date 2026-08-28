@@ -7,6 +7,39 @@ function verifyAuth(request: Request): boolean {
   return !!pw && pw === process.env.ADMIN_PASSWORD;
 }
 
+/**
+ * Kampanya: profilini doğrulayan uzmana N gün ücretsiz öne çıkarma.
+ * CAMPAIGN_FEATURED_DAYS=0 ile kapatılır (varsayılan 30).
+ */
+const CAMPAIGN_FEATURED_DAYS =
+  parseInt(process.env.CAMPAIGN_FEATURED_DAYS ?? '30', 10) || 0;
+
+function campaignFeaturedUntil(): string | null {
+  if (CAMPAIGN_FEATURED_DAYS <= 0) return null;
+  return new Date(Date.now() + CAMPAIGN_FEATURED_DAYS * 86_400_000).toISOString();
+}
+
+/** Mevcut profile kampanya öne çıkarması uygular; kalıcı öne çıkanı bozmaz. */
+async function applyCampaignFeature(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  supabase: any,
+  professionalId: string,
+): Promise<void> {
+  const until = campaignFeaturedUntil();
+  if (!until) return;
+  const { data: cur } = await supabase
+    .from('professionals')
+    .select('is_featured, featured_until')
+    .eq('id', professionalId)
+    .maybeSingle();
+  // Kalıcı öne çıkarma (is_featured && featured_until NULL) → süreli yapıp düşürme.
+  if (cur?.is_featured && !cur.featured_until) return;
+  await supabase
+    .from('professionals')
+    .update({ is_featured: true, featured_until: until })
+    .eq('id', professionalId);
+}
+
 /* ── GET /api/admin/verification-requests/[id] ────────────────────────────── */
 export async function GET(
   request: Request,
@@ -107,6 +140,12 @@ export async function PATCH(
         is_online: vr.offers_online ?? false,
         is_in_person: vr.offers_in_person ?? false,
       };
+      // Kampanya: doğrulama karşılığı N gün ücretsiz öne çıkarma.
+      const newFeaturedUntil = campaignFeaturedUntil();
+      if (newFeaturedUntil) {
+        insertPayload.is_featured = true;
+        insertPayload.featured_until = newFeaturedUntil;
+      }
       if (vr.title) insertPayload.title = vr.title;
       if (vr.district) insertPayload.district = vr.district;
       if (vr.clinic_name) insertPayload.clinic_name = vr.clinic_name;
@@ -197,6 +236,9 @@ export async function PATCH(
       if (profErr) {
         return NextResponse.json({ error: 'Profesyonel güncellenemedi: ' + profErr.message }, { status: 500 });
       }
+
+      // Kampanya: doğrulama karşılığı N gün ücretsiz öne çıkarma.
+      await applyCampaignFeature(supabase, vr.professional_id);
 
       // ── Uzmanlık alanları ──────────────────────────────────────────────
       // Form, uzmanlıkları isim dizisi olarak gönderir (specialties: text[]).

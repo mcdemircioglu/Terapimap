@@ -326,6 +326,21 @@ export async function sendVerificationInvite({
       </p>`
     : '<div style="height:12px;"></div>';
 
+  // Kampanya bloğu — CAMPAIGN_FEATURED_DAYS>0 ise gösterilir (grant mantığıyla senkron).
+  const campaignDays = parseInt(process.env.CAMPAIGN_FEATURED_DAYS ?? '30', 10) || 0;
+  const campaignBox =
+    campaignDays > 0
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;background:#eef8f5;border:1px solid #bfe6dd;border-radius:10px;">
+          <tr><td style="padding:14px 16px;">
+            <span style="display:inline-block;background:${C.primary};color:#ffffff;font-size:11px;font-weight:bold;padding:3px 9px;border-radius:20px;letter-spacing:.3px;">KAMPANYA</span>
+            <p style="margin:10px 0 0;font-size:14px;color:${C.dark};line-height:1.6;">
+              Şimdi profilini doğrulayan uzmanları <strong>${campaignDays} gün boyunca ücretsiz öne çıkarıyoruz.</strong>
+              Arama sonuçlarında üst sırada ve ana sayfada <strong>&quot;Öne Çıkan&quot;</strong> olarak yer alırsınız.
+            </p>
+          </td></tr>
+        </table>`
+      : '';
+
   const html = layout(
     'Terapimap profiliniz yayında',
     `<p style="margin:0 0 16px;font-size:14px;color:${C.text};line-height:1.7;">
@@ -348,6 +363,7 @@ export async function sendVerificationInvite({
     <p style="margin:0 0 20px;font-size:13px;color:${C.muted};line-height:1.6;">
       Doğrulama yalnızca birkaç dakika sürer.
     </p>
+    ${campaignBox}
     ${button(verifyUrl, 'Profilimi Ücretsiz Doğrula')}
     <p style="margin:22px 0 0;font-size:12px;color:${C.muted};line-height:1.6;">
       Bu e-postayı, adınıza kayıtlı profil Terapimap&#39;te yayında olduğu için aldınız. Profilin size
@@ -367,6 +383,9 @@ export async function sendVerificationInvite({
     '- "Doğrulanmış Profil" rozeti kazanın',
     '- Danışan taleplerini doğrudan yönetin',
     '- Tamamen ücretsiz, ödeme gerekmez',
+    ...(campaignDays > 0
+      ? ['', `KAMPANYA: Şimdi doğrulayan uzmanları ${campaignDays} gün boyunca ücretsiz öne çıkarıyoruz.`]
+      : []),
     '',
     `Doğrulama bağlantısı: ${verifyUrl}`,
     '',

@@ -41,12 +41,26 @@ const PROFESSIONAL_SELECT = `
  */
 const PROFESSIONAL_LIST_SELECT = `
   id, slug, name, title, professional_type, city, district,
-  is_online, is_in_person, is_verified, is_featured,
+  is_online, is_in_person, is_verified, is_featured, featured_until,
   experience_years, price_range, rating, image_url, updated_at,
   professional_specialties (
     specialties ( id, name, slug, type, sort_order )
   )
 `;
+
+/**
+ * Öne çıkarma süreye bağlı: is_featured true olsa da featured_until geçmişse
+ * artık "öne çıkan" sayılmaz. featured_until NULL = süresiz (kalıcı).
+ * Cron gerektirmeden okuma anında değerlendirilir.
+ */
+function isEffectivelyFeatured(row: {
+  is_featured?: boolean | null;
+  featured_until?: string | null;
+}): boolean {
+  if (!row?.is_featured) return false;
+  if (!row.featured_until) return true;
+  return new Date(row.featured_until).getTime() > Date.now();
+}
 
 // ---------------------------------------------------------------------
 // Filters
@@ -191,6 +205,8 @@ export const getTherapists = unstable_cache(
 
   let rows = (data ?? []).map((row: any) => ({
     ...(row as Professional),
+    // Süresi geçen öne çıkarmalar rozet/sıralama için düşürülür.
+    is_featured: isEffectivelyFeatured(row),
     specialties: flattenSpecialties(row),
   })) as ProfessionalWithSpecialties[];
 
@@ -199,6 +215,14 @@ export const getTherapists = unstable_cache(
       r.specialties.some((s) => s.slug === filters.specialtySlug),
     );
   }
+
+  // Öne çıkanlar üstte, sonra puana göre (DB zaten rating'e göre sıraladı).
+  rows.sort((a, b) => {
+    const fa = a.is_featured ? 1 : 0;
+    const fb = b.is_featured ? 1 : 0;
+    if (fb !== fa) return fb - fa;
+    return (b.rating ?? 0) - (a.rating ?? 0);
+  });
 
     return rows;
   },
@@ -218,6 +242,8 @@ export async function getFeaturedTherapists(
     .eq('is_visible', true)
     .is('removed_at', null)
     .eq('is_featured', true)
+    // Süresi geçmemiş (veya süresiz) öne çıkarmalar.
+    .or(`featured_until.is.null,featured_until.gt.${new Date().toISOString()}`)
     .order('rating', { ascending: false })
     .limit(count);
 
