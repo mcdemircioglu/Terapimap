@@ -204,6 +204,7 @@ export default async function ArticleDetailPage({
               href={
                 (() => {
                   const specialtySlug =
+                    article.related_specialty_slug ??
                     ARTICLE_SLUG_CTA_SPECIALTY[article.slug] ??
                     CATEGORY_CTA_SPECIALTY[article.category];
                   return specialtySlug ? `/${locale}/${specialtySlug}` : undefined;

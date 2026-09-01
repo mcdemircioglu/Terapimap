@@ -67,8 +67,11 @@ export const CATEGORY_CONTENT: Record<
 };
 
 /**
- * Makale kategorisi → uzmanlık landing sayfası (CTA hedefi).
- * Eşleşme yoksa CTA genel terapist listesine gider.
+ * Makale kategorisi → uzmanlık landing sayfası (CTA hedefi) — FALLBACK.
+ * Öncelik sırası: articles.related_specialty_slug (DB) → ARTICLE_SLUG_CTA_SPECIALTY (kod) →
+ * CATEGORY_CTA_SPECIALTY (kod) → genel terapist listesi. Yeni makaleler admin panelinden
+ * related_specialty_slug ile eklenmeli; bu iki sabit harita yalnızca DB alanı boş olan
+ * (ör. göç öncesi) eski içerikler için geriye dönük uyumluluk sağlar.
  */
 export const CATEGORY_CTA_SPECIALTY: Partial<Record<ArticleCategory, string>> = {
   'cocuk-ve-ergen': 'cocuk-psikolojisi',
@@ -247,6 +250,11 @@ export function validateArticlePayload(body: any): { error?: string; data?: Reco
     return { error: 'Durum yalnızca draft veya published olabilir.' };
   }
 
+  const relatedSpecialtySlugRaw = String(body.related_specialty_slug ?? '').trim();
+  if (relatedSpecialtySlugRaw && !SLUG_RE.test(relatedSpecialtySlugRaw)) {
+    return { error: 'İlgili uzmanlık slug\'ı yalnızca küçük harf, rakam ve tire içerebilir.' };
+  }
+
   // published_at yönetimi: yayınlanan içerikte tarih yoksa şimdi ata;
   // taslakta gönderilen tarih korunur (ileri tarihli planlamaya izin verir).
   let published_at: string | null = body.published_at ? String(body.published_at) : null;
@@ -268,6 +276,7 @@ export function validateArticlePayload(body: any): { error?: string; data?: Reco
       meta_title: String(body.meta_title ?? '').trim() || null,
       meta_description: String(body.meta_description ?? '').trim() || null,
       is_featured: Boolean(body.is_featured),
+      related_specialty_slug: relatedSpecialtySlugRaw || null,
     },
   };
 }

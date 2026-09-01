@@ -65,6 +65,7 @@ function parseArticleMarkdown(raw: string): { fields: Partial<FormState>; catego
   if (typeof data.meta_description === 'string') fields.meta_description = data.meta_description;
   if (typeof data.cover_image_url === 'string') fields.cover_image_url = data.cover_image_url;
   if (typeof data.is_featured === 'boolean') fields.is_featured = data.is_featured;
+  if (typeof data.related_specialty === 'string') fields.related_specialty_slug = data.related_specialty;
 
   const categoryOk =
     typeof data.category === 'string' &&
@@ -100,6 +101,7 @@ type FormState = {
   status: ArticleStatus;
   is_featured: boolean;
   published_at: string;
+  related_specialty_slug: string;
 };
 
 type Flash = { type: 'success' | 'error'; text: string };
@@ -118,6 +120,7 @@ const EMPTY_FORM: FormState = {
   status: 'draft',
   is_featured: false,
   published_at: '',
+  related_specialty_slug: '',
 };
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -371,6 +374,7 @@ export default function AdminArticlesPage() {
       status: article.status ?? 'draft',
       is_featured: Boolean(article.is_featured),
       published_at: toLocalInput(article.published_at),
+      related_specialty_slug: article.related_specialty_slug ?? '',
     });
     setEditingId(id);
     setSlugTouched(true);
@@ -622,6 +626,21 @@ export default function AdminArticlesPage() {
               </Field>
             </div>
 
+            <Field label="İlgili Uzmanlık (CTA hedefi)" hint={
+              <p className="text-xs text-gray-400 mb-1">
+                Uzmanlık landing sayfası slug&apos;ı (ör. <code>cift-terapisi</code>). Doldurulursa makale
+                sonundaki &quot;uzmanlarla görüş&quot; butonu doğrudan bu sayfaya gider. Boş bırakılırsa
+                kategoriye göre otomatik eşleme denenir.
+              </p>
+            }>
+              <input
+                className={inputCls}
+                value={form.related_specialty_slug}
+                onChange={(e) => set('related_specialty_slug', e.target.value.trim())}
+                placeholder="cift-terapisi"
+              />
+            </Field>
+
             <div className="grid gap-5 sm:grid-cols-2">
               <Field label="Yayın Tarihi" hint={
                 <p className="text-xs text-gray-400 mb-1">Boş bırakılırsa yayınlarken otomatik atanır.</p>
@@ -672,6 +691,7 @@ title: "Sosyal Anksiyete Nedir?"
 slug: "sosyal-anksiyete-nedir"
 excerpt: "Kısa özet…"
 category: "psikolojik-konular"
+related_specialty: "sosyal-kaygi"
 meta_title: "…"
 meta_description: "…"
 ---

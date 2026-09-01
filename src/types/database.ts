@@ -193,6 +193,8 @@ export type Article = {
   meta_description: string | null;
   status: ArticleStatus;
   is_featured: boolean;
+  /** İlişkili uzmanlık sayfası slug'ı (ör. 'cift-terapisi') — rehber CTA hedefini belirler. Boşsa kod içi fallback haritalarına düşülür. */
+  related_specialty_slug: string | null;
   published_at: string | null;
   created_at: string;
   updated_at: string;
