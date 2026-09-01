@@ -20,7 +20,9 @@ import {
   PROF_TYPE_TR,
 } from '@/lib/seo-slugs';
 import { getTherapists, getSpecialtyBySlug } from '@/lib/queries';
+import { MIN_THERAPISTS_FOR_INDEX } from '@/lib/seo-landing';
 import { CITIES } from '@/lib/cities';
+import { getTherapistsListPath } from '@/lib/utils';
 import {
   absUrl,
   buildCollectionPageSchema,
@@ -55,15 +57,23 @@ export async function generateMetadata({
 
   let title: string;
   let description: string;
+  // Thin-page eşiği (P2 denetimi): bu sayfa ailesi önceden terapist sayısından
+  // bağımsız her zaman index:true veriyordu — seo-landing.ts'teki şehir×uzmanlık
+  // sayfalarına uygulanan MIN_THERAPISTS_FOR_INDEX eşiğiyle aynı kurala bağlandı.
+  let therapistCount = 0;
 
   if (page.kind === 'city-proftype') {
     const c = getCityProfTypeContent(page.cityName, page.profType, locale);
     title = c.metaTitle;
     description = c.metaDesc;
+    therapistCount = (
+      await getTherapists({ citySlug: page.citySlug, professionalType: page.profType })
+    ).length;
   } else if (page.kind === 'online') {
     const c = getOnlineContent(locale);
     title = c.metaTitle;
     description = c.metaDesc;
+    therapistCount = (await getTherapists({ online: true })).length;
   } else {
     const specialty =
       (await getSpecialtyBySlug(page.specialtySlug)) ??
@@ -72,13 +82,17 @@ export async function generateMetadata({
     const c = getSpecialtyContent(specialty.name, locale);
     title = c.metaTitle;
     description = c.metaDesc;
+    therapistCount = (await getTherapists({ specialtySlug: specialty.slug })).length;
   }
 
   return {
     title: title + pageSuffix,
     description,
     alternates: { canonical: url },
-    robots: { index: locale === 'tr' && pageNo === 1, follow: true },
+    robots: {
+      index: locale === 'tr' && pageNo === 1 && therapistCount >= MIN_THERAPISTS_FOR_INDEX,
+      follow: true,
+    },
     openGraph: {
       title: title + pageSuffix,
       description,
@@ -137,7 +151,7 @@ export default async function SeoLandingPage({
           label: locale === 'tr' ? 'Online Terapi' : 'Online Therapy',
         },
         {
-          href: '/' + locale + '/therapists/' + page.citySlug,
+          href: getTherapistsListPath(locale) + '/' + page.citySlug,
           label:
             locale === 'tr'
               ? page.cityName + "'daki tum terapistler"
@@ -150,7 +164,7 @@ export default async function SeoLandingPage({
     therapists = await getTherapists({ online: true });
 
     relatedLinks = CITIES.map((c) => ({
-      href: '/' + locale + '/therapists/' + c.slug,
+      href: getTherapistsListPath(locale) + '/' + c.slug,
       label: locale === 'tr' ? c.name + ' terapistleri' : 'Therapists in ' + c.name,
     }));
   } else {
@@ -178,7 +192,7 @@ export default async function SeoLandingPage({
 
     relatedLinks = [
       {
-        href: '/' + locale + '/therapists',
+        href: getTherapistsListPath(locale),
         label: locale === 'tr' ? 'Tüm terapistler' : 'All therapists',
       },
     ];
@@ -220,7 +234,7 @@ export default async function SeoLandingPage({
     }),
     buildBreadcrumbSchema([
       { name: homeLabel, url: absUrl('/' + locale) },
-      { name: allLabel, url: absUrl('/' + locale + '/therapists') },
+      { name: allLabel, url: absUrl(getTherapistsListPath(locale)) },
       { name: content.h1, url: pageUrl },
     ]),
   ];
@@ -284,7 +298,7 @@ export default async function SeoLandingPage({
           <div className="mb-6 flex items-center justify-between gap-4">
             <p className="text-sm text-brand-600">{countLabel}</p>
             <Link
-              href={'/' + locale + '/therapists'}
+              href={getTherapistsListPath(locale)}
               className="text-sm font-medium text-brand-700 hover:text-brand-900"
             >
               {locale === 'tr' ? 'Tumunu gor' : 'View all'} &rarr;

@@ -7,7 +7,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { getCitySlug } from '@/lib/cities';
-import { slugifyTr } from '@/lib/utils';
+import { slugifyTr, getTherapistsListPath } from '@/lib/utils';
 import { ArrowUpRightIcon, MapPinIcon } from '@/components/ui/icons';
 import type { ProfessionalType, ProfessionalWithSpecialties } from '@/types/database';
 
@@ -52,7 +52,7 @@ function buildLinks(therapist: ProfessionalWithSpecialties, locale: string): Int
   if (therapist.district) {
     links.push({
       label: tr ? `${therapist.district} Psikologları` : `Psychologists in ${therapist.district}`,
-      href: `/${locale}/therapists/${citySlug}?district=${slugifyTr(therapist.district)}`,
+      href: `${getTherapistsListPath(locale)}/${citySlug}?district=${slugifyTr(therapist.district)}`,
     });
   }
 

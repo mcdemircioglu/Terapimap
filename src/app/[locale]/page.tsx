@@ -8,6 +8,7 @@ import PopularSearches from '@/components/home/PopularSearches';
 import { Button } from '@/components/ui/Button';
 import { UsersIcon, MapPinIcon, VideoIcon } from '@/components/ui/icons';
 import { getFeaturedTherapists, getSpecialties, getHomeStats } from '@/lib/queries';
+import { getTherapistsListPath } from '@/lib/utils';
 import FeaturedArticles from '@/components/guide/FeaturedArticles';
 
 // ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
@@ -101,7 +102,7 @@ export default async function HomePage({
                 <p className="mt-2 text-sm text-brand-700 md:text-base">{t('featuredSubtitle')}</p>
               </div>
               <Link
-                href={`/${locale}/therapists`}
+                href={getTherapistsListPath(locale)}
                 className="hidden shrink-0 text-sm font-medium text-brand-700 hover:text-brand-900 md:inline"
               >
                 {t('featuredCta')} →
@@ -111,7 +112,7 @@ export default async function HomePage({
               <TherapistGrid therapists={featured} locale={locale} />
             </div>
             <div className="mt-6 md:hidden">
-              <Link href={`/${locale}/therapists`}>
+              <Link href={getTherapistsListPath(locale)}>
                 <Button variant="outline" className="w-full">{t('featuredCta')}</Button>
               </Link>
             </div>
@@ -154,7 +155,7 @@ export default async function HomePage({
             <h2 className="text-2xl font-semibold md:text-3xl">{t('ctaTitle')}</h2>
             <p className="mx-auto mt-3 max-w-xl text-brand-100">{t('ctaBody')}</p>
             <div className="mt-6 md:mt-8">
-              <Link href={`/${locale}/therapists`}>
+              <Link href={getTherapistsListPath(locale)}>
                 <Button size="lg" variant="secondary" className="w-full sm:w-auto">
                   {t('ctaButton')}
                 </Button>

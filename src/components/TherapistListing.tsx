@@ -9,7 +9,7 @@ import TherapistSearchBar from './TherapistSearchBar';
 import Pagination from './Pagination';
 import { getDistricts, getSpecialties, getTherapistsPaged } from '@/lib/queries';
 import { getCityName } from '@/lib/cities';
-import { findBySlug } from '@/lib/utils';
+import { findBySlug, getTherapistsListPath } from '@/lib/utils';
 import type { ProfessionalType } from '@/types/database';
 
 const PAGE_SIZE = 12;
@@ -173,7 +173,7 @@ export default async function TherapistListing({
               </svg>
               <p className="text-sm font-medium text-brand-700">{t('empty')}</p>
               <Link
-                href={'/' + locale + '/therapists'}
+                href={getTherapistsListPath(locale)}
                 className="mt-3 inline-block text-xs font-medium text-brand-600 underline-offset-2 hover:underline"
               >
                 {locale === 'tr' ? 'Filtreleri temizle' : 'Clear filters'}

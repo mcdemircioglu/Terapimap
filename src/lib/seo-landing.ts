@@ -35,7 +35,7 @@ export type LandingCopy = {
  * dağılıma dair veri olmadığından, index'i tamamen kapatmak yerine en
  * azından "birden fazla seçenek sunan" sayfaları indexlenebilir tutar.
  */
-const MIN_THERAPISTS_FOR_INDEX = 2;
+export const MIN_THERAPISTS_FOR_INDEX = 2;
 
 /* ── Uzmanlık kısaltması: "Bilişsel Davranışçı Terapi (BDT)" → "BDT" ── */
 export function shortSpecialtyName(name: string): string {
@@ -626,6 +626,88 @@ function getSpecialtyInfo(name: string): SpecialtyInfo {
   };
 }
 
+/**
+ * Aynı 4 sabit blok (1 bölüm + 3 SSS) ~313 şehir×uzmanlık sayfasının tamamında
+ * birebir tekrarlanıyordu (P1 denetimi, "Duplicate / near-duplicate içerik").
+ * Bu fonksiyon, sayfanın şehir+uzmanlık kombinasyonuna göre SABİT bir varyant
+ * seçer (Math.random DEĞİL — aynı sayfa her build'de aynı metni almalı, aksi
+ * halde içerik sürekli değişir ve arama motoru sinyali tutarsızlaşır).
+ */
+function pickVariant<T>(seed: string, variants: readonly T[]): T {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) {
+    h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return variants[h % variants.length];
+}
+
+/* ── "Terapist Seçerken" bölümünün ilk paragrafı — anlam aynı, ifade farklı ── */
+const CHOOSING_THERAPIST_PARAGRAPH_VARIANTS = [
+  `Uzmanın eğitimi ve unvanı (psikolog, klinik psikolog, psikiyatrist, psikolojik danışman), çalıştığı alanlar ve deneyimi ilk bakılacak noktalar arasındadır. Bunun yanında görüşme ücreti, seans formatı ve uzmanla kurduğunuz iletişimin size iyi hissettirip hissettirmediği de önemlidir. Terapi süreci kişiye göre değişebilir; ilk seanslar hem uzmanı tanımak hem de birlikte çalışıp çalışamayacağınızı değerlendirmek için bir fırsattır.`,
+  `Bir terapist seçerken ilk bakılacak noktalar arasında uzmanın unvanı (psikolog, klinik psikolog, psikiyatrist, psikolojik danışman), çalıştığı alanlar ve deneyim düzeyi yer alır. Görüşme ücreti, seans süresi/formatı ve uzmanla kurduğunuz iletişimin size ne kadar rahat hissettirdiği de en az bunlar kadar belirleyicidir. İlk bir veya iki seans, hem uzmanı tanımak hem de birlikte çalışmanın uygun olup olmadığını anlamak için iyi bir fırsattır.`,
+  `Doğru uzmanı bulmak biraz zaman alabilir: eğitim geçmişi, unvan (psikolog, klinik psikolog, psikiyatrist, psikolojik danışman) ve çalıştığı alanlar ilk incelenecek bilgilerdir. Bunun yanında seans ücreti, görüşme formatı ve uzmanla aranızdaki iletişimin nasıl hissettirdiği de göz ardı edilmemelidir. Terapi kişiye özel ilerler; ilk görüşmeler genellikle birbirinizi tanımanız için yeterli fikir verir.`,
+  `Uzman seçerken dikkat edilmesi gereken temel kriterler arasında eğitim geçmişi, mesleki unvan (psikolog, klinik psikolog, psikiyatrist, psikolojik danışman) ve deneyim alanları sayılabilir. Görüşme ücreti ile seans formatı da pratik açıdan önemlidir; ama belki en az bunlar kadar önemlisi, uzmanla kurduğunuz iletişimin size nasıl hissettirdiğidir. İlk seanslarda bu uyumu değerlendirme fırsatı bulursunuz.`,
+  `Bir uzmanla çalışmaya karar vermeden önce eğitimi, unvanı (psikolog, klinik psikolog, psikiyatrist, psikolojik danışman) ve hangi alanlarda deneyimli olduğu incelenebilir. Görüşme ücreti ve seans formatı pratik detaylar olsa da, asıl belirleyici çoğu zaman uzmanla kurulan iletişimin nasıl hissettirdiğidir. İlk seanslar tam olarak bunu anlamak için vardır: birbirinizi tanımak ve birlikte çalışıp çalışamayacağınızı görmek.`,
+] as const;
+
+/* ── Statik SSS'ler — soru + cevap birlikte varyantlanır ─────────────── */
+const SESSION_COUNT_FAQ_VARIANTS: LandingFaq[] = [
+  {
+    q: 'Terapi kaç seans sürer?',
+    a: `Seans sayısı; ihtiyaca, hedefe ve kullanılan yaklaşıma göre kişiden kişiye değişir. Net bir süre önceden garanti edilemez; uzmanınız ilk görüşmelerde sizinle birlikte bir plan oluşturacaktır.`,
+  },
+  {
+    q: 'Bir terapi süreci ortalama kaç seans sürer?',
+    a: `Bu tamamen kişiye, hedefe ve kullanılan terapi yaklaşımına bağlıdır; herkes için geçerli tek bir sayı vermek mümkün değildir. Uzmanınız ilk görüşmelerde ihtiyacınızı değerlendirip birlikte bir yol haritası oluşturacaktır.`,
+  },
+  {
+    q: 'Kaç seans terapiye gitmem gerekir?',
+    a: `Net bir seans sayısı önceden söylenemez; süreç kişiye, hedefe ve kullanılan yönteme göre şekillenir. İlk birkaç görüşme genellikle ihtiyacın netleşmesine ve bir plan oluşturulmasına yardımcı olur.`,
+  },
+  {
+    q: 'Terapi süreci ne kadar sürer?',
+    a: `Seans sayısı kişiden kişiye, hedeften hedefe değişir ve önceden kesin olarak belirlenemez. Uzmanınızla yapacağınız ilk görüşmeler, sürecin ne kadar süreceğine dair daha net bir fikir verir.`,
+  },
+];
+
+const MEDICATION_FAQ_VARIANTS: LandingFaq[] = [
+  {
+    q: 'Terapi ilaç tedavisinin yerine geçer mi?',
+    a: `Terapi ve ilaç tedavisi farklı destek biçimleridir ve bazı durumlarda birlikte yürütülebilir. İlaç tedavisi yalnızca psikiyatristler tarafından değerlendirilir ve düzenlenir; mevcut bir tedaviyi bırakmadan önce mutlaka hekiminize danışın.`,
+  },
+  {
+    q: 'Terapi, ilaç tedavisi yerine kullanılabilir mi?',
+    a: `İkisi farklı destek türleridir ve birbirinin yerine geçmek zorunda değildir; bazı durumlarda birlikte de yürütülebilir. İlaç tedavisiyle ilgili her karar yalnızca bir psikiyatrist tarafından değerlendirilmelidir — mevcut bir tedaviyi kendi kararınızla bırakmayın.`,
+  },
+  {
+    q: 'İlaç kullanmadan sadece terapiyle iyileşebilir miyim?',
+    a: `Terapi ve ilaç tedavisi birbirini dışlamaz; duruma göre tek başına ya da birlikte önerilebilir. İlaç tedavisiyle ilgili değerlendirme ve düzenleme yalnızca psikiyatristin yetkisindedir, bu konuda mutlaka hekiminize danışın.`,
+  },
+  {
+    q: 'Terapi ile ilaç tedavisi birlikte yürütülebilir mi?',
+    a: `Bu, kişiye ve duruma göre değişir; bazen yalnızca terapi yeterli olurken bazen ikisi birlikte önerilir. İlaç tedavisine dair kararlar yalnızca psikiyatrist tarafından verilmelidir; mevcut bir tedaviyi hekiminize danışmadan bırakmayın.`,
+  },
+];
+
+const CONTACT_FAQ_VARIANTS: LandingFaq[] = [
+  {
+    q: 'Terapimap üzerinden uzmanlarla nasıl iletişime geçebilirim?',
+    a: `Size uygun uzmanın profil sayfasındaki iletişim formunu doldurmanız yeterli. Bilgileriniz yalnızca seçtiğiniz uzmana iletilir; uzman sizinle paylaştığınız bilgiler üzerinden iletişime geçer.`,
+  },
+  {
+    q: 'Bir uzmana Terapimap üzerinden nasıl ulaşabilirim?',
+    a: `Uygun bulduğunuz uzmanın profil sayfasındaki iletişim formunu doldurmanız yeterlidir. Paylaştığınız bilgiler yalnızca o uzmana ulaşır ve uzman sizinle doğrudan iletişime geçer.`,
+  },
+  {
+    q: 'Uzmanla görüşme talebimi nasıl iletirim?',
+    a: `Profil sayfasındaki iletişim formunu doldurarak talebinizi doğrudan seçtiğiniz uzmana iletebilirsiniz. Bilgileriniz başka hiçbir yerle paylaşılmaz; uzman size döner.`,
+  },
+  {
+    q: 'Terapimap üzerinden randevu ya da görüşme talebi nasıl gönderilir?',
+    a: `İlgilendiğiniz uzmanın profilindeki iletişim formunu doldurmanız yeterli; talebiniz doğrudan o uzmana ulaşır. Uzman, paylaştığınız bilgiler üzerinden sizinle iletişime geçecektir.`,
+  },
+];
+
 /* ── Şablon üretici ────────────────────────────────────────────────── */
 
 export function buildTemplateCopy({
@@ -685,7 +767,7 @@ export function buildTemplateCopy({
     {
       heading: 'Terapist Seçerken Nelere Dikkat Etmelisiniz?',
       paragraphs: [
-        `Uzmanın eğitimi ve unvanı (psikolog, klinik psikolog, psikiyatrist, psikolojik danışman), çalıştığı alanlar ve deneyimi ilk bakılacak noktalar arasındadır. Bunun yanında görüşme ücreti, seans formatı ve uzmanla kurduğunuz iletişimin size iyi hissettirip hissettirmediği de önemlidir. Terapi süreci kişiye göre değişebilir; ilk seanslar hem uzmanı tanımak hem de birlikte çalışıp çalışamayacağınızı değerlendirmek için bir fırsattır.`,
+        pickVariant(`${cityName}|${specialtyName}|secim`, CHOOSING_THERAPIST_PARAGRAPH_VARIANTS),
         `Terapimap bir sağlık hizmeti sağlayıcısı değildir; uzman profillerini bir araya getiren bir platformdur. Profildeki bilgileri inceleyip iletişim formu üzerinden dilediğiniz uzmana ulaşabilirsiniz.`,
       ],
     },
@@ -714,18 +796,9 @@ export function buildTemplateCopy({
       q: `Online ${specialtyLower} görüşmesi yapılabilir mi?`,
       a: `Evet, birçok uzman online görüşme seçeneği sunmaktadır. Listede "Online" etiketi bulunan uzmanları filtreleyerek görüntülü görüşme yapan terapistleri görebilirsiniz.`,
     },
-    {
-      q: 'Terapi kaç seans sürer?',
-      a: `Seans sayısı; ihtiyaca, hedefe ve kullanılan yaklaşıma göre kişiden kişiye değişir. Net bir süre önceden garanti edilemez; uzmanınız ilk görüşmelerde sizinle birlikte bir plan oluşturacaktır.`,
-    },
-    {
-      q: 'Terapi ilaç tedavisinin yerine geçer mi?',
-      a: `Terapi ve ilaç tedavisi farklı destek biçimleridir ve bazı durumlarda birlikte yürütülebilir. İlaç tedavisi yalnızca psikiyatristler tarafından değerlendirilir ve düzenlenir; mevcut bir tedaviyi bırakmadan önce mutlaka hekiminize danışın.`,
-    },
-    {
-      q: 'Terapimap üzerinden uzmanlarla nasıl iletişime geçebilirim?',
-      a: `Size uygun uzmanın profil sayfasındaki iletişim formunu doldurmanız yeterli. Bilgileriniz yalnızca seçtiğiniz uzmana iletilir; uzman sizinle paylaştığınız bilgiler üzerinden iletişime geçer.`,
-    },
+    pickVariant(`${cityName}|${specialtyName}|seans`, SESSION_COUNT_FAQ_VARIANTS),
+    pickVariant(`${cityName}|${specialtyName}|ilac`, MEDICATION_FAQ_VARIANTS),
+    pickVariant(`${cityName}|${specialtyName}|iletisim`, CONTACT_FAQ_VARIANTS),
   ];
 
   return {
@@ -774,7 +847,7 @@ export function buildCityLandingCopy({
     {
       heading: 'Terapist Seçerken Nelere Dikkat Etmelisiniz?',
       paragraphs: [
-        `Uzmanın eğitimi ve unvanı (psikolog, klinik psikolog, psikiyatrist, psikolojik danışman), çalıştığı alanlar ve deneyimi ilk bakılacak noktalar arasındadır. Görüşme ücreti, seans formatı ve uzmanla kurduğunuz iletişimin size iyi hissettirip hissettirmediği de önemlidir. İlk seanslar hem uzmanı tanımak hem de birlikte çalışıp çalışamayacağınızı değerlendirmek için bir fırsattır.`,
+        pickVariant(`${cityName}|secim`, CHOOSING_THERAPIST_PARAGRAPH_VARIANTS),
         `Terapimap bir sağlık hizmeti sağlayıcısı değildir; uzman profillerini bir araya getiren bir platformdur. Profildeki bilgileri inceleyip iletişim formu üzerinden dilediğiniz uzmana ulaşabilirsiniz.`,
       ],
     },
@@ -795,14 +868,8 @@ export function buildCityLandingCopy({
       q: `${cityName}${da} online terapi mümkün mü?`,
       a: `Evet, birçok uzman online görüşme seçeneği sunmaktadır. Listede "Online" filtresini kullanarak görüntülü görüşme yapan terapistleri görebilirsiniz.`,
     },
-    {
-      q: 'Terapi kaç seans sürer?',
-      a: `Seans sayısı; ihtiyaca, hedefe ve kullanılan yaklaşıma göre kişiden kişiye değişir. Net bir süre önceden garanti edilemez; uzmanınız ilk görüşmelerde sizinle birlikte bir plan oluşturacaktır.`,
-    },
-    {
-      q: 'Terapimap üzerinden uzmanlarla nasıl iletişime geçebilirim?',
-      a: `Size uygun uzmanın profil sayfasındaki iletişim formunu doldurmanız yeterli. Bilgileriniz yalnızca seçtiğiniz uzmana iletilir; uzman sizinle paylaştığınız bilgiler üzerinden iletişime geçer.`,
-    },
+    pickVariant(`${cityName}|seans`, SESSION_COUNT_FAQ_VARIANTS),
+    pickVariant(`${cityName}|iletisim`, CONTACT_FAQ_VARIANTS),
   ];
 
   return { h1, metaTitle, metaDescription, intro, sections, faqs, isIndexable: total >= MIN_THERAPISTS_FOR_INDEX };

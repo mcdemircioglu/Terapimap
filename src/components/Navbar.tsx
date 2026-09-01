@@ -3,13 +3,14 @@ import { getTranslations } from 'next-intl/server';
 import Container from './Container';
 import MobileMenu from './MobileMenu';
 import type { Locale } from '@/i18n';
+import { getTherapistsListPath } from '@/lib/utils';
 
 export default async function Navbar({ locale }: { locale: Locale }) {
   const t = await getTranslations({ locale, namespace: 'nav' });
   const tMeta = await getTranslations({ locale, namespace: 'meta' });
 
   const home = `/${locale}`;
-  const therapists = `/${locale}/therapists`;
+  const therapists = getTherapistsListPath(locale);
   const guide = `/${locale}/psikoloji-rehberi`;
   const about = `/${locale}/about`;
   const applyExpert = `/${locale}/uzman-basvuru`;

@@ -4,6 +4,7 @@ import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import { Button } from '@/components/ui/Button';
 import { absUrl } from '@/lib/schema';
+import { getTherapistsListPath } from '@/lib/utils';
 
 export async function generateMetadata({
   params: { locale },
@@ -43,7 +44,7 @@ export default async function AboutPage({
           </div>
 
           <div className="mt-8">
-            <Link href={`/${locale}/therapists`}>
+            <Link href={getTherapistsListPath(locale)}>
               <Button size="lg">{t('ctaButton')}</Button>
             </Link>
           </div>

@@ -22,6 +22,7 @@ import { getTherapistBySlug } from '@/lib/queries';
 import { getCitySlug } from '@/lib/cities';
 import { getResolvedMapsData } from '@/lib/maps';
 import { absUrl, buildTherapistSchema, buildBreadcrumbSchema } from '@/lib/schema';
+import { getProfessionalUrlSegment, getTherapistsListPath } from '@/lib/utils';
 import { groupSpecialties, SPECIALTY_TYPE_LABELS } from '@/types/database';
 
 // ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
@@ -37,7 +38,7 @@ export async function generateMetadata({
 
   const specialties = therapist.specialties.map((s) => s.name).join(', ');
   const location = [therapist.city, therapist.district].filter(Boolean).join(' ');
-  const url = absUrl('/' + locale + '/psikolog/' + slug);
+  const url = absUrl('/' + locale + '/' + getProfessionalUrlSegment(therapist.professional_type) + '/' + slug);
 
   const title = [
     therapist.name,
@@ -80,7 +81,7 @@ export default async function PsikologDetailPage({
   if (!therapist) notFound();
 
   const citySlug = getCitySlug(therapist.city) ?? therapist.city.toLowerCase();
-  const pageUrl = absUrl('/' + locale + '/psikolog/' + therapist.slug);
+  const pageUrl = absUrl('/' + locale + '/' + getProfessionalUrlSegment(therapist.professional_type) + '/' + therapist.slug);
 
   // google_maps_url'i bir kez çözümle (kısa link genişletme + place_id
   // sayfasından koordinat kazıma; sonuç 30 gün cache'lenir) — hem JSON-LD
@@ -99,8 +100,8 @@ export default async function PsikologDetailPage({
     buildTherapistSchema(therapist, locale, resolvedMaps),
     buildBreadcrumbSchema([
       { name: breadcrumbLabel.home, url: absUrl('/' + locale) },
-      { name: breadcrumbLabel.therapists, url: absUrl('/' + locale + '/therapists') },
-      { name: therapist.city, url: absUrl('/' + locale + '/therapists/' + citySlug) },
+      { name: breadcrumbLabel.therapists, url: absUrl(getTherapistsListPath(locale)) },
+      { name: therapist.city, url: absUrl(getTherapistsListPath(locale) + '/' + citySlug) },
       { name: therapist.name, url: pageUrl },
     ]),
   ];
@@ -111,11 +112,11 @@ export default async function PsikologDetailPage({
       <Container className="py-10 md:py-14">
         {/* Breadcrumb */}
         <nav className="mb-6 text-sm text-brand-600" aria-label="Breadcrumb">
-          <Link href={'/' + locale + '/therapists'} className="hover:text-brand-800">
+          <Link href={getTherapistsListPath(locale)} className="hover:text-brand-800">
             {tNav('therapists')}
           </Link>
           <span className="mx-2">·</span>
-          <Link href={'/' + locale + '/therapists/' + citySlug} className="hover:text-brand-800">
+          <Link href={getTherapistsListPath(locale) + '/' + citySlug} className="hover:text-brand-800">
             {therapist.city}
           </Link>
         </nav>
@@ -178,7 +179,7 @@ export default async function PsikologDetailPage({
                           {group.items.map((s) => (
                             <Link
                               key={s.id}
-                              href={'/' + locale + '/therapists/' + citySlug + '/' + s.slug}
+                              href={getTherapistsListPath(locale) + '/' + citySlug + '/' + s.slug}
                             >
                               <Badge
                                 variant={

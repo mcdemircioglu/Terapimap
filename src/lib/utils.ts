@@ -26,6 +26,17 @@ export function getProfessionalUrl(
   return '/' + locale + '/' + getProfessionalUrlSegment(professionalType) + '/' + slug;
 }
 
+/**
+ * Terapist dizini listesinin locale'e göre PUBLIC path'i (TR: 'terapistler').
+ * next.config.mjs'te '/tr/therapists' → '/tr/terapistler' 301 redirect'i var;
+ * internal linkler '/therapists' hardcode ederse her tıklama/crawl gereksiz bir
+ * redirect hop'undan geçer (P2 denetiminde tespit edildi). Internal linkler
+ * HER ZAMAN bu fonksiyonu kullanmalı, '/therapists' yazmamalı.
+ */
+export function getTherapistsListPath(locale: string): string {
+  return '/' + locale + '/' + (locale === 'tr' ? 'terapistler' : 'therapists');
+}
+
 export function formatExperience(years: number, locale: 'tr' | 'en'): string {
   if (locale === 'tr') return `${years} yıl deneyim`;
   return `${years} ${years === 1 ? 'year' : 'years'} of experience`;

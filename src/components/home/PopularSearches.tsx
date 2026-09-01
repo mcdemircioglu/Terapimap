@@ -6,6 +6,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import Container from '@/components/Container';
+import { getTherapistsListPath } from '@/lib/utils';
 import {
   CloudIcon,
   EyeIcon,
@@ -38,7 +39,7 @@ export default async function PopularSearches({ locale }: { locale: string }) {
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-sm font-semibold text-brand-800">{t('popularTitle')}</h2>
           <Link
-            href={`/${locale}/therapists`}
+            href={getTherapistsListPath(locale)}
             className="hidden shrink-0 items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-800 sm:inline-flex"
           >
             {t('popularSeeAll')}
