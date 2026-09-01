@@ -9,7 +9,7 @@ export const PROF_TYPE_SLUG_MAP: Record<string, ProfessionalType> = {
   'klinik-psikolog':      'clinical_psychologist',
   'psikiyatrist':         'psychiatrist',
   'aile-terapisti':       'family_therapist',
-  'psikolojik-danisan':   'counselor',
+  'psikolojik-danisman':   'counselor',
 };
 
 export const PROF_TYPE_TR: Record<ProfessionalType, string> = {

@@ -21,7 +21,7 @@ type InternalLink = { label: string; href: string };
 const PROF_TYPE_TO_SLUG: Partial<Record<ProfessionalType, string>> = {
   psychiatrist: 'psikiyatrist',
   family_therapist: 'aile-terapisti',
-  counselor: 'psikolojik-danisan',
+  counselor: 'psikolojik-danisman',
 };
 
 const PROF_TYPE_PLURAL_TR: Partial<Record<ProfessionalType, string>> = {

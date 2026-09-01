@@ -60,7 +60,7 @@ export async function generateMetadata({
     description: copy.metaDescription,
     alternates: { canonical },
     robots:
-      copy.isIndexable && locale === 'tr'
+      copy.isIndexable && locale === 'tr' && page === 1
         ? { index: true, follow: true }
         : { index: false, follow: true },
     openGraph: {

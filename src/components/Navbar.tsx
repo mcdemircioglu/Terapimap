@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import Container from './Container';
-import LocaleSwitcher from './LocaleSwitcher';
 import MobileMenu from './MobileMenu';
 import type { Locale } from '@/i18n';
 
@@ -51,7 +50,6 @@ export default async function Navbar({ locale }: { locale: Locale }) {
           >
             {t('applyExpert')}
           </Link>
-          <LocaleSwitcher current={locale} />
           <MobileMenu items={navItems} />
         </div>
       </Container>

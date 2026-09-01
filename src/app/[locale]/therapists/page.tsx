@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import TherapistListing from '@/components/TherapistListing';
+import CityBrowseSection from '@/components/CityBrowseSection';
 import JsonLd from '@/components/JsonLd';
 import { absUrl, buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/schema';
 import { getSpecialties } from '@/lib/queries';
@@ -131,6 +132,7 @@ export default function TherapistsPage({
   return (
     <>
       <JsonLd schema={schemas} />
+      <CityBrowseSection locale={locale} />
       <TherapistListing locale={locale} searchParams={searchParams} />
     </>
   );

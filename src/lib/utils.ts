@@ -11,7 +11,7 @@ const PROF_TYPE_URL: Record<string, string> = {
   clinical_psychologist: 'psikolog',
   psychiatrist:          'psikiyatrist',
   family_therapist:      'aile-terapisti',
-  counselor:             'danisan',
+  counselor:             'psikolojik-danisman',
 };
 
 export function getProfessionalUrlSegment(professionalType: string | null | undefined): string {

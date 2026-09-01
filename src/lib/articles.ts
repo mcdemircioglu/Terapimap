@@ -75,6 +75,27 @@ export const CATEGORY_CTA_SPECIALTY: Partial<Record<ArticleCategory, string>> = 
   'iliskiler': 'cift-terapisi',
 };
 
+/**
+ * Makale SLUG'u → uzmanlık landing sayfası (CTA hedefi).
+ * Kategori bazlı eşleme, 'terapi-yontemleri' ve 'psikolojik-konular' gibi tek
+ * bir uzmanlığa indirgenemeyecek (heterojen) kategoriler için işe yaramıyor —
+ * o kategorideki her makale farklı bir yönteme/konuya değinebiliyor (ör. BDT
+ * makalesi ile ACT makalesi aynı kategoride ama farklı uzmanlığa karşılık
+ * gelmeli). Bu yüzden konusu net olan makaleler için slug bazlı, daha isabetli
+ * bir eşleme kullanılıyor; slug map'te olmayan makaleler kategori eşlemesine,
+ * o da yoksa genel listeye düşer.
+ * NOT: slug'lar rehber-icerikleri/*.md dosya adlarından türetildi — canlı
+ * veritabanındaki gerçek slug'larla birebir eşleştiğini doğrulamadım, admin
+ * panelinden teyit edilmesi önerilir.
+ */
+export const ARTICLE_SLUG_CTA_SPECIALTY: Partial<Record<string, string>> = {
+  'bilissel-davranisci-terapi-bdt-nedir': 'bilissel-davranisci-terapi-bdt',
+  'act-kabul-ve-kararlilik-terapisi-nedir': 'act-terapi',
+  'obsesif-kompulsif-bozukluk-okb-nedir': 'okb',
+  'dehb-nedir': 'dehb',
+  'travma-iliskileri-nasil-etkiler': 'travma',
+};
+
 function logError(fn: string, error: unknown) {
   console.error(`\n[terapimap:articles] ${fn} failed:`);
   console.error(JSON.stringify(error, null, 2));

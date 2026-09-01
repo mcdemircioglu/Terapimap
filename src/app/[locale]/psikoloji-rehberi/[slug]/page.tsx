@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/Badge';
 import ArticleCard from '@/components/guide/ArticleCard';
 import ArticleDisclaimer from '@/components/guide/ArticleDisclaimer';
 import TherapistCta from '@/components/guide/TherapistCta';
-import { CATEGORY_CTA_SPECIALTY, calculateReadingMinutes, getArticleBySlug, getRelatedArticles } from '@/lib/articles';
+import { ARTICLE_SLUG_CTA_SPECIALTY, CATEGORY_CTA_SPECIALTY, calculateReadingMinutes, getArticleBySlug, getRelatedArticles } from '@/lib/articles';
 import { absUrl, buildArticleSchema, buildBreadcrumbSchema } from '@/lib/schema';
 import { ARTICLE_CATEGORY_LABELS } from '@/types/database';
 
@@ -202,9 +202,12 @@ export default async function ArticleDetailPage({
             <TherapistCta
               locale={locale}
               href={
-                CATEGORY_CTA_SPECIALTY[article.category]
-                  ? `/${locale}/${CATEGORY_CTA_SPECIALTY[article.category]}`
-                  : undefined
+                (() => {
+                  const specialtySlug =
+                    ARTICLE_SLUG_CTA_SPECIALTY[article.slug] ??
+                    CATEGORY_CTA_SPECIALTY[article.category];
+                  return specialtySlug ? `/${locale}/${specialtySlug}` : undefined;
+                })()
               }
             />
           </div>

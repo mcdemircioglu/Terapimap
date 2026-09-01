@@ -1,3 +1,3 @@
-// /[locale]/danisan/[slug] — danışmanlar için canonical URL
+// /[locale]/psikolojik-danisman/[slug] — danışmanlar için canonical URL
 export { default, generateMetadata } from '@/app/[locale]/psikolog/[slug]/page';
 export const revalidate = 3600;

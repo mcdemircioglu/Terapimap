@@ -78,6 +78,7 @@ export async function generateMetadata({
     title: title + pageSuffix,
     description,
     alternates: { canonical: url },
+    robots: { index: locale === 'tr' && pageNo === 1, follow: true },
     openGraph: {
       title: title + pageSuffix,
       description,
