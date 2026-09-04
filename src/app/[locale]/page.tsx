@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import HeroSearch from '@/components/home/HeroSearch';
-import TherapistGrid from '@/components/TherapistGrid';
+import FeaturedTherapistsSlider from '@/components/home/FeaturedTherapistsSlider';
 import PopularSearches from '@/components/home/PopularSearches';
 import { Button } from '@/components/ui/Button';
 import { UsersIcon, MapPinIcon, VideoIcon } from '@/components/ui/icons';
@@ -23,7 +23,7 @@ export default async function HomePage({
   const [t, specialties, featured, stats] = await Promise.all([
     getTranslations({ locale, namespace: 'home' }),
     getSpecialties(),
-    getFeaturedTherapists(6),
+    getFeaturedTherapists(12),
     getHomeStats(),
   ]);
 
@@ -102,18 +102,20 @@ export default async function HomePage({
                 <p className="mt-2 text-sm text-brand-700 md:text-base">{t('featuredSubtitle')}</p>
               </div>
               <Link
-                href={getTherapistsListPath(locale)}
+                href={`/${locale}/one-cikan-terapistler`}
                 className="hidden shrink-0 text-sm font-medium text-brand-700 hover:text-brand-900 md:inline"
               >
-                {t('featuredCta')} →
+                {locale === 'tr' ? 'Öne çıkan terapistler' : 'Featured therapists'} →
               </Link>
             </div>
             <div className="mt-6 md:mt-8">
-              <TherapistGrid therapists={featured} locale={locale} />
+              <FeaturedTherapistsSlider therapists={featured} locale={locale} />
             </div>
             <div className="mt-6 md:hidden">
-              <Link href={getTherapistsListPath(locale)}>
-                <Button variant="outline" className="w-full">{t('featuredCta')}</Button>
+              <Link href={`/${locale}/one-cikan-terapistler`}>
+                <Button variant="outline" className="w-full">
+                  {locale === 'tr' ? 'Öne çıkan terapistler' : 'Featured therapists'}
+                </Button>
               </Link>
             </div>
           </Container>

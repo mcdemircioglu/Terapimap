@@ -92,6 +92,7 @@ export async function GET() {
     // TR → /terapistler/, EN → /therapists/
     const listSlug = locale === "tr" ? "terapistler" : "therapists";
     items.push(item(`${l}/${listSlug}`, "daily", 0.9));
+    items.push(item(`${l}/one-cikan-terapistler`, "weekly", 0.7));
 
     for (const city of CITIES) {
       if ((cityCounts.get(city.slug) ?? 0) < MIN_THERAPISTS_FOR_INDEX) continue;
