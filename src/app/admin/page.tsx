@@ -43,6 +43,7 @@ type Professional = {
   is_verified: boolean;
   is_featured: boolean;
   status: string | null;
+  user_id: string | null;
   specialties: Specialty[];
 };
 
@@ -384,12 +385,14 @@ function ProfessionalList({
   onAdd,
   onEdit,
   onDelete,
+  onInvitePanel,
 }: {
   professionals: Professional[];
   loading: boolean;
   onAdd: () => void;
   onEdit: (id: string) => void;
   onDelete: (id: string, name: string) => void;
+  onInvitePanel: (id: string, name: string) => void;
 }) {
   const [search, setSearch] = useState('');
   const [cityFilter, setCityFilter] = useState('');
@@ -582,6 +585,25 @@ function ProfessionalList({
                           </svg>
                           Düzenle
                         </Btn>
+                        {p.user_id ? (
+                          <span
+                            title="Panel hesabı bağlı"
+                            className="px-2 py-1.5 text-xs font-medium text-brand-600"
+                          >
+                            Panel ✓
+                          </span>
+                        ) : (
+                          <Btn
+                            variant="ghost"
+                            onClick={() => onInvitePanel(p.id, p.name)}
+                            className="px-2 py-1.5"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M16 12H8m0 0l4-4m-4 4l4 4m6-9v10a2 2 0 01-2 2H8a2 2 0 01-2-2V7a2 2 0 012-2h8a2 2 0 012 2z" />
+                            </svg>
+                            Panel'e davet et
+                          </Btn>
+                        )}
                         <Btn
                           variant="ghost"
                           onClick={() => onDelete(p.id, p.name)}
@@ -1003,6 +1025,28 @@ export default function AdminPage() {
     }
   };
 
+  const handleInvitePanel = async (id: string, name: string) => {
+    if (
+      !window.confirm(
+        `"${name}" için panel hesabı açılsın mı?\n\nBu, terapiste panel giriş daveti e-postası gönderir. Yalnızca ödeme/anlaşma tamamlandıktan sonra kullanın — panel erişimi ücretli bir üründür.`,
+      )
+    )
+      return;
+    const res = await apiFetch(`/api/admin/professionals/${id}/panel-invite`, { method: 'POST' });
+    const d = await res.json();
+    if (res.ok) {
+      showFlash({
+        type: 'success',
+        text: d.alreadyLinked
+          ? `"${name}" için panel hesabı zaten bağlıydı.`
+          : `"${name}" için panel daveti gönderildi.`,
+      });
+      loadData();
+    } else {
+      showFlash({ type: 'error', text: d.error ?? 'Panel daveti gönderilemedi.' });
+    }
+  };
+
   // ── Not authenticated ──
   if (!adminPassword) {
     return <LoginView onAuth={setAdminPassword} />;
@@ -1109,6 +1153,7 @@ export default function AdminPage() {
             onAdd={() => { setEditingId(null); setView('form'); setFlash(null); }}
             onEdit={(id) => { setEditingId(id); setView('form'); setFlash(null); }}
             onDelete={handleDelete}
+            onInvitePanel={handleInvitePanel}
           />
         ) : (
           <ProfessionalForm

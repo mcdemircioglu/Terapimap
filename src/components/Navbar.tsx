@@ -14,6 +14,7 @@ export default async function Navbar({ locale }: { locale: Locale }) {
   const guide = `/${locale}/psikoloji-rehberi`;
   const about = `/${locale}/about`;
   const applyExpert = `/${locale}/uzman-basvuru`;
+  const panelLogin = '/panel/giris';
 
   const navItems = [
     { href: home,        label: t('home') },
@@ -21,6 +22,7 @@ export default async function Navbar({ locale }: { locale: Locale }) {
     { href: guide,       label: t('guide') },
     { href: about,       label: t('about') },
     { href: applyExpert, label: t('applyExpert') },
+    { href: panelLogin,  label: t('panelLogin') },
   ];
 
   return (
@@ -45,6 +47,12 @@ export default async function Navbar({ locale }: { locale: Locale }) {
 
         {/* Right side: CTA + locale switcher + mobile hamburger */}
         <div className="flex items-center gap-2">
+          <Link
+            href={panelLogin}
+            className="hidden text-sm text-brand-600 hover:text-brand-900 md:inline-flex"
+          >
+            {t('panelLogin')}
+          </Link>
           <Link
             href={applyExpert}
             className="hidden rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-700 md:inline-flex"

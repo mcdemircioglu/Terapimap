@@ -19,6 +19,7 @@ type Lead = {
   status: LeadStatus;
   created_at: string;
   sent_at: string | null;
+  therapist_contacted_at: string | null;
 };
 
 type Flash = { type: 'success' | 'error'; text: string };
@@ -443,15 +444,29 @@ export default function LeadsPage() {
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {lead.sent_at ? (
-                          <span
-                            className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg"
-                            title={`Gönderildi: ${new Date(lead.sent_at).toLocaleString('tr-TR')}`}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                            Gönderildi
-                          </span>
+                          <div className="inline-flex flex-col items-end gap-1">
+                            <span
+                              className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-3 py-1.5 rounded-lg"
+                              title={`Gönderildi: ${new Date(lead.sent_at).toLocaleString('tr-TR')}`}
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                              Gönderildi
+                            </span>
+                            {lead.therapist_contacted_at ? (
+                              <span
+                                className="text-[11px] font-medium text-green-700"
+                                title={new Date(lead.therapist_contacted_at).toLocaleString('tr-TR')}
+                              >
+                                ✓ Terapist iletişime geçti
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-gray-400">
+                                Terapist henüz iletişime geçmedi
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           <Btn
                             onClick={() => handleSend(lead)}
