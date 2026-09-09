@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 import { slugifyTr } from '@/lib/utils';
+import { revalidatePublicTherapistPages } from '@/lib/revalidatePublicPages';
 
 function verifyAuth(request: Request): boolean {
   const pw = request.headers.get('x-admin-password');
@@ -320,13 +321,17 @@ export async function PATCH(
       return NextResponse.json({ error: vrUpdateErr.message }, { status: 500 });
     }
 
+    // Ret, professionals tablosuna dokunmuyor (görünürlük değişmiyor), ama
+    // tutarlılık için yine de tazeleme tetikleniyor.
+    revalidatePublicTherapistPages();
+
     return NextResponse.json({ ok: true, action: 'rejected' });
   }
 
   if (action === 'remove') {
     // ── Soft-delete the professional ──
     if (vr.professional_id) {
-      const { error: profErr } = await supabase
+      const { data: removedProfessional, error: profErr } = await supabase
         .from('professionals')
         .update({
           is_visible: false,
@@ -334,11 +339,15 @@ export async function PATCH(
           removal_reason: vr.message ?? 'Terapistin talebi üzerine kaldırıldı.',
           updated_at: new Date().toISOString(),
         })
-        .eq('id', vr.professional_id);
+        .eq('id', vr.professional_id)
+        .select('slug, professional_type')
+        .maybeSingle();
 
       if (profErr) {
         return NextResponse.json({ error: 'Profesyonel kaldırılamadı: ' + profErr.message }, { status: 500 });
       }
+
+      revalidatePublicTherapistPages(removedProfessional);
     }
 
     const { error: vrUpdateErr } = await supabase

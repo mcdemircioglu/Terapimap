@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
+import { revalidatePublicTherapistPages } from '@/lib/revalidatePublicPages';
 
 function verifyAuth(request: Request): boolean {
   const pw = request.headers.get('x-admin-password');
@@ -85,6 +86,14 @@ export async function DELETE(
 
   const supabase = getServiceClient();
 
+  // Silmeden önce slug/professional_type'ı alıyoruz — kayıt gittikten sonra
+  // hangi detay sayfasını tazeleyeceğimizi bilemeyiz.
+  const { data: professional } = await supabase
+    .from('professionals')
+    .select('slug, professional_type')
+    .eq('id', params.id)
+    .maybeSingle();
+
   // Delete specialty relations first (FK constraint)
   await supabase
     .from('professional_specialties')
@@ -100,6 +109,8 @@ export async function DELETE(
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  revalidatePublicTherapistPages(professional);
 
   return NextResponse.json({ ok: true });
 }

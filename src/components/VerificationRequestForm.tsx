@@ -45,7 +45,6 @@ interface Props {
 
 const REQUEST_TYPE_OPTIONS = [
   { value: 'update', label: 'Profilimi doğrulamak ve güncellemek istiyorum' },
-  { value: 'photo_update', label: 'Profil fotoğrafı eklemek / güncellemek istiyorum' },
   { value: 'removal', label: 'Profilimin Terapimap\'ten kaldırılmasını istiyorum' },
 ];
 
@@ -354,7 +353,7 @@ export default function VerificationRequestForm({
                 onChange={() => setRequestType(opt.value as RequestType)}
                 className="mt-0.5 flex-shrink-0 text-brand-600"
               />
-              <span className={`text-sm font-medium ${opt.value === 'removal' ? 'text-red-700' : 'text-gray-800'}`}>
+              <span className={`text-sm font-semibold ${opt.value === 'removal' ? 'text-red-700' : 'text-gray-900'}`}>
                 {opt.label}
               </span>
             </label>

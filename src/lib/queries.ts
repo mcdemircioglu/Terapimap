@@ -158,7 +158,7 @@ export const getDistricts = unstable_cache(
     return unique;
   },
   ['getDistricts'],
-  { revalidate: 600 },
+  { revalidate: 600, tags: ['therapists-list'] },
 );
 
 export const getTherapists = unstable_cache(
@@ -227,7 +227,7 @@ export const getTherapists = unstable_cache(
     return rows;
   },
   ['getTherapists'],
-  { revalidate: 600 },
+  { revalidate: 600, tags: ['therapists-list'] },
 );
 
 export async function getFeaturedTherapists(
@@ -401,7 +401,7 @@ export const getTherapistsPaged = unstable_cache(
     return { therapists, total: count ?? 0 };
   },
   ['getTherapistsPaged'],
-  { revalidate: 600 },
+  { revalidate: 600, tags: ['therapists-list'] },
 );
 
 // ---------------------------------------------------------------------
@@ -454,7 +454,7 @@ export const getTherapistStats = unstable_cache(
     };
   },
   ['getTherapistStats'],
-  { revalidate: 600 },
+  { revalidate: 600, tags: ['therapists-list'] },
 );
 
 // ---------------------------------------------------------------------
