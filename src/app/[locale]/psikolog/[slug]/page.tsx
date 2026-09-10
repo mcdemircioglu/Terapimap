@@ -9,8 +9,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
-import LeadForm from '@/components/LeadForm';
 import JsonLd from '@/components/JsonLd';
+import AppointmentModalButton from '@/components/therapist/AppointmentModalButton';
 import LocationCard from '@/components/therapist/LocationCard';
 import MeetingInfoCard from '@/components/therapist/MeetingInfoCard';
 import NearbyTherapistLinks from '@/components/therapist/NearbyTherapistLinks';
@@ -109,7 +109,7 @@ export default async function PsikologDetailPage({
   return (
     <>
       <JsonLd schema={schemas} />
-      <Container className="py-10 md:py-14">
+      <Container className="pt-10 pb-28 md:pt-14 lg:pb-14">
         {/* Breadcrumb */}
         <nav className="mb-6 text-sm text-brand-600" aria-label="Breadcrumb">
           <Link href={getTherapistsListPath(locale)} className="hover:text-brand-800">
@@ -259,18 +259,37 @@ export default async function PsikologDetailPage({
             )}
           </div>
 
-          {/* Lead form */}
-          <aside>
-            <Card className="p-6 md:sticky md:top-24">
-              <h2 className="text-lg font-semibold text-brand-900">{tLead('title')}</h2>
+          {/* Randevu talebi — masaüstünde sidebar'da sticky buton (tıklayınca form modalda açılır) */}
+          <aside className="hidden lg:block">
+            <Card className="p-6 lg:sticky lg:top-24">
+              <h2 className="text-lg font-semibold text-brand-900">{tDetail('appointmentCta')}</h2>
               <p className="mt-1 text-sm text-brand-600">{tLead('subtitle')}</p>
               <div className="mt-5">
-                <LeadForm professionalId={therapist.id} />
+                <AppointmentModalButton
+                  professionalId={therapist.id}
+                  label={tDetail('appointmentCta')}
+                  subtitle={tLead('subtitle')}
+                  closeLabel={tDetail('close')}
+                  className="w-full"
+                />
               </div>
             </Card>
           </aside>
         </div>
       </Container>
+
+      {/* Mobilde/tablette sidebar görünmez (lg altı) — bunun yerine ekranın altında
+          sabit (fixed) bir CTA bar gösteriyoruz, böylece kullanıcı sayfayı ne kadar
+          scroll ederse etsin randevu butonu her zaman görünür kalır. */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-100 bg-white/95 p-3 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] backdrop-blur-sm [padding-bottom:calc(0.75rem_+_env(safe-area-inset-bottom))] lg:hidden">
+        <AppointmentModalButton
+          professionalId={therapist.id}
+          label={tDetail('appointmentCta')}
+          subtitle={tLead('subtitle')}
+          closeLabel={tDetail('close')}
+          className="w-full"
+        />
+      </div>
     </>
   );
 }

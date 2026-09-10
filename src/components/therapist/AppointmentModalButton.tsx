@@ -15,6 +15,8 @@ type Props = {
   label: string;
   subtitle: string;
   closeLabel: string;
+  /** Butona eklenecek ekstra class'lar — örn. sidebar/mobil bar'da "w-full". */
+  className?: string;
 };
 
 export default function AppointmentModalButton({
@@ -22,6 +24,7 @@ export default function AppointmentModalButton({
   label,
   subtitle,
   closeLabel,
+  className = '',
 }: Props) {
   const [open, setOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -46,7 +49,7 @@ export default function AppointmentModalButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 text-sm font-medium text-white shadow-soft transition-colors hover:bg-brand-700 active:bg-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+        className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 text-sm font-medium text-white shadow-soft transition-colors hover:bg-brand-700 active:bg-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${className}`}
       >
         <CalendarPlusIcon className="h-[18px] w-[18px]" />
         {label}
