@@ -5,7 +5,7 @@
  * request_type: 'new' ile /api/verification-requests'e gönderir.
  * Bilgiler bekleyen başvuru olarak kaydolur; admin onaylayınca yayınlanır.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Button } from './ui/Button';
 import { Input, Textarea } from './ui/Input';
 import { Select } from './ui/Select';
@@ -74,6 +74,14 @@ export default function TherapistApplicationForm({
   const [selected, setSelected] = useState<string[]>([]);
   const [kvkk, setKvkk] = useState(false);
 
+  // Profil fotoğrafı — opsiyonel. Seçilirse gönderim sırasında önce
+  // /api/verification-requests/upload'a yüklenir, dönen URL photo_url
+  // olarak başvuru kaydına eklenir.
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
   const districts = city ? getDistricts(city) : [];
   const isLoading = status === 'loading';
 
@@ -83,6 +91,33 @@ export default function TherapistApplicationForm({
     );
 
   const cityName = (slug: string) => CITIES.find((c) => c.slug === slug)?.name ?? slug;
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setPhotoError('');
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setPhotoError('Sadece JPG, PNG ve WebP dosyaları kabul edilmektedir.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError('Dosya boyutu 5 MB\'ı geçemez.');
+      return;
+    }
+
+    setPhotoFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setPhotoPreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function clearPhoto() {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setPhotoError('');
+    if (fileRef.current) fileRef.current.value = '';
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -100,6 +135,21 @@ export default function TherapistApplicationForm({
 
     setStatus('loading');
     try {
+      // Fotoğraf seçildiyse önce storage'a yükle, dönen URL'i başvuruya ekle.
+      let photoUrl: string | undefined;
+      if (photoFile) {
+        const fd = new FormData();
+        fd.append('file', photoFile);
+        // Henüz bir professional_id yok (yeni başvuru) — dosyayı kendi
+        // klasöründe tutmak için geçici, benzersiz bir kimlik yeterli.
+        fd.append('therapistId', `basvuru-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+
+        const upRes = await fetch('/api/verification-requests/upload', { method: 'POST', body: fd });
+        const upData = await upRes.json().catch(() => ({}));
+        if (!upRes.ok) return fail(upData.error ?? 'Fotoğraf yüklenemedi.');
+        photoUrl = upData.url;
+      }
+
       const res = await fetch('/api/verification-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -119,6 +169,7 @@ export default function TherapistApplicationForm({
           offers_online: online,
           offers_in_person: inPerson,
           specialties: selected,
+          photo_url: photoUrl,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -203,6 +254,45 @@ export default function TherapistApplicationForm({
             <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" placeholder="ornek@eposta.com" />
           </Field>
         </div>
+
+        {/* Profil fotoğrafı */}
+        <Field label="Profil fotoğrafı" hint="JPG, PNG veya WebP · maksimum 5 MB. Profilinizde danışanlara gösterilir.">
+          {photoPreview ? (
+            <div className="flex items-center gap-4">
+              <img
+                src={photoPreview}
+                alt="Önizleme"
+                className="h-20 w-20 rounded-full border-2 border-brand-200 object-cover"
+              />
+              <button
+                type="button"
+                onClick={clearPhoto}
+                className="text-sm text-red-600 underline hover:text-red-800"
+              >
+                Kaldır
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-200 px-4 py-2.5 text-sm text-brand-500 transition-colors hover:border-brand-400 hover:text-brand-700"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Fotoğraf seç
+            </button>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handlePhotoChange}
+          />
+          {photoError && <p className="mt-1.5 text-xs text-red-600">{photoError}</p>}
+        </Field>
 
         {/* Görüşme türü */}
         <Field label="Görüşme türü">

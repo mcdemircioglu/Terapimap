@@ -23,6 +23,7 @@ type Application = {
   offers_online: boolean | null;
   offers_in_person: boolean | null;
   specialties: string[] | null;
+  photo_url: string | null;
   status: string;
   admin_note: string | null;
   created_at: string;
@@ -198,14 +199,29 @@ export default function BasvurularPage() {
               return (
                 <div key={a.id} className="rounded-xl border border-gray-200 bg-white p-5">
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-gray-900">{a.full_name}</h3>
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium border ${meta.cls}`}>{meta.label}</span>
+                    <div className="flex items-start gap-3">
+                      {a.photo_url ? (
+                        <a href={a.photo_url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+                          <img
+                            src={a.photo_url}
+                            alt={a.full_name}
+                            className="h-14 w-14 rounded-full border border-gray-200 object-cover"
+                          />
+                        </a>
+                      ) : (
+                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full border border-dashed border-gray-200 bg-gray-50 text-xs text-gray-400">
+                          Foto yok
+                        </div>
+                      )}
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-gray-900">{a.full_name}</h3>
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium border ${meta.cls}`}>{meta.label}</span>
+                        </div>
+                        <p className="mt-0.5 text-sm text-gray-500">
+                          {a.title ?? '—'} · {[a.district, a.city].filter(Boolean).join(', ')}
+                        </p>
                       </div>
-                      <p className="mt-0.5 text-sm text-gray-500">
-                        {a.title ?? '—'} · {[a.district, a.city].filter(Boolean).join(', ')}
-                      </p>
                     </div>
                     <p className="text-xs text-gray-400">{new Date(a.created_at).toLocaleString('tr-TR')}</p>
                   </div>
