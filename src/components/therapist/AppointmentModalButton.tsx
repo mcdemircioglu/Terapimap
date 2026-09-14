@@ -57,7 +57,7 @@ export default function AppointmentModalButton({
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-label={label}
@@ -69,9 +69,11 @@ export default function AppointmentModalButton({
             aria-hidden="true"
           />
 
-          {/* Panel */}
-          <div className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-xl md:p-7">
-            <div className="flex items-start justify-between gap-4">
+          {/* Panel — mobilde alttan açılan sheet, sm+ ekranda ortalanmış dialog.
+              Başlık sabit kalır, form kendi içinde scroll olur; klavye açıldığında
+              görünür alan (dvh) küçülse bile Gönder butonuna scroll ile ulaşılabilir. */}
+          <div className="relative flex max-h-[85dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:max-h-[90vh] sm:rounded-2xl">
+            <div className="flex flex-shrink-0 items-start justify-between gap-4 p-6 pb-4 md:p-7 md:pb-4">
               <div>
                 <h3 className="text-lg font-semibold text-brand-900">{label}</h3>
                 <p className="mt-1 text-sm text-brand-600">{subtitle}</p>
@@ -87,7 +89,7 @@ export default function AppointmentModalButton({
               </button>
             </div>
 
-            <div className="mt-5">
+            <div className="overflow-y-auto px-6 pb-6 md:px-7 md:pb-7">
               <LeadForm professionalId={professionalId} />
             </div>
           </div>

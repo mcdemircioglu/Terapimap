@@ -9,7 +9,7 @@
  * Seçime göre SEO landing sayfasına yönlendirir.
  */
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { CITIES } from '@/lib/cities';
 import { groupSpecialties } from '@/types/database';
 import type { Specialty } from '@/types/database';
@@ -18,7 +18,7 @@ const T = {
   tr: {
     l1: 'Size nasıl yardımcı olabilir?', p1: 'Örn: Anksiyete, Depresyon',
     l2: 'Konum', p2: 'Şehir seçin',
-    l3: 'Uzmanlık alanı', p3: 'Tercihinizi seçin',
+    l3: 'Terapi Yöntemleri ve Uzmanlık Alanları', p3: 'Tercihinizi seçin',
     l4: 'Görüşme türü', p4: 'Online, Yüz yüze vb.',
     online: 'Online', inperson: 'Yüz yüze', cta: 'Terapistleri ara',
   },
@@ -45,6 +45,101 @@ const IC = {
   spark: 'M12 3v4M12 17v4M5 12H1M23 12h-4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6',
   video: 'M23 7l-7 5 7 5V7zM1 5h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H1z',
 };
+
+const selCls =
+  'h-11 w-full appearance-none rounded-lg border border-white/10 bg-brand-950/50 pl-9 pr-8 text-sm text-white ' +
+  'focus:border-white/30 focus:outline-none focus:ring-2 focus:ring-white/10 ' +
+  '[&>option]:bg-white [&>option]:text-brand-950';
+
+/**
+ * "Terapi Yöntemleri ve Uzmanlık Alanları" alanı için özel dropdown.
+ * Native <select>'in aksine açılma yönü tarayıcıya/OS'e bırakılmıyor —
+ * liste her zaman tetikleyicinin ALTINDA açılır.
+ */
+function SpecialtyDropdown({
+  value,
+  onChange,
+  options,
+  placeholder,
+  label,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { slug: string; name: string }[];
+  placeholder: string;
+  label: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  const selected = options.find((o) => o.slug === value);
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={label}
+        className={`${selCls} flex items-center text-left`}
+      >
+        <span className="truncate">{selected ? selected.name : placeholder}</span>
+      </button>
+
+      {open && (
+        <ul
+          role="listbox"
+          className="absolute left-0 right-0 top-full z-20 mt-1.5 max-h-64 overflow-y-auto rounded-lg border border-brand-100 bg-white py-1 text-sm text-brand-950 shadow-lg"
+        >
+          <li
+            role="option"
+            aria-selected={value === ''}
+            onClick={() => {
+              onChange('');
+              setOpen(false);
+            }}
+            className="cursor-pointer px-3 py-2 text-brand-400 hover:bg-brand-50"
+          >
+            {placeholder}
+          </li>
+          {options.map((o) => (
+            <li
+              key={o.slug}
+              role="option"
+              aria-selected={value === o.slug}
+              onClick={() => {
+                onChange(o.slug);
+                setOpen(false);
+              }}
+              className={`cursor-pointer px-3 py-2 hover:bg-brand-50 ${
+                value === o.slug ? 'bg-brand-50 font-medium text-brand-800' : ''
+              }`}
+            >
+              {o.name}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function HeroSearch({
   locale,
@@ -85,11 +180,6 @@ export default function HeroSearch({
     router.push(path);
   }
 
-  const selCls =
-    'h-11 w-full appearance-none rounded-lg border border-white/10 bg-brand-950/50 pl-9 pr-8 text-sm text-white ' +
-    'focus:border-white/30 focus:outline-none focus:ring-2 focus:ring-white/10 ' +
-    '[&>option]:bg-white [&>option]:text-brand-950';
-
   const Field = ({
     label, icon, children,
   }: { label: string; icon: string; children: React.ReactNode }) => (
@@ -126,10 +216,13 @@ export default function HeroSearch({
           </select>
         </Field>
         <Field label={t.l3} icon={IC.spark}>
-          <select value={method} onChange={(e) => setMethod(e.target.value)} className={selCls} aria-label={t.l3}>
-            <option value="">{t.p3}</option>
-            {yontem.map((s) => <option key={s.slug} value={s.slug}>{s.name}</option>)}
-          </select>
+          <SpecialtyDropdown
+            value={method}
+            onChange={setMethod}
+            options={yontem}
+            placeholder={t.p3}
+            label={t.l3}
+          />
         </Field>
         <Field label={t.l4} icon={IC.video}>
           <select value={meeting} onChange={(e) => setMeeting(e.target.value)} className={selCls} aria-label={t.l4}>
