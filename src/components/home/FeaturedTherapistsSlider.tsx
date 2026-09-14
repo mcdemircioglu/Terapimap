@@ -8,6 +8,7 @@ import type { ProfessionalWithSpecialties } from '@/types/database';
  * Ana sayfa "Öne Çıkan Terapistler" slider'ı.
  * Masaüstü 3, tablet 2, mobil 1 kart gösterir; ~5 sn'de bir otomatik
  * sonraki gruba geçer (döngüsel). Ok + nokta kontrolleri, hover'da durur.
+ * Kartlara parmakla/mouse ile dokunup sürükleyerek de (swipe) geçilebilir.
  * Grup sayısı 1 ise kontroller gizlenir.
  */
 export default function FeaturedTherapistsSlider({
@@ -22,6 +23,14 @@ export default function FeaturedTherapistsSlider({
   const [perView, setPerView] = useState(3);
   const [page, setPage] = useState(0);
   const [paused, setPaused] = useState(false);
+
+  // Swipe/drag durumu
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const windowRef = useRef<HTMLDivElement>(null);
+  const pointerStartX = useRef(0);
+  const activePointerId = useRef<number | null>(null);
+  const didDrag = useRef(false);
 
   // Responsive perView: <768 =1, 768-1023 =2, >=1024 =3
   useEffect(() => {
@@ -54,13 +63,65 @@ export default function FeaturedTherapistsSlider({
   const go = (p: number) => setPage(((p % pages) + pages) % pages);
 
   const trackStyle = useMemo(
-    () => ({ transform: `translateX(-${page * 100}%)` }),
-    [page],
+    () => ({ transform: `translateX(calc(-${page * 100}% + ${dragOffset}px))` }),
+    [page, dragOffset],
   );
 
   const showControls = pages > 1;
   const prevLabel = locale === 'tr' ? 'Önceki' : 'Previous';
   const nextLabel = locale === 'tr' ? 'Sonraki' : 'Next';
+
+  // ── Sürükle/kaydır (touch + mouse, Pointer Events ile tek elden) ──
+  function onPointerDown(e: React.PointerEvent) {
+    if (pages <= 1) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    pointerStartX.current = e.clientX;
+    activePointerId.current = e.pointerId;
+    didDrag.current = false;
+    setIsDragging(true);
+    setPaused(true);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }
+
+  function onPointerMove(e: React.PointerEvent) {
+    if (activePointerId.current !== e.pointerId) return;
+    const delta = e.clientX - pointerStartX.current;
+    if (Math.abs(delta) > 4) didDrag.current = true;
+    setDragOffset(delta);
+  }
+
+  function endDrag() {
+    const width = windowRef.current?.clientWidth ?? 0;
+    const threshold = width * 0.18; // genişliğin ~%18'i kadar sürüklenince sayfa değişir
+    if (width > 0) {
+      if (dragOffset <= -threshold) go(page + 1);
+      else if (dragOffset >= threshold) go(page - 1);
+    }
+    setDragOffset(0);
+    setIsDragging(false);
+    setPaused(false);
+    activePointerId.current = null;
+  }
+
+  function onPointerUp(e: React.PointerEvent) {
+    if (activePointerId.current !== e.pointerId) return;
+    endDrag();
+  }
+
+  function onPointerCancel(e: React.PointerEvent) {
+    if (activePointerId.current !== e.pointerId) return;
+    endDrag();
+  }
+
+  // Gerçek bir sürükleme olduysa, bırakılan yerdeki tıklamayı (ör. "Profili gör"
+  // linki) iptal et — yoksa sürükleme sonu yanlışlıkla profile yönlendirir.
+  function onClickCapture(e: React.MouseEvent) {
+    if (didDrag.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      didDrag.current = false;
+    }
+  }
 
   return (
     <div
@@ -68,10 +129,22 @@ export default function FeaturedTherapistsSlider({
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* Görüntü penceresi */}
-      <div className="overflow-hidden">
+      {/* Görüntü penceresi — swipe/drag alanı: dikey scroll (pan-y) serbest,
+          yatay hareketi biz yönetiyoruz. */}
+      <div
+        ref={windowRef}
+        className={`overflow-hidden ${pages > 1 ? 'cursor-grab touch-pan-y active:cursor-grabbing' : ''} ${
+          isDragging ? 'select-none' : ''
+        }`}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+        onClickCapture={onClickCapture}
+        onDragStart={(e) => e.preventDefault()}
+      >
         <div
-          className="flex transition-transform duration-500 ease-out"
+          className={`flex ease-out ${isDragging ? '' : 'transition-transform duration-500'}`}
           style={trackStyle}
         >
           {therapists.map((t) => (
