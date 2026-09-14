@@ -97,7 +97,7 @@ export const getSpecialties = unstable_cache(
     return (data ?? []) as Specialty[];
   },
   ['getSpecialties'],
-  { revalidate: 3600 },
+  { revalidate: 3600, tags: ['specialties'] },
 );
 
 /**
