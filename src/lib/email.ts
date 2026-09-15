@@ -417,8 +417,9 @@ export async function sendConfirmationToClient({ lead, professional }: LeadEmail
       Uzman, paylaştığınız iletişim bilgileri üzerinden en kısa sürede sizinle iletişime geçecektir.
     </p>
     <p style="margin:0 0 16px;font-size:14px;color:${C.text};line-height:1.7;">
-      Makul bir süre içinde dönüş alamazsanız, profil sayfasındaki iletişim bilgilerini kullanarak
-      uzmana doğrudan ulaşabilir veya Terapimap üzerinden başka bir uzmanla iletişime geçebilirsiniz.
+      Makul bir süre içinde dönüş alamazsanız, Terapimap üzerinden listelenen diğer uzmanlarla iletişime
+      geçebilir ya da durumu bize <a href="mailto:iletisim@terapimap.com" style="color:${C.primary};">iletisim@terapimap.com</a>
+      adresinden bildirebilirsiniz — size yardımcı olmaktan memnuniyet duyarız.
     </p>
     <p style="margin:0;font-size:12px;color:${C.muted};line-height:1.6;">
       Hatırlatma: Terapimap terapi veya sağlık hizmeti sunmaz; yalnızca sizi uzmanlarla buluşturan bir
@@ -431,6 +432,10 @@ export async function sendConfirmationToClient({ lead, professional }: LeadEmail
     '',
     `Terapimap üzerinden ${professional.name} adlı uzmana ilettiğiniz iletişim talebi kendisine ulaştırılmıştır.`,
     'Uzman en kısa sürede sizinle iletişime geçecektir.',
+    '',
+    'Makul bir süre içinde dönüş alamazsanız, Terapimap üzerinden listelenen diğer uzmanlarla iletişime',
+    'geçebilir ya da durumu bize iletisim@terapimap.com adresinden bildirebilirsiniz — size yardımcı',
+    'olmaktan memnuniyet duyarız.',
     '',
     'Bilgileriniz yalnızca talep ettiğiniz uzmana iletilmiştir.',
     '',
