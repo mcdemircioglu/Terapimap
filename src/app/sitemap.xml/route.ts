@@ -1,5 +1,4 @@
 import { CITIES, getCitySlug } from "@/lib/cities";
-import { PROF_TYPE_SLUG_MAP } from "@/lib/seo-slugs";
 import { MIN_THERAPISTS_FOR_INDEX } from "@/lib/seo-landing";
 import { getTherapists, getSpecialties } from "@/lib/queries";
 import { getArticlesForSitemap } from "@/lib/articles";
@@ -63,16 +62,11 @@ export async function GET() {
   const cityCounts = new Map<string, number>();
   const specialtyCounts = new Map<string, number>();
   const comboCounts = new Map<string, number>();
-  const cityProfTypeCounts = new Map<string, number>();
 
   for (const t of therapists) {
     const citySlug = t.city ? getCitySlug(t.city) : null;
     if (citySlug) {
       cityCounts.set(citySlug, (cityCounts.get(citySlug) ?? 0) + 1);
-      if (t.professional_type) {
-        const ptKey = `${citySlug}:${t.professional_type}`;
-        cityProfTypeCounts.set(ptKey, (cityProfTypeCounts.get(ptKey) ?? 0) + 1);
-      }
     }
     for (const s of t.specialties) {
       specialtyCounts.set(s.slug, (specialtyCounts.get(s.slug) ?? 0) + 1);
@@ -107,13 +101,8 @@ export async function GET() {
     }
 
     items.push(item(`${l}/online-terapi`, "weekly", 0.8));
-    for (const city of CITIES) {
-      for (const [ptSlug, profType] of Object.entries(PROF_TYPE_SLUG_MAP)) {
-        const ptKey = `${city.slug}:${profType}`;
-        if ((cityProfTypeCounts.get(ptKey) ?? 0) < MIN_THERAPISTS_FOR_INDEX) continue;
-        items.push(item(`${l}/${city.slug}-${ptSlug}`, "weekly", 0.8));
-      }
-    }
+    // SEO T5: düz /{sehir}-{meslek} landing'leri artık /terapistler/{sehir}'e
+    // 301 yönlendiriyor (bkz. [seoSlug]/page.tsx) — sitemap'e girmemeli.
 
     for (const specialty of specialties) {
       if ((specialtyCounts.get(specialty.slug) ?? 0) < MIN_THERAPISTS_FOR_INDEX) continue;

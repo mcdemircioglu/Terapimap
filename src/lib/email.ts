@@ -349,6 +349,9 @@ export async function sendVerificationInvite({
       bir dizin platformudur. Adınıza kayıtlı bir profil şu anda yayında ve danışanlar aramalarında
       bu profille karşılaşıyor:
     </p>
+    <p style="margin:0 0 16px;font-size:14px;color:${C.primary};font-weight:bold;line-height:1.6;">
+      Profilinizi doğrulayarak daha fazla görüntülenme ve danışan talebi alabilirsiniz.
+    </p>
     ${previewCard}
     ${viewLink}
     <p style="margin:0 0 12px;font-size:14px;color:${C.text};line-height:1.7;">
@@ -376,6 +379,8 @@ export async function sendVerificationInvite({
     `Sayın ${name},`,
     '',
     'Terapimap, danışanların şehir ve uzmanlık alanına göre terapist bulduğu ücretsiz bir dizin platformudur. Adınıza kayıtlı bir profil şu anda yayında ve danışanlar aramalarında bu profille karşılaşıyor.',
+    '',
+    'Profilinizi doğrulayarak daha fazla görüntülenme ve danışan talebi alabilirsiniz.',
     ...(profileUrl ? ['', `Profiliniz: ${profileUrl}`] : []),
     '',
     'Profilinizi ücretsiz doğrulayarak:',

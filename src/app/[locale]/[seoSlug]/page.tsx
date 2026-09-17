@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import { unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
@@ -49,6 +49,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const page = parseSeoSlug(seoSlug);
   if (!page) return {};
+
+  // SEO T5: düz şehir-meslek landing'leri (ör. /gaziantep-psikolog) artık
+  // /terapistler/{sehir} sayfasına 301'leniyor — ağır metadata hesaplamasını
+  // (terapist sayımı vb.) atla, zaten kullanıcıya bu metadata gösterilmeyecek.
+  if (page.kind === 'city-proftype') return {};
 
   const baseUrl = absUrl('/' + locale + '/' + seoSlug);
   const pageNo = parseInt(searchParams?.page ?? '1', 10) || 1;
@@ -117,6 +122,14 @@ export default async function SeoLandingPage({
 
   const page = parseSeoSlug(seoSlug);
   if (!page) notFound();
+
+  // SEO T5: /{sehir}-{meslek} düz landing'i, aynı niyeti (şehir + meslek)
+  // hedefleyen /terapistler/{sehir} sayfasıyla çakışıyordu (ikisi de ayrı
+  // ayrı indekslenip birbirinin sinyalini bölüyordu). Tek kanonik olarak
+  // zaten sitemap'te ve iç linklerde kullanılan /terapistler/{sehir}'i seçtik.
+  if (page.kind === 'city-proftype') {
+    permanentRedirect(getTherapistsListPath(locale) + '/' + page.citySlug);
+  }
 
   type Content = { h1: string; intro: string; metaDesc: string; faqs: { q: string; a: string }[] };
 
