@@ -13,11 +13,8 @@ import JsonLd from '@/components/JsonLd';
 import {
   parseSeoSlug,
   getKnownSeoSlugs,
-  getCityProfTypeContent,
   getOnlineContent,
   getSpecialtyContent,
-  PROF_TYPE_SLUG_MAP,
-  PROF_TYPE_TR,
 } from '@/lib/seo-slugs';
 import { getTherapists, getSpecialtyBySlug } from '@/lib/queries';
 import { MIN_THERAPISTS_FOR_INDEX } from '@/lib/seo-landing';
@@ -67,14 +64,11 @@ export async function generateMetadata({
   // sayfalarına uygulanan MIN_THERAPISTS_FOR_INDEX eşiğiyle aynı kurala bağlandı.
   let therapistCount = 0;
 
-  if (page.kind === 'city-proftype') {
-    const c = getCityProfTypeContent(page.cityName, page.profType, locale);
-    title = c.metaTitle;
-    description = c.metaDesc;
-    therapistCount = (
-      await getTherapists({ citySlug: page.citySlug, professionalType: page.profType })
-    ).length;
-  } else if (page.kind === 'online') {
+  // SEO T6 build fix: page.kind === 'city-proftype' burada asla oluşamaz —
+  // yukarıdaki erken return (satır 56) bu case'i zaten ele aldı. TypeScript
+  // bunu akış analiziyle görüp bu kolu "unreachable" olarak işaretliyordu
+  // (build hatası), o yüzden dead code'u kaldırdık.
+  if (page.kind === 'online') {
     const c = getOnlineContent(locale);
     title = c.metaTitle;
     description = c.metaDesc;
@@ -144,35 +138,11 @@ export default async function SeoLandingPage({
 
   const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
 
-  if (page.kind === 'city-proftype') {
-    content = getCityProfTypeContent(page.cityName, page.profType, locale);
-    therapists = await getTherapists({
-      citySlug: page.citySlug,
-      professionalType: page.profType,
-    });
-
-    const otherCities = CITIES.filter((c) => c.slug !== page.citySlug);
-    const ptSlug = Object.entries(PROF_TYPE_SLUG_MAP).find(([, v]) => v === page.profType)?.[0];
-    if (ptSlug) {
-      relatedLinks = [
-        ...otherCities.map((c) => ({
-          href: '/' + locale + '/' + c.slug + '-' + ptSlug,
-          label: c.name + ' ' + PROF_TYPE_TR[page.profType],
-        })),
-        {
-          href: '/' + locale + '/online-terapi',
-          label: locale === 'tr' ? 'Online Terapi' : 'Online Therapy',
-        },
-        {
-          href: getTherapistsListPath(locale) + '/' + page.citySlug,
-          label:
-            locale === 'tr'
-              ? page.cityName + "'daki tum terapistler"
-              : 'All therapists in ' + page.cityName,
-        },
-      ];
-    }
-  } else if (page.kind === 'online') {
+  // SEO T6 build fix: page.kind === 'city-proftype' burada asla oluşamaz —
+  // satır 130-132'deki permanentRedirect() (dönüş tipi `never`) bu case için
+  // her zaman fırlatıyor. TypeScript akış analiziyle bunu görüp bu kolu
+  // "unreachable" olarak işaretliyordu (build hatası), dead code kaldırıldı.
+  if (page.kind === 'online') {
     content = getOnlineContent(locale);
     therapists = await getTherapists({ online: true });
 
