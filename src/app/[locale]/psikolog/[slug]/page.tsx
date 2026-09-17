@@ -135,8 +135,15 @@ export default async function PsikologDetailPage({
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
+                    {/* SEO P3: H1 = ad + unvan (unvan artık ayrı bir <p> değil,
+                        H1'in kendi içinde küçük bir alt satır olarak). */}
                     <h1 className="text-2xl font-semibold text-brand-900 md:text-3xl">
                       {therapist.name}
+                      {therapist.title && (
+                        <span className="mt-1 block text-sm font-medium text-brand-600 md:text-base">
+                          {therapist.title}
+                        </span>
+                      )}
                     </h1>
                     {therapist.is_verified && (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 text-xs font-medium border border-brand-200 flex-shrink-0 mt-1">
@@ -147,9 +154,6 @@ export default async function PsikologDetailPage({
                       </span>
                     )}
                   </div>
-                  {therapist.title && (
-                    <p className="mt-1 text-sm text-brand-600">{therapist.title}</p>
-                  )}
                   <p className="mt-2 text-sm text-brand-700">
                     {therapist.city}
                     {therapist.district ? ' · ' + therapist.district : ''}

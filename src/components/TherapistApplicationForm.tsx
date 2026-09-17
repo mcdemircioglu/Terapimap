@@ -66,6 +66,7 @@ export default function TherapistApplicationForm({
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [bio, setBio] = useState('');
+  const [priceRange, setPriceRange] = useState('');
   const [website, setWebsite] = useState('');
   const [instagram, setInstagram] = useState('');
   const [googleMapsUrl, setGoogleMapsUrl] = useState('');
@@ -163,6 +164,7 @@ export default function TherapistApplicationForm({
           phone: phone.trim(),
           email: email.trim(),
           bio: bio.trim(),
+          price_range: priceRange.trim() || undefined,
           website: website.trim() || undefined,
           instagram: instagram.trim() || undefined,
           google_maps_url: googleMapsUrl.trim() || undefined,
@@ -345,6 +347,15 @@ export default function TherapistApplicationForm({
         {/* Hakkında */}
         <Field label="Hakkında" required hint="Eğitiminiz, yaklaşımınız ve çalışma alanlarınız hakkında kısa bir metin.">
           <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={5} />
+        </Field>
+
+        {/* Seans ücreti — SEO P3/L2: profilde ve listeleme sayfalarında gösterilebilmesi
+            için terapistin kendisinden girdi olarak alınıyor. */}
+        <Field
+          label="Seans Ücreti (opsiyonel)"
+          hint="Danışanlara profilinizde gösterilir. Ör: 800-1200 TL, veya 1000 TL"
+        >
+          <Input value={priceRange} onChange={(e) => setPriceRange(e.target.value)} placeholder="800-1200 TL" />
         </Field>
 
         {/* İsteğe bağlı bağlantılar */}

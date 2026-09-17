@@ -21,6 +21,7 @@ type VerificationRequest = {
   offers_in_person: boolean | null;
   specialties: string[] | null;
   bio: string | null;
+  price_range: string | null;
   photo_url: string | null;
   message: string | null;
   status: string;
@@ -41,6 +42,7 @@ type Professional = {
   is_online: boolean;
   is_in_person: boolean;
   about: string | null;
+  price_range: string | null;
   image_url: string | null;
   phone: string | null;
   email: string | null;
@@ -297,6 +299,7 @@ export default function VerificationRequestDetailPage() {
                     />
                   )}
                   {vr.bio && <Row label="Hakkında" old={professional?.about} next={vr.bio} />}
+                  {vr.price_range && <Row label="Seans Ücreti" old={professional?.price_range} next={vr.price_range} />}
                 </div>
               )}
 

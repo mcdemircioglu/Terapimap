@@ -145,6 +145,7 @@ export default function VerificationRequestForm({
   const [offersInPerson, setOffersInPerson] = useState<boolean | null>(null);
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([]);
   const [bio, setBio] = useState('');
+  const [priceRange, setPriceRange] = useState('');
   const [message, setMessage] = useState('');
 
   // Photo
@@ -268,6 +269,7 @@ export default function VerificationRequestForm({
         if (website) payload.website = website.trim();
         if (instagram) payload.instagram = instagram.trim();
         if (bio) payload.bio = bio.trim();
+        if (priceRange) payload.price_range = priceRange.trim();
         if (offersOnline !== null) payload.offers_online = offersOnline;
         if (offersInPerson !== null) payload.offers_in_person = offersInPerson;
         if (selectedSpecialties.length > 0) {
@@ -474,6 +476,10 @@ export default function VerificationRequestForm({
                   <div>
                     <FieldLabel>Instagram</FieldLabel>
                     <Input value={instagram} onChange={setInstagram} placeholder="https://instagram.com/..." />
+                  </div>
+                  <div>
+                    <FieldLabel>Seans Ücreti</FieldLabel>
+                    <Input value={priceRange} onChange={setPriceRange} placeholder="800-1200 TL" />
                   </div>
                 </div>
               </Section>

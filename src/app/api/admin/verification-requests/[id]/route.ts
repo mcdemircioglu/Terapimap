@@ -155,6 +155,7 @@ export async function PATCH(
       if (vr.instagram) insertPayload.instagram_url = vr.instagram;
       if (vr.google_maps_url) insertPayload.google_maps_url = vr.google_maps_url;
       if (vr.bio) insertPayload.about = vr.bio;
+      if (vr.price_range) insertPayload.price_range = vr.price_range;
       if (vr.photo_url) insertPayload.image_url = vr.photo_url;
       if (vr.email) insertPayload.email = vr.email;
       if (vr.phone) insertPayload.phone = vr.phone;
@@ -225,6 +226,7 @@ export async function PATCH(
       if (vr.instagram) update.instagram_url = vr.instagram;
       if (vr.google_maps_url) update.google_maps_url = vr.google_maps_url;
       if (vr.bio) update.about = vr.bio;
+      if (vr.price_range) update.price_range = vr.price_range;
       if (vr.photo_url) update.image_url = vr.photo_url;
       if (vr.offers_online !== null && vr.offers_online !== undefined) update.is_online = vr.offers_online;
       if (vr.offers_in_person !== null && vr.offers_in_person !== undefined) update.is_in_person = vr.offers_in_person;
