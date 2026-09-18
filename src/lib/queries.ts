@@ -333,8 +333,12 @@ export type TherapistPagedFilters = TherapistFilters & {
  * önbelleklenmezse her sayfa görüntülemesi Supabase'e canlı sorgu atar.
  * unstable_cache burada Next'in veri önbelleğini devreye sokup aynı
  * filtre/sayfa kombinasyonu için tekrar eden istekleri karşılar.
+ *
+ * Şehir/genel filtre yolu DB'de range() ile sayfalanıyor (sayfa başına 12
+ * satır — küçük, önbelleğe güvenle sığan payload), bu yüzden kendi
+ * unstable_cache'i altında kalıyor (bkz. getTherapistsPagedByCity).
  */
-export const getTherapistsPaged = unstable_cache(
+const getTherapistsPagedByCity = unstable_cache(
   async (
     filters: TherapistPagedFilters = {},
   ): Promise<{ therapists: ProfessionalWithSpecialties[]; total: number }> => {
@@ -343,25 +347,6 @@ export const getTherapistsPaged = unstable_cache(
   const pageSize = filters.pageSize ?? 12;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
-
-  // ── Uzmanlık filtresi ──────────────────────────────────────────────
-  // getTherapists() specialty'yi embed veri üzerinden süzer ve KANITLI
-  // biçimde çalışır (SEO landing sayfaları onu kullanıyor). Paged sürümde
-  // count:'exact' + embed + range'siz sorgu Supabase'de timeout'a düşüp
-  // sessizce boş dönüyordu; bu yüzden uzmanlık filtresinde getTherapists'e
-  // devredip sayfalamayı JS tarafında yapıyoruz.
-  if (filters.specialtySlug) {
-    const all = await getTherapists({
-      citySlug: filters.citySlug,
-      specialtySlug: filters.specialtySlug,
-      district: filters.district,
-      professionalType: filters.professionalType,
-      online: filters.online,
-      inPerson: filters.inPerson,
-      search: filters.search,
-    });
-    return { therapists: all.slice(from, to + 1), total: all.length };
-  }
 
   let query = supabase
     .from('professionals')
@@ -403,6 +388,51 @@ export const getTherapistsPaged = unstable_cache(
   ['getTherapistsPaged'],
   { revalidate: 600, tags: ['therapists-list'] },
 );
+
+/**
+ * SEO/PERF fix (Eylül 2026): uzmanlık filtresi olan istekler artık ayrı,
+ * unstable_cache'SİZ bir yoldan geçiyor. getTherapists() zaten kendi
+ * unstable_cache'ine sahip (['getTherapists'] anahtarıyla) — bu fonksiyonu
+ * da aynı (bazen 800+ satırlık, ~4MB'lık) sonucu AYRICA önbelleklemeye
+ * çalışmak, Next.js Data Cache'in girdi başına 2MB sınırını aşıp
+ * "Failed to set Next.js data cache, items over 2MB can not be cached"
+ * hatasına yol açıyordu. Fonksiyonel bir kırılma değildi (Next önbellek
+ * yazımı başarısız olunca veriyi önbelleksiz döndürür) ama popüler
+ * uzmanlıklarda (Anksiyete, Depresyon vb.) her istekte tekrar eden,
+ * önbelleklenmeyen ~4MB'lık Supabase sorgusu demekti — gereksiz gecikme
+ * ve gereksiz Supabase egress kullanımı. getTherapists()'in kendi cache'i
+ * zaten aynı işi (10 dakikalık revalidate ile) karşılıyor; burada ikinci
+ * bir (ve başarısız olan) önbellekleme katmanına gerek yok.
+ */
+export async function getTherapistsPaged(
+  filters: TherapistPagedFilters = {},
+): Promise<{ therapists: ProfessionalWithSpecialties[]; total: number }> {
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = filters.pageSize ?? 12;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  // ── Uzmanlık filtresi ──────────────────────────────────────────────
+  // getTherapists() specialty'yi embed veri üzerinden süzer ve KANITLI
+  // biçimde çalışır (SEO landing sayfaları onu kullanıyor). Paged sürümde
+  // count:'exact' + embed + range'siz sorgu Supabase'de timeout'a düşüp
+  // sessizce boş dönüyordu; bu yüzden uzmanlık filtresinde getTherapists'e
+  // devredip sayfalamayı JS tarafında yapıyoruz.
+  if (filters.specialtySlug) {
+    const all = await getTherapists({
+      citySlug: filters.citySlug,
+      specialtySlug: filters.specialtySlug,
+      district: filters.district,
+      professionalType: filters.professionalType,
+      online: filters.online,
+      inPerson: filters.inPerson,
+      search: filters.search,
+    });
+    return { therapists: all.slice(from, to + 1), total: all.length };
+  }
+
+  return getTherapistsPagedByCity(filters);
+}
 
 // ---------------------------------------------------------------------
 // SEO landing istatistikleri — hafif sayım (yalnızca 3 kolon çeker)

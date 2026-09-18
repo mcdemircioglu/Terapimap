@@ -21,9 +21,70 @@ import Avatar from '@/components/ui/Avatar';
 import { getTherapistBySlug } from '@/lib/queries';
 import { getCitySlug } from '@/lib/cities';
 import { getResolvedMapsData } from '@/lib/maps';
-import { absUrl, buildTherapistSchema, buildBreadcrumbSchema } from '@/lib/schema';
+import { absUrl, buildTherapistSchema, buildBreadcrumbSchema, buildFaqSchema } from '@/lib/schema';
 import { getProfessionalUrlSegment, getTherapistsListPath } from '@/lib/utils';
 import { groupSpecialties, SPECIALTY_TYPE_LABELS } from '@/types/database';
+import type { ProfessionalWithSpecialties } from '@/types/database';
+
+// SEO P3: her profile özgü, verilerden üretilen 4-6 soruluk SSS. Amaç iki
+// yönlü — hem sayfaya gerçek, benzersiz metin eklemek (ince içerik riskini
+// azaltmak) hem de "fiyat", "online mi", "nasıl randevu alınır" gibi sık
+// aranan niyetleri sayfanın kendisinde karşılamak. Statik bir şablon değil:
+// her soru/cevap therapist'in kendi verisinden (şehir, ilçe, uzmanlıklar,
+// görüşme şekli, ücret, deneyim) üretiliyor.
+function buildProfileFaqs(therapist: ProfessionalWithSpecialties): { q: string; a: string }[] {
+  const name = therapist.name;
+  const faqs: { q: string; a: string }[] = [];
+
+  if (therapist.specialties.length > 0) {
+    const names = therapist.specialties.map((s) => s.name).join(', ');
+    faqs.push({
+      q: `${name} hangi konularda uzman?`,
+      a: `${name}, ${names} alanlarında çalışıyor.`,
+    });
+  }
+
+  if (therapist.is_online || therapist.is_in_person) {
+    let a: string;
+    if (therapist.is_online && therapist.is_in_person) {
+      a = `Evet, ${name} hem online hem yüz yüze seans veriyor.`;
+    } else if (therapist.is_online) {
+      a = `Evet, ${name} online (görüntülü) seans veriyor.`;
+    } else {
+      a = `${name} şu an yalnızca yüz yüze görüşme yapıyor, online seans vermiyor.`;
+    }
+    faqs.push({ q: `${name} ile online görüşme yapılabilir mi?`, a });
+  }
+
+  const location = [therapist.city, therapist.district].filter(Boolean).join(', ');
+  faqs.push({
+    q: `${name}'e nerede ulaşılabilir?`,
+    a: therapist.is_in_person
+      ? `${name}, ${location}${therapist.clinic_name ? ` (${therapist.clinic_name})` : ''} adresinde yüz yüze görüşme yapıyor.`
+      : `${name}, ${therapist.city} merkezli olarak online seans veriyor.`,
+  });
+
+  faqs.push({
+    q: `${name}'in seans ücreti ne kadar?`,
+    a: therapist.price_range
+      ? `${name} için seans ücreti ${therapist.price_range} aralığında. Güncel bilgi için doğrudan iletişime geçebilirsiniz.`
+      : `Seans ücreti hakkında güncel bilgi almak için bu sayfadan ${name} ile doğrudan iletişime geçebilir veya randevu talebi gönderebilirsiniz.`,
+  });
+
+  faqs.push({
+    q: `${name}'e nasıl randevu alabilirim?`,
+    a: `Bu sayfadaki "Randevu Talep Et" butonuyla ${name}'e doğrudan bir talep gönderebilirsiniz; talebiniz iletildikten sonra sizinle iletişime geçilir.`,
+  });
+
+  if (therapist.experience_years > 0) {
+    faqs.push({
+      q: `${name} kaç yıllık deneyime sahip?`,
+      a: `${name}, ${therapist.experience_years} yıllık mesleki deneyime sahip.`,
+    });
+  }
+
+  return faqs.slice(0, 6);
+}
 
 // ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
 export const revalidate = 3600;
@@ -96,7 +157,11 @@ export default async function PsikologDetailPage({
       ? { home: 'Ana Sayfa', therapists: 'Terapistler' }
       : { home: 'Home', therapists: 'Therapists' };
 
-  const schemas = [
+  // SEO P3: profile özgü SSS — hem sayfaya özgün metin ekliyor hem de
+  // FAQPage zengin sonucu için schema üretiyor.
+  const profileFaqs = buildProfileFaqs(therapist);
+
+  const schemas: object[] = [
     buildTherapistSchema(therapist, locale, resolvedMaps),
     buildBreadcrumbSchema([
       { name: breadcrumbLabel.home, url: absUrl('/' + locale) },
@@ -105,6 +170,9 @@ export default async function PsikologDetailPage({
       { name: therapist.name, url: pageUrl },
     ]),
   ];
+  if (profileFaqs.length > 0) {
+    schemas.push(buildFaqSchema(profileFaqs));
+  }
 
   return (
     <>
@@ -224,6 +292,33 @@ export default async function PsikologDetailPage({
 
             {/* Yakındaki Terapistler — internal linking */}
             <NearbyTherapistLinks therapist={therapist} locale={locale} />
+
+            {/* SEO P3: profile özgü SSS — sayfaya özgün metin + FAQPage rich result */}
+            {profileFaqs.length > 0 && (
+              <Card className="p-6 md:p-8">
+                <h2 className="text-lg font-semibold text-brand-900">
+                  {locale === 'tr' ? 'Sıkça Sorulan Sorular' : 'Frequently Asked Questions'}
+                </h2>
+                <dl className="mt-4 divide-y divide-brand-100">
+                  {profileFaqs.map((faq, i) => (
+                    <details key={i} className="group py-3 [&_summary::-webkit-details-marker]:hidden">
+                      <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-sm font-semibold text-brand-900 hover:text-brand-700">
+                        <span>{faq.q}</span>
+                        <span
+                          aria-hidden="true"
+                          className="mt-0.5 flex-shrink-0 text-brand-400 transition-transform duration-200 group-open:rotate-45"
+                        >
+                          <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                            <path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" />
+                          </svg>
+                        </span>
+                      </summary>
+                      <p className="mt-3 text-sm leading-relaxed text-brand-700">{faq.a}</p>
+                    </details>
+                  ))}
+                </dl>
+              </Card>
+            )}
 
             {/* Bu profil size mi ait? — belirgin doğrulama kartı */}
             <Link
