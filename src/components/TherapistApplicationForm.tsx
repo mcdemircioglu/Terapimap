@@ -24,6 +24,7 @@ const PROF_TYPES: ProfessionalType[] = [
   'psychologist',
   'clinical_psychologist',
   'psychiatrist',
+  'child_psychiatrist',
   'family_therapist',
   'counselor',
 ];

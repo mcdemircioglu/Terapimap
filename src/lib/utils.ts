@@ -10,6 +10,7 @@ const PROF_TYPE_URL: Record<string, string> = {
   psychologist:          'psikolog',
   clinical_psychologist: 'psikolog',
   psychiatrist:          'psikiyatrist',
+  child_psychiatrist:    'cocuk-psikiyatristi',
   family_therapist:      'aile-terapisti',
   counselor:             'psikolojik-danisman',
 };

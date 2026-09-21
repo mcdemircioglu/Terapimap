@@ -15,12 +15,13 @@ const intlMiddleware = createMiddleware({
 // kalıcı yönlendirme yap. Sembolik linkle paylaşılan [slug]/page.tsx
 // component'i hangi literal segmentten çağrıldığını bilemediği için bu
 // kontrol burada, gerçek istek path'ini gören tek katmanda yapılıyor.
-const PROFILE_SEGMENT_RE = /^\/(tr)\/(psikolog|psikiyatrist|aile-terapisti|psikolojik-danisman)\/([^/]+)\/?$/;
+const PROFILE_SEGMENT_RE = /^\/(tr)\/(psikolog|psikiyatrist|cocuk-psikiyatristi|aile-terapisti|psikolojik-danisman)\/([^/]+)\/?$/;
 
 const PROF_TYPE_URL: Record<string, string> = {
   psychologist: 'psikolog',
   clinical_psychologist: 'psikolog',
   psychiatrist: 'psikiyatrist',
+  child_psychiatrist: 'cocuk-psikiyatristi',
   family_therapist: 'aile-terapisti',
   counselor: 'psikolojik-danisman',
 };

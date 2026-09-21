@@ -8,6 +8,7 @@ export const PROF_TYPE_SLUG_MAP: Record<string, ProfessionalType> = {
   'psikolog':             'psychologist',
   'klinik-psikolog':      'clinical_psychologist',
   'psikiyatrist':         'psychiatrist',
+  'cocuk-psikiyatristi':  'child_psychiatrist',
   'aile-terapisti':       'family_therapist',
   'psikolojik-danisman':   'counselor',
 };
@@ -16,6 +17,7 @@ export const PROF_TYPE_TR: Record<ProfessionalType, string> = {
   psychologist:          'Psikolog',
   clinical_psychologist: 'Klinik Psikolog',
   psychiatrist:          'Psikiyatrist',
+  child_psychiatrist:    'Çocuk Psikiyatristi',
   family_therapist:      'Aile Terapisti',
   counselor:             'Psikolojik Danışman',
 };
@@ -24,6 +26,7 @@ export const PROF_TYPE_EN: Record<ProfessionalType, string> = {
   psychologist:          'Psychologist',
   clinical_psychologist: 'Clinical Psychologist',
   psychiatrist:          'Psychiatrist',
+  child_psychiatrist:    'Child Psychiatrist',
   family_therapist:      'Family Therapist',
   counselor:             'Counselor',
 };

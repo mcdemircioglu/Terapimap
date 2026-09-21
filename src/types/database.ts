@@ -56,6 +56,7 @@ export type ProfessionalType =
   | "psychologist"
   | "clinical_psychologist"
   | "psychiatrist"
+  | "child_psychiatrist"
   | "family_therapist"
   | "counselor";
 
@@ -63,6 +64,7 @@ export const PROFESSIONAL_TYPE_LABELS: Record<ProfessionalType, string> = {
   psychologist: "Psikolog",
   clinical_psychologist: "Klinik Psikolog",
   psychiatrist: "Psikiyatrist",
+  child_psychiatrist: "Çocuk Psikiyatristi",
   family_therapist: "Aile Terapisti",
   counselor: "Psikolojik Danışman",
 };

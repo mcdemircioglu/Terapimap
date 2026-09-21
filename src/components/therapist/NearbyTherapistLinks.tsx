@@ -20,18 +20,21 @@ type InternalLink = { label: string; href: string };
 
 const PROF_TYPE_TO_SLUG: Partial<Record<ProfessionalType, string>> = {
   psychiatrist: 'psikiyatrist',
+  child_psychiatrist: 'cocuk-psikiyatristi',
   family_therapist: 'aile-terapisti',
   counselor: 'psikolojik-danisman',
 };
 
 const PROF_TYPE_PLURAL_TR: Partial<Record<ProfessionalType, string>> = {
   psychiatrist: 'Psikiyatristleri',
+  child_psychiatrist: 'Çocuk Psikiyatristleri',
   family_therapist: 'Aile Terapistleri',
   counselor: 'Psikolojik Danışmanları',
 };
 
 const PROF_TYPE_PLURAL_EN: Partial<Record<ProfessionalType, string>> = {
   psychiatrist: 'Psychiatrists',
+  child_psychiatrist: 'Child Psychiatrists',
   family_therapist: 'Family Therapists',
   counselor: 'Counselors',
 };

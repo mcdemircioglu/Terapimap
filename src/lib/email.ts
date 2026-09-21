@@ -109,24 +109,27 @@ export async function sendLeadToTherapist({ lead, professional }: LeadEmailInput
 
   const verifyBlock = professional.is_verified
     ? ''
-    : `<div style="margin-top:28px;background:${C.bg};border:1px solid ${C.border};border-radius:10px;padding:20px;">
-        <p style="margin:0 0 6px;font-size:15px;font-weight:bold;color:${C.dark};">Terapimap profilinizi doğrulayın</p>
-        <p style="margin:0 0 14px;font-size:13px;color:${C.text};line-height:1.6;">
-          Profiliniz henüz doğrulanmamış görünüyor. Profilinizi doğrulayarak bilgilerinizi güncelleyebilir,
-          &quot;Doğrulanmış Profil&quot; rozeti kazanabilir ve danışan taleplerini doğrudan yönetebilirsiniz.
-          Dilerseniz profilinizin güncellenmesini veya kaldırılmasını da talep edebilirsiniz.
+    : `<div style="margin-top:28px;background:#fff7e6;border:1px solid #f0c36d;border-radius:10px;padding:20px;">
+        <p style="margin:0 0 6px;font-size:15px;font-weight:bold;color:${C.dark};">Profilinizi doğrulayın, daha fazla danışana ulaşın</p>
+        <p style="margin:0 0 14px;font-size:13px;color:${C.text};line-height:1.7;">
+          Profiliniz şu an <strong>doğrulanmamış</strong> görünüyor: doğrulayarak bilgilerinizi
+          güncelleyebilir, &quot;Doğrulanmış Profil&quot; rozeti kazanabilirsiniz. Doğrulanmış, güncel ve
+          eksiksiz profiller danışanların gözünde daha güvenilir durur ve genellikle daha fazla danışan
+          talebi alır. Dilerseniz profilinizin güncellenmesini veya kaldırılmasını da talep edebilirsiniz.
         </p>
         ${button(verifyUrl, 'Profilimi Doğrula')}
       </div>`;
 
   const html = layout(
-    'Yeni danışan talebi',
+    'YENİ DANIŞAN TALEBİ',
     `<p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
       Sayın ${escapeHtml(professional.name)},<br>
-      Terapimap üzerindeki <a href="${profileUrl}" style="color:${C.primary};">profiliniz</a> aracılığıyla
-      size ulaşmak isteyen bir danışan talebi aldık. İletişim bilgileri aşağıdadır;
-      danışanla doğrudan iletişime geçebilirsiniz.
+      Bu talep, Terapimap&#39;teki <a href="${profileUrl}" style="color:${C.primary};">profiliniz</a> sayesinde
+      size ulaştı — Terapimap, danışanların size ulaşmasını sağlayan önemli bir dijital görünürlük kanalı.<br><br>
+      Profiliniz aracılığıyla sizinle görüşmek isteyen bir danışan talebi aldık. İletişim bilgileri
+      aşağıdadır; danışanla doğrudan iletişime geçebilirsiniz.
     </p>
+    <p style="margin:0 0 8px;font-size:14px;font-weight:bold;color:${C.dark};">Danışan Bilgileri;</p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
       style="background:${C.bg};border:1px solid ${C.border};border-radius:10px;">
       ${infoRow('Ad Soyad', escapeHtml(lead.name))}
@@ -134,7 +137,7 @@ export async function sendLeadToTherapist({ lead, professional }: LeadEmailInput
       ${lead.phone ? infoRow('Telefon', escapeHtml(lead.phone)) : ''}
       ${infoRow('Mesaj', escapeHtml(lead.message).replace(/\n/g, '<br>'))}
     </table>
-    <p style="margin:16px 0 0;font-size:12px;color:${C.muted};line-height:1.6;">
+    <p style="margin:16px 0 0;font-size:13px;font-weight:bold;color:${C.dark};line-height:1.6;background:#fdeeee;border:1px solid #f3c9c9;border-radius:8px;padding:12px 14px;">
       Bu bilgiler, danışanın açık talebi üzerine yalnızca size iletilmiştir.
       Lütfen kişisel verileri 6698 sayılı KVKK&#39;ya uygun şekilde ve yalnızca
       danışanla iletişim amacıyla kullanınız.
@@ -152,7 +155,9 @@ export async function sendLeadToTherapist({ lead, professional }: LeadEmailInput
     lead.phone ? `Telefon: ${lead.phone}` : null,
     `Mesaj: ${lead.message}`,
     '',
-    professional.is_verified ? null : `Profilinizi doğrulamak için: ${verifyUrl}`,
+    professional.is_verified
+      ? null
+      : `Profiliniz henüz doğrulanmamış. Doğrulanmış, güncel profiller danışanların gözünde daha güvenilir durur ve genellikle daha fazla danışan talebi alır. Profilinizi doğrulamak için: ${verifyUrl}`,
     '',
     'Terapimap — terapimap.com',
   ]

@@ -81,6 +81,7 @@ const PROFESSIONAL_TYPES = [
   { value: 'psychologist', label: 'Psikolog' },
   { value: 'clinical_psychologist', label: 'Klinik Psikolog' },
   { value: 'psychiatrist', label: 'Psikiyatrist' },
+  { value: 'child_psychiatrist', label: 'Çocuk Psikiyatristi' },
   { value: 'family_therapist', label: 'Aile Terapisti' },
   { value: 'counselor', label: 'Psikolojik Danışman' },
 ];
