@@ -210,3 +210,70 @@ export type ArticleListItem = Pick<
   /** PostgREST computed column (reading_minutes fonksiyonu). */
   reading_minutes: number;
 };
+
+// ---------------------------------------------------------------------
+// Psikoloji testleri
+// ---------------------------------------------------------------------
+
+export type TestKind = 'clinical' | 'viral';
+
+export type TestQuestion = {
+  id: string;
+  text_tr: string;
+};
+
+export type TestScaleOption = {
+  label_tr: string;
+  value: number;
+};
+
+export type TestTier = {
+  min: number;
+  max: number;
+  label_tr: string;
+  summary_tr: string;
+};
+
+export type TestScoring = {
+  scale: TestScaleOption[];
+  max_score: number;
+  tiers: TestTier[];
+};
+
+/** `specialties` tablosundan embed edilen daraltılmış alanlar (CTA/internal linking için). */
+export type TestSpecialtyRef = {
+  slug: string;
+  /** `specialties` tablosunda tek dilli (TR) tek bir `name` kolonu var — name_tr/name_en yok. */
+  name: string;
+};
+
+export type PsychologyTest = {
+  id: string;
+  slug: string;
+  title_tr: string;
+  title_en: string | null;
+  intro_tr: string | null;
+  kind: TestKind;
+  source_label: string | null;
+  /** Hub kartında gösterilecek kapak görseli. Boşsa kart ikon+pastel fallback'e düşer;
+   *  ileride yalnızca bu alanı güncelleyerek (kod değişikliği/deploy gerekmeden) kapakları yenileyebiliriz. */
+  cover_image_url: string | null;
+  specialty_id: string | null;
+  /** `getTestBySlug`/`getPublishedTests` sorgularında `specialties(slug, name)` embed edilir. */
+  specialty?: TestSpecialtyRef | null;
+  questions: TestQuestion[];
+  scoring: TestScoring;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Hub/liste görünümü için — questions/scoring gövdesi fetch edilmez. */
+export type PsychologyTestListItem = Pick<
+  PsychologyTest,
+  'id' | 'slug' | 'title_tr' | 'title_en' | 'intro_tr' | 'kind' | 'source_label' | 'cover_image_url' | 'specialty'
+>;
+
+export function scoreTier(scoring: TestScoring, score: number): TestTier | null {
+  return scoring.tiers.find((t) => score >= t.min && score <= t.max) ?? null;
+}

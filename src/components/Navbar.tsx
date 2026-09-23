@@ -11,6 +11,7 @@ export default async function Navbar({ locale }: { locale: Locale }) {
 
   const home = `/${locale}`;
   const therapists = getTherapistsListPath(locale);
+  const tests = `/${locale}/testler`;
   const guide = `/${locale}/psikoloji-rehberi`;
   const about = `/${locale}/about`;
   const applyExpert = `/${locale}/uzman-basvuru`;
@@ -19,6 +20,7 @@ export default async function Navbar({ locale }: { locale: Locale }) {
   const navItems = [
     { href: home,        label: t('home') },
     { href: therapists,  label: t('therapists') },
+    { href: tests,       label: t('tests') },
     { href: guide,       label: t('guide') },
     { href: about,       label: t('about') },
     { href: applyExpert, label: t('applyExpert') },
@@ -41,6 +43,7 @@ export default async function Navbar({ locale }: { locale: Locale }) {
         <nav className="hidden items-center gap-6 text-sm md:flex">
           <Link href={home}       className="text-brand-700 hover:text-brand-900">{t('home')}</Link>
           <Link href={therapists} className="text-brand-700 hover:text-brand-900">{t('therapists')}</Link>
+          <Link href={tests}      className="text-brand-700 hover:text-brand-900">{t('tests')}</Link>
           <Link href={guide}      className="text-brand-700 hover:text-brand-900">{t('guide')}</Link>
           <Link href={about}      className="text-brand-700 hover:text-brand-900">{t('about')}</Link>
         </nav>

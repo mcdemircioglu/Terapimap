@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Test Kartı Renk Önizleme v2</title>
+<style>
+  :root {
+    --page-bg: #f4f6f5;
+
+    /* Önerilen yeni palet — v2 */
+    --card-bg: #6fa87c;        /* tok/dolgun yeşil — büyük kart */
+    --card-border: #5c9268;
+    --card-text: #ffffff;
+    --card-text-dim: rgba(255,255,255,.78);
+
+    --option-bg: #ffffff;              /* cevaplanmamış: beyaz */
+    --option-border: #e2ece3;
+    --option-text: #24343a;
+
+    --option-selected-bg: #e7cba9;     /* cevaplanmış: açık toprak */
+    --option-selected-border: #c9a876;
+    --check-color: #7c5a34;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 16px;
+    background: var(--page-bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    color: #1f3a3d;
+  }
+  .wrap { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+  .label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #5ba1a3;
+    margin-bottom: 8px;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 28px 24px;
+    box-shadow: 0 4px 14px rgba(95,150,105,.25);
+  }
+  .progress-track {
+    height: 6px;
+    width: 100%;
+    border-radius: 999px;
+    background: rgba(255,255,255,.28);
+    margin-bottom: 22px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 43%;
+    border-radius: 999px;
+    background: #ffffff;
+  }
+  .q-index {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--card-text-dim);
+    margin-bottom: 6px;
+  }
+  h2 {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--card-text);
+    margin: 0 0 22px;
+    line-height: 1.4;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 10px;
+    border: 1px solid var(--option-border);
+    background: var(--option-bg);
+    padding: 13px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--option-text);
+  }
+  .option.selected {
+    background: var(--option-selected-bg);
+    border-color: var(--option-selected-border);
+  }
+  .check {
+    width: 16px; height: 16px; flex: none;
+    color: var(--check-color);
+  }
+  .back {
+    margin-top: 22px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--card-text-dim);
+  }
+  .swatches {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #274b4e;
+  }
+  .swatch { display: flex; align-items: center; gap: 6px; }
+  .swatch i {
+    width: 16px; height: 16px; border-radius: 5px; display: inline-block;
+    border: 1px solid rgba(0,0,0,.08);
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <div class="label">Önizleme v2 — soru ekranı (cevap seçilmemiş)</div>
+      <div class="card">
+        <div class="progress-track"><div class="progress-fill"></div></div>
+        <div class="q-index">Soru 3 / 7</div>
+        <h2>Farklı şeyler hakkında çok fazla endişelenme</h2>
+        <div class="options">
+          <div class="option">Hiç</div>
+          <div class="option">Birkaç gün</div>
+          <div class="option">Yarısından fazla gün</div>
+          <div class="option">Hemen hemen her gün</div>
+        </div>
+        <div class="back">← Geri</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="label">Önizleme v2 — bir cevap seçilmiş hâli</div>
+      <div class="card">
+        <div class="progress-track"><div class="progress-fill" style="width:57%"></div></div>
+        <div class="q-index">Soru 4 / 7</div>
+        <h2>Rahatlamada güçlük çekme</h2>
+        <div class="options">
+          <div class="option">Hiç</div>
+          <div class="option selected">
+            Birkaç gün
+            <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="option">Yarısından fazla gün</div>
+          <div class="option">Hemen hemen her gün</div>
+        </div>
+        <div class="back">← Geri</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="label">Kullanılan renkler</div>
+      <div class="swatches">
+        <div class="swatch"><i style="background:#6fa87c;"></i>Kart zemini (tok yeşil)</div>
+        <div class="swatch"><i style="background:#5c9268;"></i>Kart kenarlığı</div>
+        <div class="swatch"><i style="background:#ffffff;border:1px solid #ddd;"></i>Cevaplanmamış zemin (beyaz)</div>
+        <div class="swatch"><i style="background:#e7cba9;"></i>Cevaplanmış zemin (açık toprak)</div>
+        <div class="swatch"><i style="background:#c9a876;"></i>Cevaplanmış kenarlığı</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

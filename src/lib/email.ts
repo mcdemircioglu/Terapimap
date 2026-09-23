@@ -461,3 +461,80 @@ export async function sendConfirmationToClient({ lead, professional }: LeadEmail
     text,
   });
 }
+
+/* ── Danışana: test sonucu ────────────────────────────────────────────── */
+
+export type TestResultEmailInput = {
+  email: string;
+  testTitle: string;
+  score: number;
+  maxScore: number;
+  tierLabel: string;
+  tierSummary: string;
+  specialtySlug?: string | null;
+  specialtyName?: string | null;
+};
+
+export async function sendTestResultEmail({
+  email,
+  testTitle,
+  score,
+  maxScore,
+  tierLabel,
+  tierSummary,
+  specialtySlug,
+  specialtyName,
+}: TestResultEmailInput) {
+  const therapistsUrl = specialtySlug ? `${BASE}/tr/${specialtySlug}` : `${BASE}/tr/terapistler`;
+  const therapistsLabel = specialtyName
+    ? `${specialtyName} alanında uzman terapistleri görüntüle`
+    : 'Uzman terapistleri görüntüle';
+
+  const scoreBar = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+    style="background:${C.bg};border:1px solid ${C.border};border-radius:10px;margin:0 0 20px;">
+    <tr>
+      <td style="padding:16px 18px;">
+        <div style="font-size:13px;color:${C.muted};margin-bottom:4px;">Puanınız</div>
+        <div style="font-size:22px;font-weight:bold;color:${C.dark};margin-bottom:8px;">${score} / ${maxScore} — ${escapeHtml(tierLabel)}</div>
+        <div style="font-size:13px;color:${C.text};line-height:1.7;">${escapeHtml(tierSummary)}</div>
+      </td>
+    </tr>
+  </table>`;
+
+  const html = layout(
+    `${testTitle} Sonucunuz`,
+    `<p style="margin:0 0 16px;font-size:14px;color:${C.text};line-height:1.7;">
+      Merhaba,<br><br>
+      Terapimap üzerinde tamamladığınız <strong>${escapeHtml(testTitle)}</strong>&#39;nin sonucu aşağıdadır.
+    </p>
+    ${scoreBar}
+    <p style="margin:0 0 20px;font-size:12px;color:${C.muted};line-height:1.6;background:#fdeeee;border:1px solid #f3c9c9;border-radius:8px;padding:12px 14px;">
+      Bu sonuç bir <strong>tanı değildir</strong>, yalnızca genel bilgilendirme amaçlı kısa bir öz-değerlendirmedir.
+      Kesin bir değerlendirme için bir uzmana danışmanızı öneririz.
+    </p>
+    ${button(therapistsUrl, therapistsLabel)}`,
+  );
+
+  const text = [
+    'Merhaba,',
+    '',
+    `Terapimap üzerinde tamamladığınız "${testTitle}" testinin sonucu:`,
+    '',
+    `Puan: ${score} / ${maxScore} — ${tierLabel}`,
+    tierSummary,
+    '',
+    'Bu sonuç bir tanı değildir, yalnızca genel bilgilendirme amaçlı bir öz-değerlendirmedir. Kesin bir değerlendirme için bir uzmana danışmanızı öneririz.',
+    '',
+    `${therapistsLabel}: ${therapistsUrl}`,
+    '',
+    'Terapimap — terapimap.com',
+  ].join('\n');
+
+  await getTransport().sendMail({
+    from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
+    to: email,
+    subject: `${testTitle} Sonucunuz — Terapimap`,
+    html,
+    text,
+  });
+}

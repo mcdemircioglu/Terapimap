@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Test Hub + Soru Kartı Önizleme</title>
+<style>
+  :root {
+    --brand-50:#f0f7f7; --brand-100:#daecec; --brand-200:#b6d9d9; --brand-400:#5ba1a3;
+    --brand-600:#316c6f; --brand-700:#2a565a; --brand-800:#26474a; --brand-900:#1f3a3d;
+    --accent-50:#f3f8f3; --accent-100:#e2efe2; --accent-200:#c5dfc6;
+    --accent-600:#3a6c3f; --accent-700:#305634; --accent-800:#29462c;
+    --page-bg:#f4f6f5;
+
+    /* soru kartı — koyu yeşil + bej */
+    --q-card-bg: var(--accent-800);   /* koyu yeşil */
+    --q-card-border: #1f3320;
+    --q-card-text:#ffffff;
+    --q-card-text-dim: rgba(255,255,255,.75);
+
+    --opt-bg:#ffffff;                 /* cevaplanmamış: beyaz */
+    --opt-border:#e2ece3;
+    --opt-text:#24343a;
+
+    --opt-selected-bg:#f0e4c8;        /* seçili: bej */
+    --opt-selected-border:#d9c294;
+    --check-color:#8a6c33;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; padding:36px 16px 60px;
+    background:var(--page-bg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    color:var(--brand-900);
+  }
+  .wrap { max-width: 920px; margin:0 auto; display:flex; flex-direction:column; gap:44px; }
+  .section-label {
+    font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--brand-400); margin-bottom:14px;
+  }
+  .note {
+    font-size:13px; color:var(--brand-700); margin:-6px 0 16px; line-height:1.6;
+    background:var(--brand-50); border:1px solid var(--brand-100); border-radius:10px; padding:10px 14px;
+  }
+
+  /* ---- Hub grid ---- */
+  .hub-grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); }
+  .hub-card {
+    border-radius:18px; padding:22px 20px 20px;
+    display:flex; flex-direction:column; gap:10px;
+    border:1px solid rgba(0,0,0,.04);
+  }
+  .hub-card.tone-a { background: var(--brand-50); }
+  .hub-card.tone-b { background: var(--accent-50); }
+  .icon-badge {
+    width:46px; height:46px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.75);
+  }
+  .tone-a .icon-badge { color:var(--brand-600); }
+  .tone-b .icon-badge { color:var(--accent-600); }
+  .hub-kind { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.03em; opacity:.65; }
+  .hub-title { font-size:17px; font-weight:700; color:var(--brand-900); margin:0; }
+  .hub-desc { font-size:13px; color:var(--brand-800); opacity:.8; line-height:1.5; margin:0; flex:1; }
+  .hub-cta {
+    align-self:flex-start; margin-top:4px;
+    background:var(--brand-600); color:#fff; border:none;
+    padding:9px 16px; border-radius:9px; font-size:13px; font-weight:600;
+  }
+
+  /* ---- Soru kartı ---- */
+  .q-card {
+    background:var(--q-card-bg); border:1px solid var(--q-card-border);
+    border-radius:16px; padding:28px 24px; max-width:520px;
+    box-shadow:0 6px 18px rgba(20,40,22,.28);
+  }
+  .progress-track { height:6px; width:100%; border-radius:999px; background:rgba(255,255,255,.22); margin-bottom:22px; overflow:hidden; }
+  .progress-fill { height:100%; width:57%; border-radius:999px; background:#fff; }
+  .q-index { font-size:12px; font-weight:600; color:var(--q-card-text-dim); margin-bottom:6px; }
+  .q-title { font-size:19px; font-weight:700; color:var(--q-card-text); margin:0 0 22px; line-height:1.4; }
+  .options { display:flex; flex-direction:column; gap:10px; }
+  .option {
+    display:flex; align-items:center; justify-content:space-between;
+    border-radius:10px; border:1px solid var(--opt-border); background:var(--opt-bg);
+    padding:13px 16px; font-size:14px; font-weight:500; color:var(--opt-text);
+  }
+  .option.selected { background:var(--opt-selected-bg); border-color:var(--opt-selected-border); }
+  .check { width:16px; height:16px; flex:none; color:var(--check-color); }
+  .back { margin-top:22px; font-size:13px; font-weight:600; color:var(--q-card-text-dim); }
+
+  .swatches { display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--brand-800); margin-top:4px; }
+  .swatch { display:flex; align-items:center; gap:6px; }
+  .swatch i { width:16px; height:16px; border-radius:5px; display:inline-block; border:1px solid rgba(0,0,0,.08); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div>
+      <div class="section-label">1 — Test Hub Sayfası (kapak kartları)</div>
+      <div class="note">
+        Ekteki referansta özel çizim (illüstrasyon) karakterler var — bizde henüz o görsel varlıklar yok.
+        Aynı hissi mevcut ikon setimiz + pastel arka planlarla (marka renklerimizle uyumlu, teal &amp; yeşil tonları
+        alternatif) vermeyi öneriyorum. İstersen ayrıca özel illüstrasyon da üretebiliriz — bu sadece ilk öneri.
+      </div>
+      <div class="hub-grid">
+        <a class="hub-card tone-a" href="#" onclick="return false">
+          <div class="icon-badge">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+          </div>
+          <div class="hub-kind">Klinik tarama</div>
+          <h3 class="hub-title">Kaygı Testi</h3>
+          <p class="hub-desc">Endişe ve gerginlik düzeyini 7 soruda ölçen kısa bir öz-değerlendirme.</p>
+          <button class="hub-cta">Teste Başla</button>
+        </a>
+
+        <a class="hub-card tone-b" href="#" onclick="return false">
+          <div class="icon-badge">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          </div>
+          <div class="hub-kind">Klinik tarama</div>
+          <h3 class="hub-title">Depresyon Testi</h3>
+          <p class="hub-desc">Son iki haftadaki ruh haliniz hakkında kısa bir öz-değerlendirme. <em>(yakında)</em></p>
+          <button class="hub-cta">Teste Başla</button>
+        </a>
+
+        <a class="hub-card tone-a" href="#" onclick="return false">
+          <div class="icon-badge">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="hub-kind">Kişilik &amp; ilişki</div>
+          <h3 class="hub-title">Bağlanma Stili Testi</h3>
+          <p class="hub-desc">İlişkilerde bağlanma tarzını keşfeden viral tarzda bir test. <em>(yakında)</em></p>
+          <button class="hub-cta">Teste Başla</button>
+        </a>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">2 — Soru / Cevap Ekranı — koyu yeşil kart, seçilen cevap bej</div>
+      <div class="q-card">
+        <div class="progress-track"><div class="progress-fill"></div></div>
+        <div class="q-index">Soru 4 / 7</div>
+        <h2 class="q-title">Rahatlamada güçlük çekme</h2>
+        <div class="options">
+          <div class="option">Hiç</div>
+          <div class="option selected">
+            Birkaç gün
+            <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="option">Yarısından fazla gün</div>
+          <div class="option">Hemen hemen her gün</div>
+        </div>
+        <div class="back">← Geri</div>
+      </div>
+      <div class="swatches">
+        <div class="swatch"><i style="background:#29462c;"></i>Kart zemini (koyu yeşil)</div>
+        <div class="swatch"><i style="background:#ffffff;border:1px solid #ddd;"></i>Cevaplanmamış (beyaz)</div>
+        <div class="swatch"><i style="background:#f0e4c8;"></i>Seçili cevap (bej)</div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

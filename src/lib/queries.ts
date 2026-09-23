@@ -6,6 +6,8 @@ import type {
   ProfessionalType,
   ProfessionalWithSpecialties,
   Specialty,
+  PsychologyTest,
+  PsychologyTestListItem,
 } from '@/types/database';
 
 // ---------------------------------------------------------------------
@@ -301,6 +303,49 @@ export async function getSpecialtyBySlug(slug: string): Promise<Specialty | null
   return data ?? null;
 }
 
+// ---------------------------------------------------------------------
+// Psikoloji testleri
+// ---------------------------------------------------------------------
+
+const TEST_SELECT = `
+  *,
+  specialty:specialties ( slug, name )
+`;
+
+/** Test tanımının `specialties` embed'i Supabase'de `specialty_id` FK'sına göre otomatik çözülür. */
+export async function getTestBySlug(slug: string): Promise<PsychologyTest | null> {
+  const supabase = getPublicClient();
+  const { data, error } = await supabase
+    .from('psychology_tests')
+    .select(TEST_SELECT)
+    .eq('slug', slug)
+    .eq('is_published', true)
+    .maybeSingle();
+  if (error) { logError('getTestBySlug', error); return null; }
+  return (data as unknown as PsychologyTest) ?? null;
+}
+
+export async function getPublishedTests(): Promise<PsychologyTestListItem[]> {
+  const supabase = getPublicClient();
+  const { data, error } = await supabase
+    .from('psychology_tests')
+    .select('id, slug, title_tr, title_en, intro_tr, kind, source_label, cover_image_url, specialty:specialties ( slug, name )')
+    .eq('is_published', true)
+    .order('created_at', { ascending: true });
+  if (error) { logError('getPublishedTests', error); return []; }
+  return (data as unknown as PsychologyTestListItem[]) ?? [];
+}
+
+export async function getKnownTestSlugs(): Promise<string[]> {
+  const supabase = getPublicClient();
+  const { data, error } = await supabase
+    .from('psychology_tests')
+    .select('slug')
+    .eq('is_published', true);
+  if (error) { logError('getKnownTestSlugs', error); return []; }
+  return (data ?? []).map((row: any) => row.slug as string);
+}
+
 export async function getCityCounts(): Promise<Record<string, number>> {
   const supabase = getPublicClient();
   const { data, error } = await supabase
@@ -509,6 +554,30 @@ export async function createLead(input: {
 
   if (error) {
     logError('createLead', error);
+    throw error;
+  }
+}
+
+export async function createTestSubmission(input: {
+  test_id: string;
+  score: number;
+  tier_label: string;
+  email?: string | null;
+  consent_marketing?: boolean;
+  city_slug?: string | null;
+}) {
+  const supabase = getPublicClient();
+  const { error } = await supabase.from('test_submissions').insert({
+    test_id: input.test_id,
+    score: input.score,
+    tier_label: input.tier_label,
+    email: input.email ?? null,
+    consent_marketing: input.consent_marketing ?? false,
+    city_slug: input.city_slug ?? null,
+  });
+
+  if (error) {
+    logError('createTestSubmission', error);
     throw error;
   }
 }
