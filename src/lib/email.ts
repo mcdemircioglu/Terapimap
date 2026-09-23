@@ -350,9 +350,10 @@ export async function sendVerificationInvite({
     'Terapimap profiliniz yayında',
     `<p style="margin:0 0 16px;font-size:14px;color:${C.text};line-height:1.7;">
       Sayın ${escapeHtml(name)},<br><br>
-      Terapimap, danışanların şehir ve uzmanlık alanına göre terapist bulduğu <strong>ücretsiz</strong>
-      bir dizin platformudur. Adınıza kayıtlı bir profil şu anda yayında ve danışanlar aramalarında
-      bu profille karşılaşıyor:
+      Sizin için Terapimap&#39;te adınıza profil oluşturduk. İsterseniz profilinizi ücretsiz
+      güncelleyip onaylı profil avantajlarından yararlanabilirsiniz. Danışanlar arama sonuçlarında
+      bu profille karşılaşıyor. Terapimap, danışanların şehir ve uzmanlık alanına göre terapist
+      bulduğu ücretsiz bir dizin platformudur.
     </p>
     <p style="margin:0 0 16px;font-size:14px;color:${C.primary};font-weight:bold;line-height:1.6;">
       Profilinizi doğrulayarak daha fazla görüntülenme ve danışan talebi alabilirsiniz.
@@ -383,7 +384,7 @@ export async function sendVerificationInvite({
   const text = [
     `Sayın ${name},`,
     '',
-    'Terapimap, danışanların şehir ve uzmanlık alanına göre terapist bulduğu ücretsiz bir dizin platformudur. Adınıza kayıtlı bir profil şu anda yayında ve danışanlar aramalarında bu profille karşılaşıyor.',
+    'Sizin için Terapimap\'te adınıza profil oluşturduk. İsterseniz profilinizi ücretsiz güncelleyip onaylı profil avantajlarından yararlanabilirsiniz. Danışanlar arama sonuçlarında bu profille karşılaşıyor. Terapimap, danışanların şehir ve uzmanlık alanına göre terapist bulduğu ücretsiz bir dizin platformudur.',
     '',
     'Profilinizi doğrulayarak daha fazla görüntülenme ve danışan talebi alabilirsiniz.',
     ...(profileUrl ? ['', `Profiliniz: ${profileUrl}`] : []),
