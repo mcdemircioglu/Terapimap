@@ -30,7 +30,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function TestRunner({ test, locale }: Props) {
   const tr = locale === 'tr';
   const [step, setStep] = useState<Step>('intro');
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  // Doğrusal testlerde sayısal değer, kategorik testlerde seçilen kategori anahtarı tutulur.
+  const [answers, setAnswers] = useState<Record<string, number | string>>({});
   const [index, setIndex] = useState(0);
 
   const [email, setEmail] = useState('');
@@ -42,8 +43,43 @@ export default function TestRunner({ test, locale }: Props) {
   const questions = test.questions;
   const currentQuestion = questions[index];
 
-  const score = Object.values(answers).reduce((sum, v) => sum + v, 0);
-  const tier = step === 'result' ? scoreTier(test.scoring, score) : null;
+  // Kategorik (viral tip) test mi, yoksa doğrusal (klinik tarama tarzı,
+  // skor+kademe) test mi? bkz. TestScoring tip tanımındaki açıklama.
+  const isCategorical = !!test.scoring.categories?.length;
+
+  // ── Doğrusal puanlama ──────────────────────────────────────────────
+  // Bazı testlerde (ör. Rosenberg Özgüven Ölçeği) olumsuz ifadeler ters
+  // puanlanır: seçilen ham değer skalanın tepe noktasından çıkarılır.
+  // `reverse` işaretlenmemiş sorularda davranış değişmez (ör. GAD-7/PHQ-8).
+  const scaleMax = (test.scoring.scale ?? []).reduce((max, o) => Math.max(max, o.value), 0);
+  const linearScore = questions.reduce((sum, q) => {
+    const raw = answers[q.id];
+    if (raw === undefined || typeof raw !== 'number') return sum;
+    return sum + (q.reverse ? scaleMax - raw : raw);
+  }, 0);
+  const tier = !isCategorical && step === 'result' ? scoreTier(test.scoring, linearScore) : null;
+
+  // ── Kategorik puanlama ─────────────────────────────────────────────
+  // Her soru kendi kategorisine bir "oy" verir; en çok oy alan kategori
+  // kazanır. Eşitlikte `scoring.categories` dizisindeki ilk sıradaki
+  // kategori kazanır (kasıtlı, basit bir çözüm — bu bir klinik puanlama
+  // değil, viral tip bir test).
+  const categoryCounts: Record<string, number> = {};
+  if (isCategorical) {
+    Object.values(answers).forEach((v) => {
+      if (typeof v === 'string') categoryCounts[v] = (categoryCounts[v] ?? 0) + 1;
+    });
+  }
+  const maxCategoryCount = Math.max(0, ...Object.values(categoryCounts));
+  const winningCategory = isCategorical
+    ? (test.scoring.categories ?? []).find((c) => categoryCounts[c.key] === maxCategoryCount && maxCategoryCount > 0) ?? null
+    : null;
+  const winningCategoryCount = winningCategory ? categoryCounts[winningCategory.key] ?? 0 : 0;
+
+  const score = isCategorical ? winningCategoryCount : linearScore;
+  const resultLabel = isCategorical ? winningCategory?.label_tr : tier?.label_tr;
+  const resultSummary = isCategorical ? winningCategory?.summary_tr : tier?.summary_tr;
+  const hasResult = isCategorical ? !!winningCategory : !!tier;
 
   const therapistsHref = test.specialty?.slug ? `/${locale}/${test.specialty.slug}` : `/${locale}/${tr ? 'terapistler' : 'therapists'}`;
   const therapistsLabel = test.specialty
@@ -54,7 +90,7 @@ export default function TestRunner({ test, locale }: Props) {
       ? 'Uzman terapistleri gör'
       : 'View specialist therapists';
 
-  function selectAnswer(value: number) {
+  function selectAnswer(value: number | string) {
     const nextAnswers = { ...answers, [currentQuestion.id]: value };
     setAnswers(nextAnswers);
     if (index + 1 < questions.length) {
@@ -74,7 +110,7 @@ export default function TestRunner({ test, locale }: Props) {
 
   async function submitEmail(e: React.FormEvent) {
     e.preventDefault();
-    if (!EMAIL_RE.test(email) || !consent || !tier) return;
+    if (!EMAIL_RE.test(email) || !consent || !hasResult) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
@@ -84,6 +120,9 @@ export default function TestRunner({ test, locale }: Props) {
         body: JSON.stringify({
           testSlug: test.slug,
           score,
+          // Kategorik testlerde sunucu tarafında kademe değil, kazanan
+          // kategori doğrulanır — bkz. /api/testler/submit route.ts.
+          resultKey: isCategorical ? winningCategory?.key : undefined,
           email,
           consentMarketing: consent,
         }),
@@ -127,6 +166,11 @@ export default function TestRunner({ test, locale }: Props) {
 
   // ── Soru ekranı ────────────────────────────────────────────────────
   if (step === 'question' && currentQuestion) {
+    // Kategorik sorularda seçenekler soruya özeldir (`currentQuestion.options`);
+    // doğrusal testlerde ortak skaladan gelir (`test.scoring.scale`).
+    const options: Array<{ key: string; value: number | string; label_tr: string }> = currentQuestion.options
+      ? currentQuestion.options.map((o) => ({ key: o.category, value: o.category, label_tr: o.label_tr }))
+      : (test.scoring.scale ?? []).map((o) => ({ key: String(o.value), value: o.value, label_tr: o.label_tr }));
     return (
       <Card className="border-transparent bg-accent-800 p-6 shadow-lg md:p-8">
         <div className="mb-6 h-1.5 w-full rounded-full bg-white/20">
@@ -140,11 +184,11 @@ export default function TestRunner({ test, locale }: Props) {
         </div>
         <h2 className="mb-6 text-lg font-semibold text-white md:text-xl">{currentQuestion.text_tr}</h2>
         <div className="flex flex-col gap-2">
-          {test.scoring.scale.map((option) => {
+          {options.map((option) => {
             const selected = answers[currentQuestion.id] === option.value;
             return (
               <button
-                key={option.value}
+                key={option.key}
                 type="button"
                 onClick={() => selectAnswer(option.value)}
                 className={
@@ -171,19 +215,32 @@ export default function TestRunner({ test, locale }: Props) {
   }
 
   // ── Sonuç ekranı ───────────────────────────────────────────────────
-  if (step === 'result' && tier) {
+  if (step === 'result' && hasResult) {
     return (
       <Card className="p-6 md:p-8">
         <div className="mb-1 text-xs font-medium text-brand-500">
           {tr ? 'Sonucunuz' : 'Your result'}
         </div>
-        <div className="mb-1 text-3xl font-bold text-brand-900">
-          {score} / {test.scoring.max_score}
-        </div>
-        <div className="mb-4 inline-flex items-center rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-800">
-          {tier.label_tr}
-        </div>
-        <p className="mb-6 text-sm leading-relaxed text-brand-700">{tier.summary_tr}</p>
+        {isCategorical ? (
+          <>
+            <div className="mb-1 text-3xl font-bold text-brand-900">{resultLabel}</div>
+            <div className="mb-4 inline-flex items-center rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-800">
+              {tr
+                ? `${questions.length} sorudan ${winningCategoryCount}'inde bu stile işaret eden cevabı seçtiniz`
+                : `You picked this style in ${winningCategoryCount} of ${questions.length} answers`}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="mb-1 text-3xl font-bold text-brand-900">
+              {score} / {test.scoring.max_score}
+            </div>
+            <div className="mb-4 inline-flex items-center rounded-full bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-800">
+              {resultLabel}
+            </div>
+          </>
+        )}
+        <p className="mb-6 text-sm leading-relaxed text-brand-700">{resultSummary}</p>
 
         <div className="mb-6 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-xs leading-relaxed text-brand-800">
           {tr

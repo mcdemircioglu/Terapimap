@@ -217,9 +217,25 @@ export type ArticleListItem = Pick<
 
 export type TestKind = 'clinical' | 'viral';
 
+/** Kategorik (viral tip) testlerde bir sorunun kendine ait seçenekleri —
+ *  her seçenek ortak bir sayısal değer yerine bir sonuç kategorisine bağlanır. */
+export type TestCategoryOption = {
+  label_tr: string;
+  /** `scoring.categories[].key` ile eşleşir. */
+  category: string;
+};
+
 export type TestQuestion = {
   id: string;
   text_tr: string;
+  /** Ters puanlanan madde mi? (ör. Rosenberg Özgüven Ölçeği'ndeki olumsuz ifadeler).
+   *  true ise puanlama sırasında seçilen değer skalanın tepe noktasından çıkarılır
+   *  (ör. 0-3'lük skalada 3 → 0, 0 → 3). Belirtilmezse normal (ters çevrilmemiş) puanlanır.
+   *  Yalnızca doğrusal (scale/tiers tabanlı) testlerde anlamlıdır. */
+  reverse?: boolean;
+  /** Doluysa bu soru kategorik bir testin parçasıdır: ortak `scoring.scale` yerine
+   *  bu seçenekler kullanılır, her biri bir `scoring.categories[].key`'e işaret eder. */
+  options?: TestCategoryOption[];
 };
 
 export type TestScaleOption = {
@@ -234,10 +250,26 @@ export type TestTier = {
   summary_tr: string;
 };
 
+/** Kategorik (viral tip) testlerde olası sonuçlardan biri — ör. bağlanma stili. */
+export type TestCategory = {
+  /** Sorulardaki `options[].category` alanıyla eşleşen benzersiz anahtar. */
+  key: string;
+  label_tr: string;
+  summary_tr: string;
+};
+
+/**
+ * İki test tipini destekler:
+ *  - Doğrusal (klinik tarama tarzı, ör. GAD-7/PHQ-8): `scale` + `max_score` + `tiers`
+ *    dolu, `categories` boş. Puan toplanır, `tiers` aralığına göre kademe bulunur.
+ *  - Kategorik (viral tip, ör. Bağlanma Stili Testi): `categories` dolu, `scale`/
+ *    `tiers` boş. Her soru kendi `options`'ını taşır; en çok seçilen kategori kazanır.
+ */
 export type TestScoring = {
-  scale: TestScaleOption[];
-  max_score: number;
-  tiers: TestTier[];
+  scale?: TestScaleOption[];
+  max_score?: number;
+  tiers?: TestTier[];
+  categories?: TestCategory[];
 };
 
 /** `specialties` tablosundan embed edilen daraltılmış alanlar (CTA/internal linking için). */
@@ -274,6 +306,7 @@ export type PsychologyTestListItem = Pick<
   'id' | 'slug' | 'title_tr' | 'title_en' | 'intro_tr' | 'kind' | 'source_label' | 'cover_image_url' | 'specialty'
 >;
 
+/** Yalnızca doğrusal (tiers tabanlı) testlerde kullanılır. */
 export function scoreTier(scoring: TestScoring, score: number): TestTier | null {
-  return scoring.tiers.find((t) => score >= t.min && score <= t.max) ?? null;
+  return (scoring.tiers ?? []).find((t) => score >= t.min && score <= t.max) ?? null;
 }

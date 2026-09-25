@@ -13,6 +13,14 @@ import { getPublishedTests } from '@/lib/queries';
 import type { PsychologyTestListItem } from '@/types/database';
 import { absUrl, buildBreadcrumbSchema } from '@/lib/schema';
 
+// Test detay sayfasıyla (`[testSlug]/page.tsx`) aynı revalidate süresi.
+// Bunu eklemeden önce bu sayfa varsayılan olarak süresiz statik önbelleğe
+// alınıyordu (Next.js'in `revalidate` verilmeyince uyguladığı davranış) —
+// bu da dev sunucusunda yeni yayınlanan bir testin listede görünmesi için
+// `.next` cache'ini elle silmeyi gerektiriyordu. Artık en geç 1 saatte bir
+// kendiliğinden tazeleniyor.
+export const revalidate = 3600;
+
 /**
  * `test.cover_image_url` boşken kart üzerinde gösterilecek geçici ikon+pastel
  * fallback'i. Test türüne göre sırayla dağıtılır; bir test için özel bir

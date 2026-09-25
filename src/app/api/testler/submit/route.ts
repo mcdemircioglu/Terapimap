@@ -17,6 +17,9 @@ export async function POST(request: Request) {
   const score = Number(body?.score);
   const email = body?.email ? String(body.email).trim() : null;
   const consentMarketing = Boolean(body?.consentMarketing);
+  // Kategorik (viral tip) testlerde client kazanan kategori anahtarını gönderir;
+  // doğrusal testlerde bu alan yok/undefined.
+  const resultKey = body?.resultKey ? String(body.resultKey).trim() : null;
 
   if (!testSlug || !Number.isFinite(score) || score < 0) {
     return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
@@ -38,16 +41,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'test_not_found' }, { status: 404 });
   }
 
-  const tier = test.scoring.tiers.find((t) => score >= t.min && score <= t.max);
-  if (!tier) {
+  // Kategorik testlerde kademe (tier) yerine kazanan kategori doğrulanır.
+  // Sunucu, client'ın gönderdiği `resultKey`'in testin gerçek kategorilerinden
+  // biri olduğunu kontrol eder — ham cevapları yeniden hesaplamaz (bu bir
+  // klinik skor değil, viral tip bir test; düşük risk).
+  const isCategorical = !!test.scoring.categories?.length;
+  const category = isCategorical
+    ? test.scoring.categories!.find((c) => c.key === resultKey)
+    : null;
+  const tier = !isCategorical
+    ? (test.scoring.tiers ?? []).find((t) => score >= t.min && score <= t.max)
+    : null;
+
+  if (isCategorical ? !category : !tier) {
     return NextResponse.json({ error: 'invalid_score' }, { status: 400 });
   }
+
+  const resultLabel = isCategorical ? category!.label_tr : tier!.label_tr;
+  const resultSummary = isCategorical ? category!.summary_tr : tier!.summary_tr;
+  const maxScore = isCategorical ? test.questions.length : (test.scoring.max_score ?? score);
 
   try {
     await createTestSubmission({
       test_id: test.id,
       score,
-      tier_label: tier.label_tr,
+      tier_label: resultLabel,
       email,
       consent_marketing: consentMarketing,
     });
@@ -63,9 +81,10 @@ export async function POST(request: Request) {
       email,
       testTitle: test.title_tr,
       score,
-      maxScore: test.scoring.max_score,
-      tierLabel: tier.label_tr,
-      tierSummary: tier.summary_tr,
+      maxScore,
+      tierLabel: resultLabel,
+      tierSummary: resultSummary,
+      resultKind: isCategorical ? 'category' : 'score',
       specialtySlug: test.specialty?.slug ?? null,
       specialtyName: test.specialty?.name ?? null,
     });

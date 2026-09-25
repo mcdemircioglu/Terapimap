@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Test Kapak İllüstrasyonları — Önizleme</title>
+<style>
+  :root{
+    --brand-50:#f0f7f7; --brand-100:#daecec; --brand-600:#316c6f; --brand-800:#26474a; --brand-900:#1f3a3d;
+    --accent-50:#f3f8f3; --accent-600:#3a6c3f;
+    --page-bg:#f4f6f5;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;padding:32px 16px;background:var(--page-bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--brand-900);}
+  .wrap{max-width:920px;margin:0 auto;}
+  .label{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#5ba1a3;margin-bottom:14px;}
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));}
+  .card{border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:10px;border:1px solid rgba(0,0,0,.04);}
+  .card.tone-a{background:var(--brand-50);}
+  .card.tone-b{background:var(--accent-50);}
+  .cover{width:100%;height:112px;border-radius:12px;overflow:hidden;margin-bottom:2px;}
+  .cover svg{display:block;width:100%;height:100%;}
+  .kind{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:rgba(38,71,74,.6);}
+  .title{font-size:17px;font-weight:700;color:var(--brand-900);}
+  .desc{font-size:13px;color:rgba(38,71,74,.8);line-height:1.5;}
+  .cta{margin-top:2px;display:inline-flex;width:fit-content;align-items:center;border-radius:8px;background:var(--brand-600);padding:8px 16px;font-size:13px;font-weight:600;color:#fff;}
+  .note{margin-top:24px;font-size:13px;color:#456;background:#fff;border:1px solid #e2e8e6;border-radius:10px;padding:12px 16px;line-height:1.6;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="label">Hub kartlarında bu şekilde görünecek</div>
+    <div class="grid">
+
+      <div class="card tone-a">
+        <div class="cover">
+          <svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="240" fill="#eef6f6"/>
+            <ellipse cx="200" cy="238" rx="170" ry="55" fill="#d7ebea"/>
+            <circle cx="200" cy="110" r="72" fill="#b6d9d9" opacity="0.4"/>
+            <path d="M186 200 L178 232" stroke="#2a565a" stroke-width="15" stroke-linecap="round"/>
+            <path d="M214 200 L222 232" stroke="#2a565a" stroke-width="15" stroke-linecap="round"/>
+            <path d="M176 200 C172 165 180 138 200 138 C220 138 228 165 224 200 Z" fill="#316c6f"/>
+            <path d="M176 160 C160 168 158 188 178 196" stroke="#2a565a" stroke-width="13" stroke-linecap="round" fill="none"/>
+            <path d="M224 160 C240 168 242 188 222 196" stroke="#2a565a" stroke-width="13" stroke-linecap="round" fill="none"/>
+            <circle cx="200" cy="112" r="28" fill="#316c6f"/>
+            <path d="M150 55 C160 40 180 45 178 58 C176 70 195 62 192 48 C190 36 215 34 218 50 C220 62 240 56 236 42"
+                  stroke="#5ba1a3" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.85"/>
+            <circle cx="145" cy="70" r="4" fill="#88bfbf"/>
+            <circle cx="248" cy="52" r="3.5" fill="#88bfbf"/>
+          </svg>
+        </div>
+        <div class="kind">Klinik tarama</div>
+        <div class="title">Kaygı Testi</div>
+        <div class="desc">Endişe ve gerginlik düzeyini 7 soruda ölçen kısa bir öz-değerlendirme.</div>
+        <div class="cta">Teste Başla</div>
+      </div>
+
+      <div class="card tone-b">
+        <div class="cover">
+          <svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="240" fill="#eef3f4"/>
+            <ellipse cx="200" cy="238" rx="170" ry="55" fill="#dde7e8"/>
+            <ellipse cx="255" cy="88" rx="12" ry="12" fill="#f0e4c8" opacity="0.9"/>
+            <ellipse cx="230" cy="70" rx="46" ry="30" fill="#9fb4bc"/>
+            <ellipse cx="270" cy="76" rx="34" ry="24" fill="#9fb4bc"/>
+            <ellipse cx="196" cy="80" rx="34" ry="22" fill="#9fb4bc"/>
+            <path d="M200 118 L192 138" stroke="#b9d4dc" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+            <path d="M224 122 L216 146" stroke="#b9d4dc" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+            <path d="M176 122 L170 142" stroke="#b9d4dc" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+            <path d="M170 205 C160 178 172 158 200 158 C228 158 240 178 230 205 Z" fill="#2a565a"/>
+            <circle cx="200" cy="150" r="26" fill="#2a565a"/>
+            <path d="M176 196 C168 196 160 202 158 214" stroke="#2a565a" stroke-width="13" stroke-linecap="round" fill="none"/>
+            <path d="M224 196 C232 196 240 202 242 214" stroke="#2a565a" stroke-width="13" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="kind">Klinik tarama</div>
+        <div class="title">Depresyon Testi</div>
+        <div class="desc">Son iki haftadaki ruh haliniz hakkında kısa bir öz-değerlendirme.</div>
+        <div class="cta">Teste Başla</div>
+      </div>
+
+      <div class="card tone-a">
+        <div class="cover">
+          <svg viewBox="0 0 400 240" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="240" fill="#faf5ea"/>
+            <ellipse cx="200" cy="238" rx="170" ry="55" fill="#f0e4c8"/>
+            <circle cx="200" cy="130" r="88" fill="#e9d6ab" opacity="0.45"/>
+            <circle cx="200" cy="130" r="66" fill="#e3cea1" opacity="0.5"/>
+            <path d="M186 205 L178 232" stroke="#26474a" stroke-width="15" stroke-linecap="round"/>
+            <path d="M214 205 L222 232" stroke="#26474a" stroke-width="15" stroke-linecap="round"/>
+            <path d="M176 205 C170 165 180 132 200 132 C220 132 230 165 224 205 Z" fill="#316c6f"/>
+            <path d="M178 158 C160 148 150 122 162 104" stroke="#316c6f" stroke-width="13" stroke-linecap="round" fill="none"/>
+            <path d="M222 158 C240 148 250 122 238 104" stroke="#316c6f" stroke-width="13" stroke-linecap="round" fill="none"/>
+            <path d="M181 150 L221 178" stroke="#c9a876" stroke-width="10" stroke-linecap="round" opacity="0.9"/>
+            <circle cx="200" cy="104" r="27" fill="#316c6f"/>
+            <path d="M118 82 l5 12 12 5 -12 5 -5 12 -5 -12 -12 -5 12 -5z" fill="#c9a876"/>
+            <circle cx="292" cy="96" r="5" fill="#c9a876"/>
+            <path d="M284 140 l4 9 9 4 -9 4 -4 9 -4 -9 -9 -4 9 -4z" fill="#c9a876"/>
+          </svg>
+        </div>
+        <div class="kind">Kişilik &amp; ilişki</div>
+        <div class="title">Özgüven Testi</div>
+        <div class="desc">Kendinize dair genel değerlendirmenizi ölçen 10 soruluk bir test.</div>
+        <div class="cta">Teste Başla</div>
+      </div>
+
+    </div>
+    <div class="note">
+      Bunlar elle kodlanmış, düz/flat tarzda vektör (SVG) illüstrasyonlar — marka renklerinizle uyumlu, soyut/temsili
+      figürler (yüz detayı yok, sade blob-figür tarzı). Onaylarsan doğrudan <code>cover_image_url</code> alanına
+      gömülü SVG olarak (harici barındırma gerekmeden) ekleyeceğim.
+    </div>
+  </div>
+</body>
+</html>

@@ -471,6 +471,10 @@ export type TestResultEmailInput = {
   maxScore: number;
   tierLabel: string;
   tierSummary: string;
+  /** 'score' (varsayılan): doğrusal testler, "Puanınız: X / Y — Kademe" gösterir.
+   *  'category': kategorik/viral testler (ör. Bağlanma Stili Testi), sonucu bir
+   *  puan yerine bir stil/tip olarak başlıkta gösterir. */
+  resultKind?: 'score' | 'category';
   specialtySlug?: string | null;
   specialtyName?: string | null;
 };
@@ -482,6 +486,7 @@ export async function sendTestResultEmail({
   maxScore,
   tierLabel,
   tierSummary,
+  resultKind = 'score',
   specialtySlug,
   specialtyName,
 }: TestResultEmailInput) {
@@ -490,12 +495,16 @@ export async function sendTestResultEmail({
     ? `${specialtyName} alanında uzman terapistleri görüntüle`
     : 'Uzman terapistleri görüntüle';
 
+  const isCategory = resultKind === 'category';
   const scoreBar = `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"
     style="background:${C.bg};border:1px solid ${C.border};border-radius:10px;margin:0 0 20px;">
     <tr>
       <td style="padding:16px 18px;">
-        <div style="font-size:13px;color:${C.muted};margin-bottom:4px;">Puanınız</div>
-        <div style="font-size:22px;font-weight:bold;color:${C.dark};margin-bottom:8px;">${score} / ${maxScore} — ${escapeHtml(tierLabel)}</div>
+        <div style="font-size:13px;color:${C.muted};margin-bottom:4px;">${isCategory ? 'Sonucunuz' : 'Puanınız'}</div>
+        <div style="font-size:22px;font-weight:bold;color:${C.dark};margin-bottom:8px;">${
+          isCategory ? escapeHtml(tierLabel) : `${score} / ${maxScore} — ${escapeHtml(tierLabel)}`
+        }</div>
+        ${isCategory ? `<div style="font-size:12px;color:${C.muted};margin-bottom:8px;">${score} / ${maxScore} soruda bu sonuca işaret eden cevabı seçtiniz</div>` : ''}
         <div style="font-size:13px;color:${C.text};line-height:1.7;">${escapeHtml(tierSummary)}</div>
       </td>
     </tr>
@@ -520,7 +529,7 @@ export async function sendTestResultEmail({
     '',
     `Terapimap üzerinde tamamladığınız "${testTitle}" testinin sonucu:`,
     '',
-    `Puan: ${score} / ${maxScore} — ${tierLabel}`,
+    isCategory ? `Sonuç: ${tierLabel} (${score} / ${maxScore} soruda bu sonuca işaret eden cevap)` : `Puan: ${score} / ${maxScore} — ${tierLabel}`,
     tierSummary,
     '',
     'Bu sonuç bir tanı değildir, yalnızca genel bilgilendirme amaçlı bir öz-değerlendirmedir. Kesin bir değerlendirme için bir uzmana danışmanızı öneririz.',
