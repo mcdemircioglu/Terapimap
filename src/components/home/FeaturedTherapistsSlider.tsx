@@ -80,7 +80,7 @@ export default function FeaturedTherapistsSlider({
     didDrag.current = false;
     setIsDragging(true);
     setPaused(true);
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    // ÖNEMLİ: setPointerCapture burada ÇAĞRILMIYOR — bkz. onPointerMove.
   }
 
   function onPointerMove(e: React.PointerEvent) {
@@ -94,7 +94,28 @@ export default function FeaturedTherapistsSlider({
     // sürükleme/swipe niyetini yanlış pozitiften ayırt etmek için eşik
     // yükseltildi; sayfa değiştirme eşiği (endDrag'daki %18) hâlâ çok daha
     // yüksek olduğundan asıl swipe davranışı etkilenmiyor.
-    if (Math.abs(delta) > 10) didDrag.current = true;
+    //
+    // ASIL SEBEP (canlı ortamda pointerdown/up/click event log'larıyla
+    // doğrulandı): setPointerCapture önceden onPointerDown içinde HER
+    // pointerdown'da (sürükleme olsun olmasın) çağrılıyordu. Bir öğe
+    // pointer'ı "capture" ettiğinde, tarayıcı o pointer'a ait SONRAKİ
+    // pointerup ve click olaylarının target'ını gerçek tıklanan öğe
+    // (buton/link) yerine capture eden öğeye (bu dış div) yeniden atıyor.
+    // Bu yüzden click olayı hiçbir zaman "Profili gör" butonuna/linkine
+    // ulaşmıyor ve <Link> navigasyonu tetiklenmiyordu — kartı sadece
+    // tıklamak (sürüklemeden) bile bunu tetiklemeye yetiyordu, çünkü
+    // capture koşulsuzdu. Eşiği 4px'ten 10px'e çıkarmak sorunu ÇÖZMEDİ
+    // çünkü sorun eşikle değil, capture'ın ne zaman alındığıyla ilgiliydi.
+    // Çözüm: capture'ı yalnızca gerçek bir sürükleme başladığında (eşik
+    // aşıldığında), bir kereliğine almak. Sıradan bir tıklamada element
+    // hiç capture edilmediği için click olayı normal şekilde bubbling ile
+    // butona/linke ulaşır ve navigasyon çalışır.
+    if (Math.abs(delta) > 10) {
+      if (!didDrag.current) {
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      }
+      didDrag.current = true;
+    }
     setDragOffset(delta);
   }
 
