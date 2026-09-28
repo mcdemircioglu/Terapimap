@@ -86,7 +86,15 @@ export default function FeaturedTherapistsSlider({
   function onPointerMove(e: React.PointerEvent) {
     if (activePointerId.current !== e.pointerId) return;
     const delta = e.clientX - pointerStartX.current;
-    if (Math.abs(delta) > 4) didDrag.current = true;
+    // Eşik önceden 4px'ti — bu, fareyle yapılan sıradan bir tıklamada bile
+    // (el titremesi / imhassas imleç hareketi) neredeyse her zaman aşılıyor,
+    // bu da "Profili gör" gibi kart içi linklerin masaüstünde fare ile
+    // tıklanamaz hale gelmesine yol açıyordu (dokunmatikte parmak hareketi
+    // çok daha durağan olduğu için sorun ortaya çıkmıyordu). Gerçek bir
+    // sürükleme/swipe niyetini yanlış pozitiften ayırt etmek için eşik
+    // yükseltildi; sayfa değiştirme eşiği (endDrag'daki %18) hâlâ çok daha
+    // yüksek olduğundan asıl swipe davranışı etkilenmiyor.
+    if (Math.abs(delta) > 10) didDrag.current = true;
     setDragOffset(delta);
   }
 
