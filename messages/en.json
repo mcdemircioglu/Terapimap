@@ -54,7 +54,10 @@
     "statOnline": "Online Sessions",
     "popularTitle": "Popular searches",
     "popularSeeAll": "See all",
-    "statSpecialties": "Specialty Areas"
+    "statSpecialties": "Specialty Areas",
+    "testsTitle": "Psychology Tests",
+    "testsSubtitle": "Get to know yourself better with short, free self-assessment tests.",
+    "testsCta": "All tests"
   },
   "filters": {
     "title": "Filters",

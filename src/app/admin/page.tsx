@@ -683,14 +683,21 @@ function ProfessionalForm({
     setError('');
 
     if (!form.name.trim()) { setError('Ad zorunludur.'); return; }
-    if (!form.slug.trim()) { setError('Slug zorunludur.'); return; }
+    // Slug her zaman slugify()'dan geçirilir — böylece elle yazılan/yapıştırılan
+    // bir slug'ta Türkçe karakter, boşluk vb. kalsa bile veritabanına asla
+    // ham (bozuk) haliyle gitmez. (2026-09-28: canlıda 33 profilin slug'ında
+    // Türkçe karakter/boşluk kalmış olduğu, elle düzenleme sırasında bu adımın
+    // atlanabildiği tespit edildi — bkz. psychology_tests_... değil,
+    // professionals slug temizliği migration'ı.)
+    const cleanSlug = slugify(form.slug.trim());
+    if (!cleanSlug) { setError('Slug zorunludur.'); return; }
     if (!form.city.trim()) { setError('Şehir zorunludur.'); return; }
 
     setSaving(true);
     try {
       const payload = {
         name: form.name.trim(),
-        slug: form.slug.trim(),
+        slug: cleanSlug,
         title: form.title || null,
         professional_type: form.professional_type || null,
         city: form.city.trim(),

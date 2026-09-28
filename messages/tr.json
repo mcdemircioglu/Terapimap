@@ -54,7 +54,10 @@
     "statOnline": "Online Görüşme",
     "popularTitle": "Popüler aramalar",
     "popularSeeAll": "Tümünü gör",
-    "statSpecialties": "Uzmanlık Alanı"
+    "statSpecialties": "Uzmanlık Alanı",
+    "testsTitle": "Psikoloji Testleri",
+    "testsSubtitle": "Kısa, ücretsiz öz-değerlendirme testleriyle kendinizi daha yakından tanıyın.",
+    "testsCta": "Tüm testler"
   },
   "filters": {
     "title": "Filtreler",

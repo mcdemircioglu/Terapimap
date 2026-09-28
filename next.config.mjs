@@ -214,6 +214,50 @@ const nextConfig = {
       { source: "/:locale/psikolog/-bursa-psikolog-yasemin-gorecek", destination: "/:locale/psikolog/yasemin-gorecek-bursa", permanent: true },
       { source: "/:locale/psikolog/cansu-aydin-ankara-psikolog-", destination: "/:locale/psikolog/cansu-aydin-ankara", permanent: true },
       { source: "/:locale/psikiyatrist/uzm-dr-aysel-alkan-koseoglu-", destination: "/:locale/psikiyatrist/aysel-alkan-koseoglu-bursa", permanent: true },
+      // SEO/404 T7: profillerin slug'ında kalmış Türkçe karakter/boşluk (ör. "ı",
+      // "ç", "ş" ham haliyle) → doğru ASCII slug'a 301. source alanları
+      // Next.js'in önerdiği gibi encodeURIComponent ile yüzde-kodlanmış
+      // (tarayıcının gerçek istekte gönderdiği bayt dizisiyle eşleşsin diye).
+      // 2026-09-28'de tespit edildi: admin panelinde profil düzenlenirken
+      // slug alanı serbest metin kutusuydu ve slugify()'dan geçmeden
+      // kaydedilebiliyordu (artık düzeltildi, bkz. ProfessionalForm
+      // handleSubmit). Liste, professionals tablosunda
+      // slug ~ '^[a-z0-9-]+$' regex'ini SAĞLAMAYAN tüm satırların tam
+      // taramasından üretildi (33 kayıt).
+      { source: "/:locale/psikolog/maltepe-klinik-psikolog-kerem-cetinkaya-ozne-psikoloji", destination: "/:locale/psikolog/maltepe-klinik-psikolog-kerem-cetinkaya", permanent: true },
+      { source: "/:locale/psikolog/umut-psikolojik-danismanlik-merkezi-ayd%C4%B1n-psikolog", destination: "/:locale/psikolog/umut-psikolojik-danismanlik-merkezi-aydin-psikolog", permanent: true },
+      { source: "/:locale/psikolog/maltepe-klinik-psikolog-kerem-%C3%A7etinkaya", destination: "/:locale/psikolog/maltepe-klinik-psikolog-kerem-cetinkaya", permanent: true },
+      { source: "/:locale/psikolog/istanbul-aile-dan%C4%B1%C5%9Fma-ozel-sone-aile-danisma-merkezi", destination: "/:locale/psikolog/istanbul-aile-danisma-ozel-sone-aile-danisma-merkezi", permanent: true },
+      { source: "/:locale/psikolog/van-psikolog-h%C3%BCseyin-erol", destination: "/:locale/psikolog/van-psikolog-huseyin-erol", permanent: true },
+      { source: "/:locale/psikolog/ayd%C4%B1n-psikolog-hatice-ozcelik-ince", destination: "/:locale/psikolog/aydin-psikolog-hatice-ozcelik-ince", permanent: true },
+      { source: "/:locale/psikolog/begonvil-psikoloji-ayd%C4%B1n-psikolog", destination: "/:locale/psikolog/begonvil-psikoloji-aydin-psikolog", permanent: true },
+      { source: "/:locale/psikolog/dilan-sirdar-mutlu-ayd%C4%B1n-psikolog", destination: "/:locale/psikolog/dilan-sirdar-mutlu-aydin-psikolog", permanent: true },
+      { source: "/:locale/psikolog/ayd%C4%B1n-psikolog-sibel-bilir", destination: "/:locale/psikolog/aydin-psikolog-sibel-bilir", permanent: true },
+      { source: "/:locale/psikolog/ayd%C4%B1n-psikolog-emre-efe-cocuk-psikologu", destination: "/:locale/psikolog/aydin-psikolog-emre-efe-cocuk-psikologu", permanent: true },
+      { source: "/:locale/psikolog/mara%C5%9F-psikolog-fulya-arabaci", destination: "/:locale/psikolog/maras-psikolog-fulya-arabaci", permanent: true },
+      { source: "/:locale/psikolog/gonca-raslayan-bal%C4%B1kesir-psikolog", destination: "/:locale/psikolog/gonca-raslayan-balikesir-psikolog", permanent: true },
+      { source: "/:locale/psikolog/burak-y%C4%B1lmaz-karaca-balikesir", destination: "/:locale/psikolog/burak-yilmaz-karaca-balikesir", permanent: true },
+      { source: "/:locale/psikolojik-danisman/merve-c%C4%B1nar-manisa", destination: "/:locale/psikolojik-danisman/merve-cinar-manisa", permanent: true },
+      { source: "/:locale/psikolog/elif-sevim-psikolg-kad%C4%B1k%C3%B6y", destination: "/:locale/psikolog/elif-sevim-psikolg-kadikoy", permanent: true },
+      { source: "/:locale/psikolog/seyda-sofuoglu-psikoloji-kad%C4%B1k%C3%B6y", destination: "/:locale/psikolog/seyda-sofuoglu-psikoloji-kadikoy", permanent: true },
+      { source: "/:locale/psikolog/ankara-alt%C4%B1ndag-psikolog-oguzhan-ustaoglu", destination: "/:locale/psikolog/ankara-altindag-psikolog-oguzhan-ustaoglu", permanent: true },
+      { source: "/:locale/psikiyatrist/psikiyatrist-uzm-dr-veli-cihat-topaloglu-%D0%BF%D1%81%D0%B8%D1%85%D0%B8%D0%B0%D1%82%D1%80", destination: "/:locale/psikiyatrist/psikiyatrist-uzm-dr-veli-cihat-topaloglu", permanent: true },
+      { source: "/:locale/psikolog/eda-yilmaz-tarabya-bireysel-terapi%20-cift-terapisi", destination: "/:locale/psikolog/eda-yilmaz-tarabya-bireysel-terapi-cift-terapisi", permanent: true },
+      { source: "/:locale/psikolog/psikolog-vedat-demiral-beylikd%C3%BCz%C3%BC", destination: "/:locale/psikolog/psikolog-vedat-demiral-beylikduzu", permanent: true },
+      { source: "/:locale/psikolog/ece-demirci-sar%C4%B1yer-psikolog", destination: "/:locale/psikolog/ece-demirci-sariyer-psikolog", permanent: true },
+      { source: "/:locale/psikolog/yenimahalle-%20psikolog-aysenur-tas", destination: "/:locale/psikolog/yenimahalle-psikolog-aysenur-tas", permanent: true },
+      { source: "/:locale/psikolog/bursa-psikolog-nazike-mese-osmangazi%20psikolog", destination: "/:locale/psikolog/bursa-psikolog-nazike-mese-osmangazi-psikolog", permanent: true },
+      { source: "/:locale/psikolog/klinik-psikolog-melisa-y%C3%BCcelbursa-psikolog", destination: "/:locale/psikolog/klinik-psikolog-melisa-yucelbursa-psikolog", permanent: true },
+      { source: "/:locale/psikolog/kadikoy-psikolog-gizem-olmez-akf%C4%B1rat", destination: "/:locale/psikolog/kadikoy-psikolog-gizem-olmez-akfirat", permanent: true },
+      { source: "/:locale/psikolog/izmirde-psikolog-ceren-yagc%C4%B1%20-koseoglu", destination: "/:locale/psikolog/izmirde-psikolog-ceren-yagci-koseoglu", permanent: true },
+      { source: "/:locale/psikolog/gozde-seckiner-ankara-%C3%A7ankaya-psikolog", destination: "/:locale/psikolog/gozde-seckiner-ankara-cankaya-psikolog", permanent: true },
+      { source: "/:locale/psikolog/humanist-psikolojik-danismanlik-metin%20akyol", destination: "/:locale/psikolog/humanist-psikolojik-danismanlik-metin-akyol", permanent: true },
+      { source: "/:locale/psikolog/polatl%C4%B1-psikolog-durmazlar-psikoloji", destination: "/:locale/psikolog/polatli-psikolog-durmazlar-psikoloji", permanent: true },
+      { source: "/:locale/psikolog/polatl%C4%B1-psikolog-sinem-baris-yigit", destination: "/:locale/psikolog/polatli-psikolog-sinem-baris-yigit", permanent: true },
+      { source: "/:locale/psikiyatrist/uzm-dr-didem-suculluoglu-dikici-psikiyatrist-bayrakl%C4%B1", destination: "/:locale/psikiyatrist/uzm-dr-didem-suculluoglu-dikici-psikiyatrist-bayrakli", permanent: true },
+      { source: "/:locale/psikolojik-danisman/psikoljik-dan%C4%B1%C5%9Fman-temel-kocak", destination: "/:locale/psikolojik-danisman/psikoljik-danisman-temel-kocak", permanent: true },
+      { source: "/:locale/psikolog/psikolog-konyaalt%C4%B1-cagla-acelya-bayar", destination: "/:locale/psikolog/psikolog-konyaalti-cagla-acelya-bayar", permanent: true },
+      { source: "/:locale/psikolog/atasehir-psikolog-kubilay-ersanl%C4%B1", destination: "/:locale/psikolog/atasehir-psikolog-kubilay-ersanli", permanent: true },
       // /tr/therapists/ → /tr/terapistler/ (SEO)
       { source: "/tr/therapists", destination: "/tr/terapistler", permanent: true },
       { source: "/tr/therapists/:path*", destination: "/tr/terapistler/:path*", permanent: true },

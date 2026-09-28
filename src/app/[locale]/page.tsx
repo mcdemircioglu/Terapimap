@@ -5,9 +5,10 @@ import Container from '@/components/Container';
 import HeroSearch from '@/components/home/HeroSearch';
 import FeaturedTherapistsSlider from '@/components/home/FeaturedTherapistsSlider';
 import PopularSearches from '@/components/home/PopularSearches';
+import FeaturedTests from '@/components/home/FeaturedTests';
 import { Button } from '@/components/ui/Button';
 import { UsersIcon, MapPinIcon, VideoIcon } from '@/components/ui/icons';
-import { getFeaturedTherapists, getSpecialties, getHomeStats } from '@/lib/queries';
+import { getFeaturedTherapists, getSpecialties, getHomeStats, getPublishedTests } from '@/lib/queries';
 import { getTherapistsListPath } from '@/lib/utils';
 import FeaturedArticles from '@/components/guide/FeaturedArticles';
 
@@ -20,11 +21,12 @@ export default async function HomePage({
   params: { locale: string };
 }) {
   unstable_setRequestLocale(locale);
-  const [t, specialties, featured, stats] = await Promise.all([
+  const [t, specialties, featured, stats, tests] = await Promise.all([
     getTranslations({ locale, namespace: 'home' }),
     getSpecialties(),
     getFeaturedTherapists(12),
     getHomeStats(),
+    getPublishedTests(),
   ]);
 
   const statItems = [
@@ -115,6 +117,38 @@ export default async function HomePage({
               <Link href={`/${locale}/one-cikan-terapistler`}>
                 <Button variant="outline" className="w-full">
                   {locale === 'tr' ? 'Öne çıkan terapistler' : 'Featured therapists'}
+                </Button>
+              </Link>
+            </div>
+          </Container>
+        </section>
+      )}
+
+      {/* Psikoloji Testleri — yayında test yoksa bölüm gizlenir */}
+      {tests.length > 0 && (
+        <section>
+          <Container className="py-10 md:py-16">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-brand-900 md:text-3xl">
+                  {t('testsTitle')}
+                </h2>
+                <p className="mt-2 text-sm text-brand-700 md:text-base">{t('testsSubtitle')}</p>
+              </div>
+              <Link
+                href={`/${locale}/testler`}
+                className="hidden shrink-0 text-sm font-medium text-brand-700 hover:text-brand-900 md:inline"
+              >
+                {t('testsCta')} →
+              </Link>
+            </div>
+            <div className="mt-6 md:mt-8">
+              <FeaturedTests tests={tests} locale={locale} />
+            </div>
+            <div className="mt-6 md:hidden">
+              <Link href={`/${locale}/testler`}>
+                <Button variant="outline" className="w-full">
+                  {t('testsCta')}
                 </Button>
               </Link>
             </div>
