@@ -1,7 +1,6 @@
 import createMiddleware from 'next-intl/middleware';
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
 import { defaultLocale, locales } from './i18n';
 
 const intlMiddleware = createMiddleware({
@@ -10,44 +9,53 @@ const intlMiddleware = createMiddleware({
   localePrefix: 'always',
 });
 
-// SEO T1: profesyon segmenti terapistin gerçek professional_type'ıyla
-// eşleşmiyorsa (ör. bir psikiyatrist /psikolog/slug üzerinden açıldıysa)
-// kalıcı yönlendirme yap. Sembolik linkle paylaşılan [slug]/page.tsx
-// component'i hangi literal segmentten çağrıldığını bilemediği için bu
-// kontrol burada, gerçek istek path'ini gören tek katmanda yapılıyor.
-const PROFILE_SEGMENT_RE = /^\/(tr)\/(psikolog|psikiyatrist|cocuk-psikiyatristi|aile-terapisti|psikolojik-danisman)\/([^/]+)\/?$/;
+// ─────────────────────────────────────────────────────────────────────────────
+// Statik (ISR) liste sayfaları + dinamik varyant
+//
+// Liste/landing sayfaları (page.tsx) searchParams OKUMAZ → ISR ile önbelleğe
+// alınır. Filtre/sayfalama query'si taşıyan istekler (?page=2, ?online=1 …)
+// aynı URL'de kalır ama burada içeride /{locale}/dyn/... rotasına rewrite
+// edilir; o rota force-dynamic'tir ve aynı view'i searchParams ile render eder.
+// utm_*, gclid, fbclid gibi takip parametreleri listede yok → statik sayfa
+// servis edilmeye devam eder.
+// ─────────────────────────────────────────────────────────────────────────────
+const DYN_QUERY_KEYS = ['page', 'online', 'inPerson', 'type', 'district', 'q', 'specialty', 'city'];
 
-const PROF_TYPE_URL: Record<string, string> = {
-  psychologist: 'psikolog',
-  clinical_psychologist: 'psikolog',
-  psychiatrist: 'psikiyatrist',
-  child_psychiatrist: 'cocuk-psikiyatristi',
-  family_therapist: 'aile-terapisti',
-  counselor: 'psikolojik-danisman',
-};
+// app/[locale] altındaki literal (tek segmentli) rotalar — bunlar [seoSlug]
+// değildir, dinamik varyanta rewrite edilmemeli. Yeni bir tek segmentli sayfa
+// eklenir ve ?page= okuyorsa buraya EKLEME; [seoSlug] dışındaysa zaten kendi
+// rotası çözülür. Liste yalnızca "?page=" taşıyan istekler için önemli.
+const RESERVED_TOP_SEGMENTS = new Set([
+  'about', 'aile-terapisti', 'cerez-politikasi', 'cocuk-psikiyatristi', 'dyn',
+  'gizlilik-politikasi', 'iletisim', 'kullanim-kosullari', 'kvkk-aydinlatma-metni',
+  'one-cikan-terapistler', 'psikiyatrist', 'psikolog', 'psikoloji-rehberi',
+  'psikolojik-danisman', 'terapist-profil-politikasi', 'terapistler', 'testler',
+  'therapist', 'therapists', 'uzman-basvuru', 'panel',
+]);
 
-async function checkProfileSegment(request: NextRequest): Promise<NextResponse | null> {
-  const match = PROFILE_SEGMENT_RE.exec(request.nextUrl.pathname);
-  if (!match) return null;
-  const [, locale, segment, slug] = match;
+function rewriteToDynamic(request: NextRequest): NextResponse | null {
+  const { pathname, searchParams } = request.nextUrl;
+  if (!DYN_QUERY_KEYS.some((k) => searchParams.has(k))) return null;
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
-  const { data } = await supabase
-    .from('professionals')
-    .select('professional_type')
-    .eq('slug', slug)
-    .maybeSingle();
-  if (!data) return null; // bilinmeyen slug — normal 404 akışına bırak
+  const seg = pathname.replace(/\/+$/, '').split('/').filter(Boolean);
+  const [locale, first, ...rest] = seg;
+  if (!locale || !(locales as readonly string[]).includes(locale) || !first) return null;
 
-  const correctSegment = PROF_TYPE_URL[data.professional_type ?? ''] ?? 'psikolog';
-  if (correctSegment === segment) return null;
+  let target: string | null = null;
+  if (first === 'terapistler' || first === 'therapists') {
+    // /terapistler, /terapistler/{sehir}, /terapistler/{sehir}/{uzmanlik}
+    if (rest.length <= 2) {
+      target = `/${locale}/dyn/therapists${rest.length ? '/' + rest.join('/') : ''}`;
+    }
+  } else if (rest.length === 0 && searchParams.has('page') && !RESERVED_TOP_SEGMENTS.has(first)) {
+    // /{seoSlug}?page=N
+    target = `/${locale}/dyn/s/${first}`;
+  }
+  if (!target) return null;
 
   const url = request.nextUrl.clone();
-  url.pathname = `/${locale}/${correctSegment}/${slug}`;
-  return NextResponse.redirect(url, 308);
+  url.pathname = target;
+  return NextResponse.rewrite(url);
 }
 
 /**
@@ -91,8 +99,12 @@ export default async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/panel')) {
     return refreshPanelSession(request);
   }
-  const segmentRedirect = await checkProfileSegment(request);
-  if (segmentRedirect) return segmentRedirect;
+  // /{locale}/dyn/... yalnızca içeride rewrite hedefi; dışarıdan erişilemez.
+  if (/^\/[^/]+\/dyn(\/|$)/.test(request.nextUrl.pathname)) {
+    return new NextResponse('Not found', { status: 404 });
+  }
+  const dynamicRewrite = rewriteToDynamic(request);
+  if (dynamicRewrite) return dynamicRewrite;
   return intlMiddleware(request);
 }
 

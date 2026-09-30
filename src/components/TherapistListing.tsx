@@ -142,19 +142,25 @@ export default async function TherapistListing({
       )}
 
       <div className="grid gap-6 md:grid-cols-[260px_1fr]">
-        <Filters
-          locale={locale}
-          specialties={specialties}
-          districts={districts}
-          selectedCity={effectiveCity}
-          selectedSpecialty={effectiveSpecialty}
-        />
-        <div>
-          <TherapistSearchBar
-            placeholder={locale === 'tr' ? 'Terapist adı ara…' : 'Search by name…'}
-            submitLabel={locale === 'tr' ? 'Ara' : 'Search'}
-            clearLabel={locale === 'tr' ? 'Temizle' : 'Clear'}
+        {/* useSearchParams kullanan client bilesenler: sayfa statik/ISR oldugu icin
+            Suspense siniri sart (aksi halde build "missing-suspense-with-csr-bailout"). */}
+        <Suspense fallback={<div className="hidden md:block md:min-h-[24rem]" aria-hidden="true" />}>
+          <Filters
+            locale={locale}
+            specialties={specialties}
+            districts={districts}
+            selectedCity={effectiveCity}
+            selectedSpecialty={effectiveSpecialty}
           />
+        </Suspense>
+        <div>
+          <Suspense fallback={<div className="mb-4 h-12" aria-hidden="true" />}>
+            <TherapistSearchBar
+              placeholder={locale === 'tr' ? 'Terapist adı ara…' : 'Search by name…'}
+              submitLabel={locale === 'tr' ? 'Ara' : 'Search'}
+              clearLabel={locale === 'tr' ? 'Temizle' : 'Clear'}
+            />
+          </Suspense>
           {therapists.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-brand-200 bg-white p-12 text-center">
               <svg

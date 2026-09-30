@@ -23,6 +23,12 @@ import { ARTICLE_CATEGORY_LABELS } from '@/types/database';
 
 // ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
 export const revalidate = 3600;
+export const dynamicParams = true;
+
+// Profiller ilk istekte uretilir ve ISR ile onbellege alinir (ƒ yerine ● olur).
+export function generateStaticParams() {
+  return [];
+}
 
 export async function generateMetadata({
   params: { locale, slug },
