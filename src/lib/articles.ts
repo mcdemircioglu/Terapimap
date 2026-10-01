@@ -6,7 +6,7 @@
  */
 import { getPublicClient } from './supabase/server';
 import { ARTICLE_CATEGORIES } from '@/types/database';
-import type { Article, ArticleCategory, ArticleListItem } from '@/types/database';
+import type { Article, ArticleAuthor, ArticleCategory, ArticleListItem } from '@/types/database';
 
 /**
  * Kategori hub sayfaları (/psikoloji-rehberi/kategori/[kategori]) için
@@ -154,12 +154,18 @@ export async function getFeaturedArticles(limit = 4): Promise<ArticleListItem[]>
   return (data ?? []) as unknown as ArticleListItem[];
 }
 
-/** Detay sayfası — tam satır. Draft içerikler RLS + filtre ile asla dönmez. */
-export async function getArticleBySlug(slug: string): Promise<Article | null> {
+/**
+ * Detay sayfası — tam satır. Draft içerikler RLS + filtre ile asla dönmez.
+ * Terapist yazdıysa `author` dolu gelir (yazar kartı için); admin yazısıysa
+ * (professional_id NULL) veya yazarın profili artık public değilse null olur.
+ */
+export async function getArticleBySlug(
+  slug: string,
+): Promise<(Article & { author: ArticleAuthor | null }) | null> {
   const supabase = getPublicClient();
   const { data, error } = await supabase
     .from('articles')
-    .select('*')
+    .select('*, professionals ( slug, name, title, image_url, professional_type )')
     .eq('slug', slug)
     .eq('status', 'published')
     .not('published_at', 'is', null)
@@ -170,7 +176,10 @@ export async function getArticleBySlug(slug: string): Promise<Article | null> {
     logError('getArticleBySlug', error);
     return null;
   }
-  return (data as Article) ?? null;
+  if (!data) return null;
+
+  const { professionals, ...article } = data as any;
+  return { ...(article as Article), author: (professionals as ArticleAuthor | null) ?? null };
 }
 
 /** Aynı kategoriden benzer içerikler. */
@@ -246,8 +255,8 @@ export function validateArticlePayload(body: any): { error?: string; data?: Reco
   if (!(ARTICLE_CATEGORIES as readonly string[]).includes(category)) {
     return { error: 'Geçersiz kategori.' };
   }
-  if (status !== 'draft' && status !== 'published') {
-    return { error: 'Durum yalnızca draft veya published olabilir.' };
+  if (!['draft', 'pending', 'published', 'rejected'].includes(status)) {
+    return { error: 'Geçersiz durum.' };
   }
 
   const relatedSpecialtySlugRaw = String(body.related_specialty_slug ?? '').trim();
@@ -276,6 +285,50 @@ export function validateArticlePayload(body: any): { error?: string; data?: Reco
       meta_title: String(body.meta_title ?? '').trim() || null,
       meta_description: String(body.meta_description ?? '').trim() || null,
       is_featured: Boolean(body.is_featured),
+      related_specialty_slug: relatedSpecialtySlugRaw || null,
+      admin_note: String(body.admin_note ?? '').trim() || null,
+    },
+  };
+}
+
+/**
+ * Terapist Blog — panel API doğrulaması. validateArticlePayload'tan
+ * bilinçli olarak ayrı: terapist is_featured'ı kontrol edemez (yalnızca
+ * admin "öne çıkan" kararı verir) ve status burada DEĞİL, çağıran route
+ * tarafından (mevcut satırın durumuna ve 'save_draft'/'submit'
+ * aksiyonuna göre) belirlenir — bkz. /api/panel/articles.
+ */
+export function validateTherapistArticlePayload(
+  body: any,
+): { error?: string; data?: Record<string, unknown> } {
+  const title = String(body.title ?? '').trim();
+  const slug = String(body.slug ?? '').trim();
+  const excerpt = String(body.excerpt ?? '').trim();
+  const content = String(body.content ?? '').trim();
+  const category = String(body.category ?? '').trim();
+
+  if (!title) return { error: 'Başlık zorunludur.' };
+  if (!slug) return { error: 'Slug zorunludur.' };
+  if (!SLUG_RE.test(slug)) return { error: 'Slug yalnızca küçük harf, rakam ve tire içerebilir.' };
+  if (!excerpt) return { error: 'Kısa açıklama zorunludur.' };
+  if (!content) return { error: 'İçerik zorunludur.' };
+  if (!(ARTICLE_CATEGORIES as readonly string[]).includes(category)) {
+    return { error: 'Geçersiz kategori.' };
+  }
+
+  const relatedSpecialtySlugRaw = String(body.related_specialty_slug ?? '').trim();
+  if (relatedSpecialtySlugRaw && !SLUG_RE.test(relatedSpecialtySlugRaw)) {
+    return { error: "İlgili uzmanlık slug'ı yalnızca küçük harf, rakam ve tire içerebilir." };
+  }
+
+  return {
+    data: {
+      title,
+      slug,
+      excerpt,
+      content,
+      category,
+      cover_image_url: String(body.cover_image_url ?? '').trim() || null,
       related_specialty_slug: relatedSpecialtySlugRaw || null,
     },
   };

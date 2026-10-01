@@ -71,6 +71,18 @@ export const PROFESSIONAL_TYPE_LABELS: Record<ProfessionalType, string> = {
 
 export type ProfessionalStatus = 'pending' | 'approved' | 'featured' | 'rejected';
 
+// Belge Yükleme (Faz 1): terapistin yüklediği diploma/sertifika/ek fotoğraf
+// gibi belgeler. Herkese açık — admin ön-onayı gerekmez, doğrudan yayınlanır.
+export type TherapistDocumentType = 'pdf' | 'image';
+
+export type TherapistDocument = {
+  url: string;
+  /** Kullanıcının yüklediği orijinal dosya adı — listelemede gösterilir. */
+  name: string;
+  type: TherapistDocumentType;
+  uploaded_at: string;
+};
+
 export type Professional = {
   id: string;
   slug: string;
@@ -97,6 +109,7 @@ export type Professional = {
   google_maps_url: string | null;
   instagram_url: string | null;
   user_id: string | null;
+  documents: TherapistDocument[];
   created_at: string;
   updated_at: string;
 };
@@ -141,6 +154,7 @@ export type VerificationRequest = {
   specialties: string[] | null;
   bio: string | null;
   photo_url: string | null;
+  documents: TherapistDocument[];
   message: string | null;
   status: VerificationRequestStatus;
   admin_note: string | null;
@@ -180,7 +194,11 @@ export function isArticleCategory(value: string): value is ArticleCategory {
   return (ARTICLE_CATEGORIES as readonly string[]).includes(value);
 }
 
-export type ArticleStatus = 'draft' | 'published';
+// Terapist Blog: draft (terapist düzenliyor) → pending (incelemede) →
+// published (yayında) veya rejected (admin reddetti, admin_note'ta
+// gerekçe). Admin-yazarlı eski içerikler hâlâ yalnızca draft/published
+// kullanır — pending/rejected yalnızca terapist gönderimlerinde oluşur.
+export type ArticleStatus = 'draft' | 'pending' | 'published' | 'rejected';
 
 export type Article = {
   id: string;
@@ -197,9 +215,22 @@ export type Article = {
   is_featured: boolean;
   /** İlişkili uzmanlık sayfası slug'ı (ör. 'cift-terapisi') — rehber CTA hedefini belirler. Boşsa kod içi fallback haritalarına düşülür. */
   related_specialty_slug: string | null;
+  /** NULL = admin tarafından yazıldı (eski/mevcut davranış). Doluysa terapist panelinden gönderilmiştir. */
+  professional_id: string | null;
+  /** Admin'in red gerekçesi — yalnızca status 'rejected' iken anlamlı, terapiste panelde gösterilir. */
+  admin_note: string | null;
   published_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+/** Public makale detay sayfasında yazar kartı için — terapist yazdıysa dolu. */
+export type ArticleAuthor = {
+  slug: string;
+  name: string;
+  title: string | null;
+  image_url: string | null;
+  professional_type: ProfessionalType | null;
 };
 
 /** Liste kartları için — content gövdesi fetch edilmez. */

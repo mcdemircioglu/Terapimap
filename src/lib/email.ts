@@ -414,6 +414,60 @@ export async function sendVerificationInvite({
   });
 }
 
+/* ── Terapiste: panel hesabı daveti ───────────────────────────────────
+ * Supabase Auth'un kendi (markasız, mail.app.supabase.io'dan giden) davet
+ * e-postası yerine kullanılır: hesap supabase.auth.admin.generateLink ile
+ * e-posta GÖNDERMEDEN oluşturulur, dönen action_link bu şablonla gönderilir.
+ */
+
+export type PanelInviteEmailInput = {
+  name: string;
+  email: string;
+  inviteUrl: string;
+};
+
+export async function sendPanelInviteEmail({ name, email, inviteUrl }: PanelInviteEmailInput) {
+  const html = layout(
+    'Panel hesabınız hazır',
+    `<p style="margin:0 0 16px;font-size:14px;color:${C.text};line-height:1.7;">
+      Sayın ${escapeHtml(name)},<br><br>
+      Terapimap panelinde size özel bir hesap oluşturduk. Panel üzerinden profilinizi
+      güncelleyebilir, danışan taleplerinizi yönetebilir ve blog yazılarınızı
+      yayınlayabilirsiniz.
+    </p>
+    <p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
+      Hesabınıza giriş yapmak ve şifrenizi belirlemek için aşağıdaki butona tıklayın.
+    </p>
+    ${button(inviteUrl, 'Panele Giriş Yap')}
+    <p style="margin:22px 0 0;font-size:12px;color:${C.muted};line-height:1.6;">
+      Bu bağlantı güvenlik amacıyla sınırlı bir süre için geçerlidir. Butona tıklanamıyorsa
+      aşağıdaki adresi tarayıcınıza kopyalayabilirsiniz:<br>
+      <a href="${inviteUrl}" style="color:${C.primary};word-break:break-all;">${inviteUrl}</a>
+    </p>`,
+  );
+
+  const text = [
+    `Sayın ${name},`,
+    '',
+    'Terapimap panelinde size özel bir hesap oluşturduk. Panel üzerinden profilinizi güncelleyebilir, danışan taleplerinizi yönetebilir ve blog yazılarınızı yayınlayabilirsiniz.',
+    '',
+    'Hesabınıza giriş yapmak ve şifrenizi belirlemek için aşağıdaki bağlantıyı kullanın:',
+    inviteUrl,
+    '',
+    'Bu bağlantı güvenlik amacıyla sınırlı bir süre için geçerlidir.',
+    '',
+    'Terapimap — terapimap.com',
+  ].join('\n');
+
+  await getTransport().sendMail({
+    from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
+    to: email,
+    subject: `${name}, Terapimap panel hesabınız hazır`,
+    html,
+    text,
+  });
+}
+
 /* ── Danışana: talebiniz iletildi ───────────────────────────────────── */
 
 export async function sendConfirmationToClient({ lead, professional }: LeadEmailInput) {

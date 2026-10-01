@@ -15,7 +15,7 @@ export default async function PanelProfilePage() {
     .from('professionals')
     .select(
       `id, name, city, title, district, clinic_name, address, google_maps_url,
-       website_url, instagram_url, about, is_online, is_in_person, image_url`,
+       website_url, instagram_url, about, is_online, is_in_person, image_url, documents`,
     )
     .eq('user_id', user.id)
     .maybeSingle();

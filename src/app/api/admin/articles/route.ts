@@ -21,11 +21,21 @@ export async function GET(request: Request) {
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('articles')
-    .select('id, title, slug, category, status, is_featured, published_at, created_at, updated_at')
+    .select(
+      `id, title, slug, category, status, is_featured, admin_note, published_at, created_at, updated_at,
+       professional_id, professionals ( id, name, slug )`,
+    )
     .order('updated_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ articles: data ?? [] });
+
+  // Terapist gönderimi olanlarda yazar bilgisini düzleştir.
+  const articles = (data ?? []).map((row: any) => {
+    const { professionals, ...rest } = row;
+    return { ...rest, author: professionals ?? null };
+  });
+
+  return NextResponse.json({ articles });
 }
 
 /* ── POST: yeni içerik ────────────────────────────────────────────────── */

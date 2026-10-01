@@ -11,6 +11,7 @@ import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import JsonLd from '@/components/JsonLd';
 import AppointmentModalButton from '@/components/therapist/AppointmentModalButton';
+import DocumentsCard from '@/components/therapist/DocumentsCard';
 import LocationCard from '@/components/therapist/LocationCard';
 import MeetingInfoCard from '@/components/therapist/MeetingInfoCard';
 import NearbyTherapistLinks from '@/components/therapist/NearbyTherapistLinks';
@@ -298,6 +299,9 @@ export async function ProfileDetail({
 
             {/* 🩺 Görüşme Bilgileri */}
             <MeetingInfoCard therapist={therapist} locale={locale} />
+
+            {/* 📎 Belgeler — yalnızca terapist en az bir belge yüklediyse gösterilir */}
+            <DocumentsCard documents={therapist.documents} locale={locale} />
 
             {/* Yakındaki Terapistler — internal linking */}
             <NearbyTherapistLinks therapist={therapist} locale={locale} />

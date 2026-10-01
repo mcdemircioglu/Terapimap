@@ -49,6 +49,7 @@ type Professional = {
   is_verified: boolean;
   is_visible: boolean;
   specialties: { id: string; name: string; slug: string }[];
+  documents?: { url: string; name: string; type: 'pdf' | 'image'; uploaded_at: string }[];
 };
 
 const SESSION_KEY = 'terapimap_admin_pw';
@@ -160,6 +161,30 @@ export default function VerificationRequestDetailPage() {
         loadData();
       } else {
         setFlash({ type: 'error', text: data.error ?? 'Bir hata oluştu.' });
+      }
+    } catch {
+      setFlash({ type: 'error', text: 'Bağlantı hatası.' });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const removeDocument = async (url: string) => {
+    if (!professional) return;
+    if (!window.confirm('Bu belgeyi profilden kaldırmak istediğinizden emin misiniz?')) return;
+    setActionLoading(true);
+    setFlash(null);
+    try {
+      const res = await apiFetch(`/api/admin/professionals/${professional.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ removeDocumentUrl: url }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setFlash({ type: 'success', text: 'Belge kaldırıldı.' });
+        loadData();
+      } else {
+        setFlash({ type: 'error', text: data.error ?? 'Belge kaldırılamadı.' });
       }
     } catch {
       setFlash({ type: 'error', text: 'Bağlantı hatası.' });
@@ -344,6 +369,38 @@ export default function VerificationRequestDetailPage() {
                     {professional.is_online && <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full">Online</span>}
                     {professional.is_in_person && <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded-full">Yüz yüze</span>}
                   </div>
+                </div>
+              )}
+
+              {/* Belgeler — herkese açık, admin onayı olmadan yayınlanır;
+                  admin burada yalnızca sonradan kaldırabilir. */}
+              {professional && professional.documents && professional.documents.length > 0 && (
+                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                    Belgeler ({professional.documents.length})
+                  </h3>
+                  <ul className="space-y-2">
+                    {professional.documents.map((doc) => (
+                      <li key={doc.url} className="flex items-center justify-between gap-2 text-sm">
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="min-w-0 flex-1 truncate text-brand-700 hover:underline"
+                          title={doc.name}
+                        >
+                          {doc.type === 'pdf' ? '📄' : '🖼'} {doc.name}
+                        </a>
+                        <button
+                          onClick={() => removeDocument(doc.url)}
+                          disabled={actionLoading}
+                          className="shrink-0 text-xs text-red-600 hover:text-red-800 disabled:opacity-50"
+                        >
+                          Kaldır
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
 

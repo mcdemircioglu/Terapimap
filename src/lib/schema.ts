@@ -196,7 +196,10 @@ export function buildFaqSchema(faqs: { q: string; a: string }[]) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Article — Psikoloji Rehberi içerik sayfaları
-// Yalnızca gerçekten var olan veriler kullanılır; yazar/rating/review üretilmez.
+// Yalnızca gerçekten var olan veriler kullanılır; rating/review üretilmez.
+// Terapist Blog: yazı bir terapiste aitse (author verilirse) gerçek kişi
+// olarak işaretlenir (E-E-A-T) — admin içeriklerinde author verilmez,
+// publisher (Terapimap) tek başına kalır.
 // ─────────────────────────────────────────────────────────────────────────────
 export function buildArticleSchema(
   article: {
@@ -210,6 +213,7 @@ export function buildArticleSchema(
   },
   locale: string,
   categoryLabel: string,
+  author?: { name: string; url: string } | null,
 ) {
   const url = absUrl('/' + locale + '/psikoloji-rehberi/' + article.slug);
   return {
@@ -224,6 +228,7 @@ export function buildArticleSchema(
     dateModified: article.updated_at,
     articleSection: categoryLabel,
     inLanguage: locale === 'tr' ? 'tr-TR' : 'en-US',
+    ...(author ? { author: { '@type': 'Person', name: author.name, url: author.url } } : {}),
     publisher: {
       '@type': 'Organization',
       name: 'Terapimap',

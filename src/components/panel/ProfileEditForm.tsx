@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Input, Textarea } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import type { TherapistDocument } from '@/types/database';
 
 type Professional = {
   id: string;
@@ -20,6 +21,7 @@ type Professional = {
   is_online: boolean;
   is_in_person: boolean;
   image_url: string | null;
+  documents: TherapistDocument[];
 };
 
 type RequestRow = {
@@ -75,7 +77,62 @@ export function ProfileEditForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
+  // Belgeler (Faz 1): moderasyon kuyruğunun tamamen DIŞINDA — yüklenir
+  // yüklenmez profilde herkese açık gösterilir. Bu yüzden pendingRequest
+  // (diğer alanları kilitleyen durum) buradaki fieldset'i etkilemez.
+  const [documents, setDocuments] = useState<TherapistDocument[]>(professional.documents ?? []);
+  const [docUploading, setDocUploading] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
+  const [removingDocUrl, setRemovingDocUrl] = useState<string | null>(null);
+  const docFileInputRef = useRef<HTMLInputElement>(null);
+
   const disabled = !!pendingRequest || saving;
+
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setDocError(null);
+    setDocUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/panel/upload-document', { method: 'POST', body: fd });
+      const d = await res.json();
+      if (!res.ok) {
+        setDocError(d.error ?? 'Belge yüklenemedi.');
+        return;
+      }
+      setDocuments((docs) => [...docs, d.document]);
+    } catch {
+      setDocError('Bağlantı hatası. Lütfen tekrar deneyin.');
+    } finally {
+      setDocUploading(false);
+    }
+  };
+
+  const handleDocumentRemove = async (url: string) => {
+    setDocError(null);
+    setRemovingDocUrl(url);
+    try {
+      const res = await fetch('/api/panel/remove-document', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setDocError(d.error ?? 'Belge kaldırılamadı.');
+        return;
+      }
+      setDocuments((docs) => docs.filter((doc) => doc.url !== url));
+    } catch {
+      setDocError('Bağlantı hatası. Lütfen tekrar deneyin.');
+    } finally {
+      setRemovingDocUrl(null);
+    }
+  };
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -276,6 +333,69 @@ export function ProfileEditForm({
             </Button>
           </fieldset>
         </form>
+      </Card>
+
+      {/* Belgeler — moderasyon kuyruğundan bağımsız: yüklenir yüklenmez
+          profilinizde herkese açık gösterilir. Bekleyen bir güncelleme
+          talebiniz olsa bile burası kullanılabilir. */}
+      <Card className="p-6">
+        <h2 className="text-sm font-semibold text-brand-800">Belgeler</h2>
+        <p className="mt-1 text-xs text-brand-500">
+          Diploma, sertifika veya ek fotoğraflarınızı yükleyin. Yüklediğiniz belgeler
+          onay beklemeden hemen profilinizde görünür; istemediğiniz bir belgeyi
+          dilediğiniz zaman kaldırabilirsiniz.
+        </p>
+
+        {documents.length > 0 && (
+          <ul className="mt-4 space-y-2">
+            {documents.map((doc) => (
+              <li
+                key={doc.url}
+                className="flex items-center justify-between gap-3 rounded-lg border border-brand-100 bg-brand-50/40 px-3 py-2 text-sm"
+              >
+                <a
+                  href={doc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex min-w-0 items-center gap-2 text-brand-700 hover:underline"
+                >
+                  <span>{doc.type === 'pdf' ? '📄' : '🖼️'}</span>
+                  <span className="truncate">{doc.name}</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => handleDocumentRemove(doc.url)}
+                  disabled={removingDocUrl === doc.url}
+                  className="shrink-0 text-xs text-red-600 underline hover:text-red-800 disabled:opacity-50"
+                >
+                  {removingDocUrl === doc.url ? 'Kaldırılıyor...' : 'Kaldır'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={docUploading}
+            onClick={() => docFileInputRef.current?.click()}
+          >
+            {docUploading ? 'Yükleniyor...' : 'Belge yükle'}
+          </Button>
+          <input
+            ref={docFileInputRef}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.webp"
+            className="hidden"
+            onChange={handleDocumentUpload}
+          />
+          <p className="mt-1.5 text-xs text-brand-400">PDF, JPG, PNG veya WebP · maksimum 10 MB</p>
+        </div>
+
+        {docError && <p className="mt-2 text-sm text-red-600">{docError}</p>}
       </Card>
 
       {recentRequests.length > 0 && (

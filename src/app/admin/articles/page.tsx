@@ -84,6 +84,9 @@ type ArticleRow = {
   category: ArticleCategory;
   status: ArticleStatus;
   is_featured: boolean;
+  admin_note: string | null;
+  professional_id: string | null;
+  author: { id: string; name: string; slug: string } | null;
   published_at: string | null;
   created_at: string;
   updated_at: string;
@@ -102,6 +105,7 @@ type FormState = {
   is_featured: boolean;
   published_at: string;
   related_specialty_slug: string;
+  admin_note: string;
 };
 
 type Flash = { type: 'success' | 'error'; text: string };
@@ -121,7 +125,21 @@ const EMPTY_FORM: FormState = {
   is_featured: false,
   published_at: '',
   related_specialty_slug: '',
+  admin_note: '',
 };
+
+const ARTICLE_STATUS_LABELS: Record<ArticleStatus, { label: string; cls: string }> = {
+  draft: { label: 'Taslak', cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
+  pending: { label: 'İncelemede', cls: 'bg-orange-50 text-orange-700 border-orange-200' },
+  published: { label: 'Yayında', cls: 'bg-green-50 text-green-700 border-green-200' },
+  rejected: { label: 'Reddedildi', cls: 'bg-red-50 text-red-600 border-red-200' },
+};
+
+/** Terapist gönderimlerini (özellikle incelemeyi bekleyenleri) listede öne çıkarır. */
+function sortArticles(rows: ArticleRow[]): ArticleRow[] {
+  const priority: Record<ArticleStatus, number> = { pending: 0, draft: 1, rejected: 2, published: 3 };
+  return [...rows].sort((a, b) => priority[a.status] - priority[b.status]);
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -306,7 +324,7 @@ export default function AdminArticlesPage() {
       const res = await apiFetch('/api/admin/articles');
       if (res.ok) {
         const data = await res.json();
-        setArticles(data.articles ?? []);
+        setArticles(sortArticles(data.articles ?? []));
       }
     } finally {
       setLoading(false);
@@ -375,6 +393,7 @@ export default function AdminArticlesPage() {
       is_featured: Boolean(article.is_featured),
       published_at: toLocalInput(article.published_at),
       related_specialty_slug: article.related_specialty_slug ?? '',
+      admin_note: article.admin_note ?? '',
     });
     setEditingId(id);
     setSlugTouched(true);
@@ -431,6 +450,44 @@ export default function AdminArticlesPage() {
     if (put.ok) {
       showFlash({ type: 'success', text: 'İçerik taslağa alındı.' });
       loadArticles();
+    }
+  };
+
+  /** Terapist gönderimini onayla ve yayına al — verification-requests admin akışıyla aynı hızlı onay deseni. */
+  const handleApprove = async (row: ArticleRow) => {
+    const res = await apiFetch(`/api/admin/articles/${row.id}`);
+    if (!res.ok) return;
+    const { article } = await res.json();
+    const put = await apiFetch(`/api/admin/articles/${row.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ ...article, status: 'published', published_at: null, admin_note: null }),
+    });
+    if (put.ok) {
+      showFlash({ type: 'success', text: 'Yazı onaylandı ve yayına alındı.' });
+      loadArticles();
+    } else {
+      const d = await put.json().catch(() => ({}));
+      showFlash({ type: 'error', text: d.error ?? 'Onaylanamadı.' });
+    }
+  };
+
+  /** Terapist gönderimini reddet — gerekçe terapist panelinde gösterilir. */
+  const handleReject = async (row: ArticleRow) => {
+    const note = window.prompt('Red gerekçesi (terapiste panelde gösterilecek):');
+    if (note === null) return;
+    const res = await apiFetch(`/api/admin/articles/${row.id}`);
+    if (!res.ok) return;
+    const { article } = await res.json();
+    const put = await apiFetch(`/api/admin/articles/${row.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ ...article, status: 'rejected', admin_note: note.trim() || null }),
+    });
+    if (put.ok) {
+      showFlash({ type: 'success', text: 'Yazı reddedildi.' });
+      loadArticles();
+    } else {
+      const d = await put.json().catch(() => ({}));
+      showFlash({ type: 'error', text: d.error ?? 'Reddedilemedi.' });
     }
   };
 
@@ -514,6 +571,7 @@ export default function AdminArticlesPage() {
                   <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
                     <tr>
                       <th className="px-4 py-3">Başlık</th>
+                      <th className="px-4 py-3">Yazar</th>
                       <th className="px-4 py-3">Kategori</th>
                       <th className="px-4 py-3">Durum</th>
                       <th className="px-4 py-3">Öne Çıkan</th>
@@ -523,18 +581,26 @@ export default function AdminArticlesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {articles.map((row) => (
+                    {articles.map((row) => {
+                      const s = ARTICLE_STATUS_LABELS[row.status];
+                      return (
                       <tr key={row.id} className="hover:bg-gray-50">
                         <td className="px-4 py-3">
                           <div className="font-medium text-gray-900">{row.title}</div>
                           <div className="text-xs text-gray-400">/{row.slug}</div>
+                          {row.status === 'rejected' && row.admin_note && (
+                            <div className="mt-1 text-xs text-red-600">Not: {row.admin_note}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-gray-600">
+                          {row.author ? row.author.name : <span className="text-gray-400">Terapimap</span>}
                         </td>
                         <td className="px-4 py-3 text-gray-600">
                           {ARTICLE_CATEGORY_LABELS[row.category] ?? row.category}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium border ${row.status === 'published' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                            {row.status === 'published' ? 'Yayında' : 'Taslak'}
+                          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium border ${s.cls}`}>
+                            {s.label}
                           </span>
                         </td>
                         <td className="px-4 py-3">{row.is_featured ? '★' : '—'}</td>
@@ -542,6 +608,16 @@ export default function AdminArticlesPage() {
                         <td className="px-4 py-3 text-gray-600">{fmtDate(row.updated_at)}</td>
                         <td className="px-4 py-3">
                           <div className="flex justify-end gap-1.5">
+                            {row.status === 'pending' && (
+                              <>
+                                <Btn onClick={() => handleApprove(row)} className="!px-3 !py-1.5 text-xs">
+                                  Onayla
+                                </Btn>
+                                <Btn variant="danger" onClick={() => handleReject(row)} className="!px-3 !py-1.5 text-xs">
+                                  Reddet
+                                </Btn>
+                              </>
+                            )}
                             <Btn variant="secondary" onClick={() => startEdit(row.id)} className="!px-3 !py-1.5 text-xs">
                               Düzenle
                             </Btn>
@@ -556,7 +632,8 @@ export default function AdminArticlesPage() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -604,10 +681,24 @@ export default function AdminArticlesPage() {
               <Field label="Durum" required>
                 <select className={inputCls} value={form.status} onChange={(e) => set('status', e.target.value as ArticleStatus)}>
                   <option value="draft">Taslak</option>
+                  <option value="pending">İncelemede</option>
                   <option value="published">Yayında</option>
+                  <option value="rejected">Reddedildi</option>
                 </select>
               </Field>
             </div>
+
+            {form.status === 'rejected' && (
+              <Field label="Red gerekçesi" hint={
+                <p className="text-xs text-gray-400 mb-1">Terapist panelinde bu not gösterilir.</p>
+              }>
+                <textarea
+                  className={`${inputCls} min-h-[70px]`}
+                  value={form.admin_note}
+                  onChange={(e) => set('admin_note', e.target.value)}
+                />
+              </Field>
+            )}
 
             <Field label="Kapak Görseli">
               <ImageUpload

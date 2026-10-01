@@ -14,11 +14,13 @@ import remarkGfm from 'remark-gfm';
 import Container from '@/components/Container';
 import JsonLd from '@/components/JsonLd';
 import { Badge } from '@/components/ui/Badge';
+import Avatar from '@/components/ui/Avatar';
 import ArticleCard from '@/components/guide/ArticleCard';
 import ArticleDisclaimer from '@/components/guide/ArticleDisclaimer';
 import TherapistCta from '@/components/guide/TherapistCta';
 import { ARTICLE_SLUG_CTA_SPECIALTY, CATEGORY_CTA_SPECIALTY, calculateReadingMinutes, getArticleBySlug, getRelatedArticles } from '@/lib/articles';
 import { absUrl, buildArticleSchema, buildBreadcrumbSchema } from '@/lib/schema';
+import { getProfessionalUrl } from '@/lib/utils';
 import { ARTICLE_CATEGORY_LABELS } from '@/types/database';
 
 // ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
@@ -97,7 +99,14 @@ export default async function ArticleDetailPage({
   );
 
   const schemas = [
-    buildArticleSchema(article, locale, categoryLabel),
+    buildArticleSchema(
+      article,
+      locale,
+      categoryLabel,
+      article.author
+        ? { name: article.author.name, url: absUrl(getProfessionalUrl(article.author.slug, article.author.professional_type, locale)) }
+        : null,
+    ),
     buildBreadcrumbSchema([
       { name: homeLabel, url: absUrl('/' + locale) },
       { name: 'Psikoloji Rehberi', url: guideUrl },
@@ -197,6 +206,24 @@ export default async function ArticleDetailPage({
               {article.content}
             </ReactMarkdown>
           </div>
+
+          {/* Yazar kartı — terapist yazdıysa görünür, admin içeriklerinde yok */}
+          {article.author && (
+            <Link
+              href={getProfessionalUrl(article.author.slug, article.author.professional_type, locale)}
+              className="mt-10 flex items-center gap-4 rounded-2xl border border-brand-100 bg-brand-50/50 p-5 transition-colors hover:border-brand-300 hover:bg-brand-50"
+            >
+              <Avatar name={article.author.name} photoUrl={article.author.image_url} size="sm" />
+              <div className="min-w-0">
+                <p className="text-xs font-medium uppercase tracking-wide text-brand-500">Yazan</p>
+                <p className="text-sm font-semibold text-brand-900">
+                  {article.author.name}
+                  {article.author.title ? ` · ${article.author.title}` : ''}
+                </p>
+                <p className="mt-0.5 text-xs text-brand-500">Profiline git ve randevu talep et →</p>
+              </div>
+            </Link>
+          )}
 
           {/* Bilgilendirme notu */}
           <div className="mt-12">

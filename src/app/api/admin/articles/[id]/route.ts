@@ -3,12 +3,20 @@
  * Silme yalnızca admin auth sonrası çalışır; arayüz açık onay ister.
  */
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { getServiceClient } from '@/lib/supabase/server';
 import { validateArticlePayload } from '@/lib/articles';
 
 function verifyAuth(request: Request): boolean {
   const pw = request.headers.get('x-admin-password');
   return !!pw && pw === process.env.ADMIN_PASSWORD;
+}
+
+/** Yayındaki/kategorideki Psikoloji Rehberi sayfalarını anında tazeler. */
+function revalidateArticlePages(slug: string, category: string) {
+  revalidatePath('/tr/psikoloji-rehberi');
+  revalidatePath(`/tr/psikoloji-rehberi/${slug}`);
+  revalidatePath(`/tr/psikoloji-rehberi/kategori/${category}`);
 }
 
 type Params = { params: { id: string } };
@@ -52,6 +60,14 @@ export async function PUT(request: Request, { params }: Params) {
       : error.message;
     return NextResponse.json({ error: msg }, { status: 400 });
   }
+
+  // Yayında olan (ya da yeni yayına giren) bir yazının sayfaları ISR'ın
+  // 1 saatlik önbelleğini beklemeden hemen tazelensin — özellikle terapist
+  // gönderimini onaylarken (pending → published) bunun anında olması önemli.
+  if (data!.status === 'published') {
+    revalidateArticlePages(data!.slug as string, data!.category as string);
+  }
+
   return NextResponse.json({ ok: true });
 }
 

@@ -3,7 +3,7 @@ import { generateMetadataImpl, CitySpecialtyPage } from '@/lib/page-views/city-s
 
 // Bu rota searchParams OKUMAZ -> statik/ISR. Filtreli/sayfali istekler
 // (?page=, ?online= ...) middleware'de /dyn/... rotasina rewrite edilir.
-export const revalidate = 3600;
+export const revalidate = 21600; // 6 saat; admin işlemleri etiketle anında temizler
 export const dynamicParams = true;
 
 // Kombinasyonlar ilk istekte uretilir ve ISR ile onbellege alinir.

@@ -14,8 +14,11 @@ type ProfessionalRef = {
  * Bunu çağırmazsak değişiklik sitede şu kadar gecikebilir:
  *  - Anasayfa / öne çıkan terapistler / terapist detay sayfaları: 1 saate
  *    kadar (ISR — bkz. ilgili page.tsx'lerdeki `revalidate = 3600`).
- *  - Şehir/uzmanlık filtreli liste sayfaları: 10 dakikaya kadar
- *    (src/lib/queries.ts'teki unstable_cache, `tags: ['therapists-list']`).
+ *  - Şehir/uzmanlık filtreli liste sayfaları: 6 saate kadar
+ *    (src/lib/queries.ts'teki unstable_cache ve sayfaların `revalidate = 21600`
+ *    değeri, `tags: ['therapists-list']`). Bu fonksiyon etiketi temizlediği için
+ *    admin işlemlerinde bu bekleme yaşanmaz; yalnızca veritabanında doğrudan
+ *    yapılan değişiklikler süre dolana kadar görünmez.
  *
  * `professional` verilirse (slug + professional_type), o profesyonelin
  * kendi detay sayfası da ayrıca tazelenir — kaldırma/silme sonrası o

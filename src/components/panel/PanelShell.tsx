@@ -15,6 +15,7 @@ import {
   GlobeIcon,
   MenuIcon,
   LogOutIcon,
+  PenLineIcon,
   XIcon,
 } from '@/components/ui/icons';
 
@@ -26,6 +27,7 @@ const ICONS: Record<PanelNavItem['icon'], React.ComponentType<{ className?: stri
   chart: BarChartIcon,
   globe: GlobeIcon,
   settings: SettingsIcon,
+  pen: PenLineIcon,
 };
 
 type PanelProfessional = {

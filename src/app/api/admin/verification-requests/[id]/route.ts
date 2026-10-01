@@ -159,6 +159,13 @@ export async function PATCH(
       if (vr.photo_url) insertPayload.image_url = vr.photo_url;
       if (vr.email) insertPayload.email = vr.email;
       if (vr.phone) insertPayload.phone = vr.phone;
+      // Belge Yükleme: yeni başvuruda seçilen belgeler (varsa) doğrudan
+      // yeni profile taşınır — belgeler moderasyon kuyruğunda özel bir
+      // onay adımına tabi değil, profilin geri kalanıyla aynı anda
+      // (admin onayladığında) yayına girer.
+      if (Array.isArray(vr.documents) && vr.documents.length > 0) {
+        insertPayload.documents = vr.documents;
+      }
 
       const { data: created, error: createErr } = await supabase
         .from('professionals')

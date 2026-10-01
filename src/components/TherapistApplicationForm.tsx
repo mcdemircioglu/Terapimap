@@ -16,7 +16,7 @@ import {
   SPECIALTY_TYPE_LABELS,
   groupSpecialties,
 } from '@/types/database';
-import type { ProfessionalType, Specialty } from '@/types/database';
+import type { ProfessionalType, Specialty, TherapistDocument } from '@/types/database';
 
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
@@ -84,6 +84,19 @@ export default function TherapistApplicationForm({
   const [photoError, setPhotoError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Belgeler (diploma/sertifika vs.) — opsiyonel, birden fazla dosya olabilir.
+  // Fotoğraftan farklı olarak seçilir seçilmez yüklenir (ilerleme göstermek
+  // ve çoklu dosyada tek tek sonuç almak için submit'i beklemez). Başvuru
+  // henüz bir professional_id'ye sahip olmadığı için hem fotoğraf hem
+  // belgeler aynı geçici "başvuru klasörü" altında saklanır.
+  const applicationIdRef = useRef<string>(
+    `basvuru-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  );
+  const [documents, setDocuments] = useState<TherapistDocument[]>([]);
+  const [docUploading, setDocUploading] = useState(false);
+  const [docError, setDocError] = useState('');
+  const docFileRef = useRef<HTMLInputElement>(null);
+
   const districts = city ? getDistricts(city) : [];
   const isLoading = status === 'loading';
 
@@ -121,6 +134,50 @@ export default function TherapistApplicationForm({
     if (fileRef.current) fileRef.current.value = '';
   }
 
+  async function handleDocumentChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setDocError('');
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (!['application/pdf', 'image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setDocError('Sadece PDF, JPG, PNG ve WebP dosyaları kabul edilmektedir.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setDocError("Dosya boyutu 10 MB'ı geçemez.");
+      return;
+    }
+
+    setDocUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('therapistId', applicationIdRef.current);
+      const res = await fetch('/api/verification-requests/upload-document', {
+        method: 'POST',
+        body: fd,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setDocError(data.error ?? 'Belge yüklenemedi.');
+        return;
+      }
+      setDocuments((docs) => [
+        ...docs,
+        { url: data.url, name: data.name, type: data.type, uploaded_at: new Date().toISOString() },
+      ]);
+    } catch {
+      setDocError('Bağlantı hatası. Lütfen tekrar deneyin.');
+    } finally {
+      setDocUploading(false);
+    }
+  }
+
+  function removeDocument(url: string) {
+    setDocuments((docs) => docs.filter((d) => d.url !== url));
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
@@ -142,9 +199,9 @@ export default function TherapistApplicationForm({
       if (photoFile) {
         const fd = new FormData();
         fd.append('file', photoFile);
-        // Henüz bir professional_id yok (yeni başvuru) — dosyayı kendi
-        // klasöründe tutmak için geçici, benzersiz bir kimlik yeterli.
-        fd.append('therapistId', `basvuru-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+        // Henüz bir professional_id yok (yeni başvuru) — belgelerle aynı
+        // geçici başvuru klasörünü kullanıyoruz.
+        fd.append('therapistId', applicationIdRef.current);
 
         const upRes = await fetch('/api/verification-requests/upload', { method: 'POST', body: fd });
         const upData = await upRes.json().catch(() => ({}));
@@ -173,6 +230,7 @@ export default function TherapistApplicationForm({
           offers_in_person: inPerson,
           specialties: selected,
           photo_url: photoUrl,
+          documents,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -295,6 +353,56 @@ export default function TherapistApplicationForm({
             onChange={handlePhotoChange}
           />
           {photoError && <p className="mt-1.5 text-xs text-red-600">{photoError}</p>}
+        </Field>
+
+        {/* Belgeler — diploma, sertifika vb. Opsiyonel, birden fazla eklenebilir.
+            Herkese açık ve onay beklemeden yayınlanır: başvurunuz onaylandığında
+            profilinizin geri kalanıyla birlikte hemen görünür olur. */}
+        <Field
+          label="Belgeler (opsiyonel)"
+          hint="Diploma, sertifika veya ek fotoğraflarınızı ekleyin. PDF, JPG, PNG veya WebP · maksimum 10 MB, birden fazla dosya ekleyebilirsiniz."
+        >
+          {documents.length > 0 && (
+            <ul className="mb-2 space-y-1.5">
+              {documents.map((doc) => (
+                <li
+                  key={doc.url}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-brand-100 bg-brand-50/50 px-3 py-1.5 text-sm"
+                >
+                  <span className="flex min-w-0 items-center gap-1.5 text-brand-700">
+                    <span>{doc.type === 'pdf' ? '📄' : '🖼️'}</span>
+                    <span className="truncate">{doc.name}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeDocument(doc.url)}
+                    className="shrink-0 text-xs text-red-600 underline hover:text-red-800"
+                  >
+                    Kaldır
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button
+            type="button"
+            onClick={() => docFileRef.current?.click()}
+            disabled={docUploading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-brand-200 px-4 py-2.5 text-sm text-brand-500 transition-colors hover:border-brand-400 hover:text-brand-700 disabled:opacity-60"
+          >
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            {docUploading ? 'Yükleniyor...' : 'Belge ekle'}
+          </button>
+          <input
+            ref={docFileRef}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png,.webp"
+            className="hidden"
+            onChange={handleDocumentChange}
+          />
+          {docError && <p className="mt-1.5 text-xs text-red-600">{docError}</p>}
         </Field>
 
         {/* Görüşme türü */}

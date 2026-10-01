@@ -160,7 +160,7 @@ export const getDistricts = unstable_cache(
     return unique;
   },
   ['getDistricts'],
-  { revalidate: 600, tags: ['therapists-list'] },
+  { revalidate: 21600, tags: ['therapists-list'] },
 );
 
 export const getTherapists = unstable_cache(
@@ -229,7 +229,7 @@ export const getTherapists = unstable_cache(
     return rows;
   },
   ['getTherapists'],
-  { revalidate: 600, tags: ['therapists-list'] },
+  { revalidate: 21600, tags: ['therapists-list'] },
 );
 
 export async function getFeaturedTherapists(
@@ -431,7 +431,7 @@ const getTherapistsPagedByCity = unstable_cache(
     return { therapists, total: count ?? 0 };
   },
   ['getTherapistsPaged'],
-  { revalidate: 600, tags: ['therapists-list'] },
+  { revalidate: 21600, tags: ['therapists-list'] },
 );
 
 /**
@@ -446,7 +446,7 @@ const getTherapistsPagedByCity = unstable_cache(
  * uzmanlıklarda (Anksiyete, Depresyon vb.) her istekte tekrar eden,
  * önbelleklenmeyen ~4MB'lık Supabase sorgusu demekti — gereksiz gecikme
  * ve gereksiz Supabase egress kullanımı. getTherapists()'in kendi cache'i
- * zaten aynı işi (10 dakikalık revalidate ile) karşılıyor; burada ikinci
+ * zaten aynı işi (6 saatlik revalidate + admin işlemlerinde anında etiket temizliği ile) karşılıyor; burada ikinci
  * bir (ve başarısız olan) önbellekleme katmanına gerek yok.
  */
 export async function getTherapistsPaged(
@@ -529,7 +529,7 @@ export const getTherapistStats = unstable_cache(
     };
   },
   ['getTherapistStats'],
-  { revalidate: 600, tags: ['therapists-list'] },
+  { revalidate: 21600, tags: ['therapists-list'] },
 );
 
 // ---------------------------------------------------------------------
