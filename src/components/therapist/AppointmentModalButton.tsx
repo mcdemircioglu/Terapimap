@@ -66,46 +66,50 @@ export default function AppointmentModalButton({
         {label}
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label={label}
-        >
-          {/* Arka plan */}
+      {open &&
+        typeof document !== 'undefined' &&
+        createPortal(
           <div
-            className="absolute inset-0 bg-brand-900/40 backdrop-blur-[2px]"
-            onClick={close}
-            aria-hidden="true"
-          />
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-label={label}
+          >
+            {/* Arka plan */}
+            <div
+              className="absolute inset-0 bg-brand-900/40 backdrop-blur-[2px]"
+              onClick={close}
+              aria-hidden="true"
+            />
 
-          {/* Panel — mobilde alttan açılan sheet, sm+ ekranda ortalanmış dialog.
-              Başlık sabit kalır, form kendi içinde scroll olur; klavye açıldığında
-              görünür alan (dvh) küçülse bile Gönder butonuna scroll ile ulaşılabilir. */}
-          <div className="relative flex max-h-[85dvh] w-full max-w-md flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:max-h-[90vh] sm:rounded-2xl">
-            <div className="flex flex-shrink-0 items-start justify-between gap-4 p-6 pb-4 md:p-7 md:pb-4">
-              <div>
-                <h3 className="text-lg font-semibold text-brand-900">{label}</h3>
-                <p className="mt-1 text-sm text-brand-600">{subtitle}</p>
+            {/* Panel — her ekran boyutunda sayfanın ortasında açılır (mobil/masaüstü
+                ayrımı kaldırıldı, davranış tek ve öngörülebilir). Başlık sabit kalır,
+                form kendi içinde scroll olur; içerik taştığında Gönder butonuna
+                scroll ile ulaşılabilir. */}
+            <div className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+              <div className="flex flex-shrink-0 items-start justify-between gap-4 p-6 pb-4 md:p-7 md:pb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-brand-900">{label}</h3>
+                  <p className="mt-1 text-sm text-brand-600">{subtitle}</p>
+                </div>
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  onClick={close}
+                  aria-label={closeLabel}
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-brand-500 transition-colors hover:bg-brand-50 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                >
+                  <XIcon className="h-5 w-5" />
+                </button>
               </div>
-              <button
-                ref={closeButtonRef}
-                type="button"
-                onClick={close}
-                aria-label={closeLabel}
-                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full text-brand-500 transition-colors hover:bg-brand-50 hover:text-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-              >
-                <XIcon className="h-5 w-5" />
-              </button>
-            </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 md:px-7 md:pb-7">
-              <LeadForm professionalId={professionalId} />
+              <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 md:px-7 md:pb-7">
+                <LeadForm professionalId={professionalId} />
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
