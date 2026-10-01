@@ -68,13 +68,10 @@ export default async function PanelLeadsPage() {
         <div className="space-y-4">
           {leads.map((lead) => (
             <Card key={lead.id} className="p-5">
-              <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <h3 className="text-sm font-semibold text-brand-900">{lead.name}</h3>
-                  <p className="text-xs text-brand-400">
-                    {lead.sent_at ? fmtDateTime(lead.sent_at) : fmtDateTime(lead.created_at)}
-                  </p>
-                </div>
+              <div className="mb-4 flex flex-wrap items-start justify-between gap-2 border-b border-brand-100 pb-3">
+                <p className="text-xs text-brand-400">
+                  {lead.sent_at ? fmtDateTime(lead.sent_at) : fmtDateTime(lead.created_at)}
+                </p>
                 {lead.therapist_contacted_at ? (
                   <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700">
                     İletişime geçildi · {fmtDateTime(lead.therapist_contacted_at)}
@@ -84,17 +81,44 @@ export default async function PanelLeadsPage() {
                 )}
               </div>
 
-              <p className="mb-3 whitespace-pre-line text-sm text-brand-700">{lead.message}</p>
+              <dl className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-brand-400">
+                    Ad Soyad
+                  </dt>
+                  <dd className="mt-0.5 text-sm font-semibold text-brand-900">{lead.name}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-brand-400">
+                    E-posta
+                  </dt>
+                  <dd className="mt-0.5 text-sm text-brand-700">
+                    <a href={`mailto:${lead.email}`} className="hover:text-brand-900 hover:underline">
+                      {lead.email}
+                    </a>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-medium uppercase tracking-wide text-brand-400">
+                    Telefon
+                  </dt>
+                  <dd className="mt-0.5 text-sm text-brand-700">
+                    {lead.phone ? (
+                      <a href={`tel:${lead.phone}`} className="hover:text-brand-900 hover:underline">
+                        {lead.phone}
+                      </a>
+                    ) : (
+                      <span className="text-brand-300">—</span>
+                    )}
+                  </dd>
+                </div>
+              </dl>
 
-              <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-brand-500">
-                <a href={`mailto:${lead.email}`} className="hover:text-brand-800">
-                  {lead.email}
-                </a>
-                {lead.phone && (
-                  <a href={`tel:${lead.phone}`} className="hover:text-brand-800">
-                    {lead.phone}
-                  </a>
-                )}
+              <div className="mt-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-brand-400">Mesaj</p>
+                <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-brand-700">
+                  {lead.message}
+                </p>
               </div>
             </Card>
           ))}
