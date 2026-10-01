@@ -5,8 +5,19 @@
  * Modal, sağ sütundaki iletişim formunun birebir aynısını (LeadForm) açar —
  * aynı /api/leads endpoint'i, aynı doğrulama, aynı başarı ekranı.
  * ESC, arka plana tıklama ve ✕ ile kapanır; açıkken body scroll kilitlenir.
+ *
+ * Modal içeriği createPortal ile doğrudan document.body'ye render edilir.
+ * Neden: bu buton bazı yerlerde (ör. mobilde ekranın altına sabitlenmiş
+ * CTA çubuğu) backdrop-filter/transform uygulanan bir üst eleman içinde
+ * kullanılıyor; CSS spesifikasyonu gereği böyle bir üst eleman, içindeki
+ * "fixed" elemanların konumlandırma referansını (containing block) viewport
+ * yerine kendi kutusuna çeviriyor. Sonuç: modal, o küçük üst elemanın
+ * sınırları içine sıkışıp ekranın altında kesik görünüyordu. Portal bu
+ * sorunu kökten çözer — modal artık her zaman gerçek viewport'a göre
+ * konumlanır, üst elemanlardaki stillerden etkilenmez.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import LeadForm from '@/components/LeadForm';
 import { CalendarPlusIcon, XIcon } from '@/components/ui/icons';
 
