@@ -21,7 +21,7 @@ export const PANEL_FEATURES: Record<PanelFeatureKey, boolean> = {
   leads: true, // Adım 6
   settings: true, // Adım 8
   blog: true, // Faz 1 — Blog Yazılarım
-  appointments: false, // Faz 2
+  appointments: true, // Faz 2 — panel tarafı (müsaitlik + liste) hazır; danışan tarafı booking akışı Faz 2b'de eklenecek
   miniSite: false, // Faz 4
   analytics: false, // Faz 2/3
 };
