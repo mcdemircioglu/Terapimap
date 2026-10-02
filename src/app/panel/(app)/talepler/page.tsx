@@ -49,6 +49,10 @@ export default async function PanelLeadsPage() {
     .from('leads')
     .select('id, name, email, phone, message, created_at, sent_at, therapist_contacted_at')
     .eq('professional_id', professional.id)
+    // Randevu takviminden gelen, bilgilendirme amaçlı kaydedilen talepleri
+    // burada göstermiyoruz — terapist bunları zaten "Randevularım" sekmesinde
+    // görüyor; aksi halde aynı danışan burada tekrar görünür.
+    .or('source.is.null,source.neq.randevu_takvimi')
     .order('sent_at', { ascending: false });
 
   return (

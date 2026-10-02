@@ -186,5 +186,37 @@ export async function POST(request: Request) {
     console.error('appointment confirmation email failed', e);
   }
 
+  // Admin'in /admin/leads üzerinden "panelden kaç randevu gitti, kime gitti"
+  // görebilmesi için bilgilendirme amaçlı bir lead kaydı da düşüyoruz.
+  // source: 'randevu_takvimi' ile işaretlenip sent_at/status doğrudan
+  // "contacted" olarak set ediliyor — bu zaten admin onayı gerektiren bir
+  // talep değil, gerçekleşmiş bir randevunun kaydı; bu yüzden admin'in
+  // "Gönder" akışını (terapiste tekrar mail atardı) tetiklemiyor. Terapistin
+  // kendi Talepler sekmesinde tekrar görünmemesi için o sayfadaki sorgu bu
+  // source değerini ayrıca filtreliyor (zaten Randevularım'da görüyor).
+  try {
+    const whenLabel = new Date(appointment.start_at).toLocaleString('tr-TR', {
+      timeZone: 'Europe/Istanbul',
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const typeLabel = sessionType === 'online' ? 'Online görüşme' : 'Yüz yüze görüşme';
+    await supabase.from('leads').insert({
+      professional_id: professionalId,
+      name,
+      email,
+      phone,
+      message: `Danışan, randevu takviminden doğrudan randevu aldı: ${whenLabel} (${typeLabel}).`,
+      source: 'randevu_takvimi',
+      status: 'contacted',
+      sent_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.error('appointment lead logging failed', e);
+  }
+
   return NextResponse.json({ ok: true, appointment });
 }
