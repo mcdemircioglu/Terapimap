@@ -35,6 +35,50 @@ const DISPLAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 const DURATION_OPTIONS = [20, 30, 45, 50, 60, 75, 90, 120];
 
+const HOURS = Array.from({ length: 24 }, (_, h) => String(h).padStart(2, '0'));
+const MINUTES = ['00', '15', '30', '45'];
+
+/**
+ * Saat/dakika için iki ayrı <select> — native <input type="time"> yerine.
+ * Native input, kullanıcının işletim sistemi/tarayıcı diline göre 12 saatlik
+ * (ÖÖ/ÖS) gösterebiliyordu; bu bileşen herkeste aynı, garanti 24 saatlik
+ * ("14:30") formatı sağlıyor.
+ */
+function TimeSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [h, m] = value.split(':');
+  const minuteValue = MINUTES.includes(m) ? m : '00';
+
+  return (
+    <div className="flex items-center gap-1">
+      <select
+        value={h}
+        onChange={(e) => onChange(`${e.target.value}:${minuteValue}`)}
+        className="h-10 rounded-lg border border-brand-200 bg-white px-2 text-sm text-brand-900"
+        aria-label="Saat"
+      >
+        {HOURS.map((hh) => (
+          <option key={hh} value={hh}>
+            {hh}
+          </option>
+        ))}
+      </select>
+      <span className="text-brand-400">:</span>
+      <select
+        value={minuteValue}
+        onChange={(e) => onChange(`${h}:${e.target.value}`)}
+        className="h-10 rounded-lg border border-brand-200 bg-white px-2 text-sm text-brand-900"
+        aria-label="Dakika"
+      >
+        {MINUTES.map((mm) => (
+          <option key={mm} value={mm}>
+            {mm}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
 type DayState = { enabled: boolean; start: string; end: string };
 
 function buildInitialWeek(rules: Rule[]): Record<number, DayState> {
@@ -185,22 +229,10 @@ export function AvailabilityForm({
                 </label>
 
                 {day.enabled ? (
-                  <div className="flex items-center gap-2 text-sm text-brand-700">
-                    <input
-                      type="time"
-                      value={day.start}
-                      onChange={(e) => updateDay(weekday, { start: e.target.value })}
-                      step={900}
-                      className="h-10 rounded-lg border border-brand-200 bg-white px-2 text-sm"
-                    />
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-brand-700">
+                    <TimeSelect value={day.start} onChange={(v) => updateDay(weekday, { start: v })} />
                     <span className="text-brand-400">—</span>
-                    <input
-                      type="time"
-                      value={day.end}
-                      onChange={(e) => updateDay(weekday, { end: e.target.value })}
-                      step={900}
-                      className="h-10 rounded-lg border border-brand-200 bg-white px-2 text-sm"
-                    />
+                    <TimeSelect value={day.end} onChange={(v) => updateDay(weekday, { end: v })} />
                     {day.start >= day.end && (
                       <span className="text-xs text-red-600">Bitiş, başlangıçtan sonra olmalı</span>
                     )}
