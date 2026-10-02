@@ -601,3 +601,165 @@ export async function sendTestResultEmail({
     text,
   });
 }
+
+/* ── Randevu bildirimleri (terapiste + danışana) ─────────────────────── */
+
+type AppointmentEmailCore = {
+  client_name: string;
+  session_type: string; // 'online' | 'in_person'
+  start_at: string; // UTC ISO
+  end_at: string; // UTC ISO
+  meeting_link: string | null;
+};
+
+type AppointmentProfessionalInfo = {
+  name: string;
+  clinic_name: string | null;
+  address: string | null;
+  district: string | null;
+  city: string | null;
+};
+
+function fmtAppointmentRange(startIso: string, endIso: string): string {
+  const start = new Date(startIso);
+  const end = new Date(endIso);
+  const datePart = start.toLocaleDateString('tr-TR', {
+    timeZone: 'Europe/Istanbul',
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+  const startTime = start.toLocaleTimeString('tr-TR', {
+    timeZone: 'Europe/Istanbul',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const endTime = end.toLocaleTimeString('tr-TR', {
+    timeZone: 'Europe/Istanbul',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return `${datePart}, ${startTime}–${endTime}`;
+}
+
+function locationBlock(professional: AppointmentProfessionalInfo): string {
+  const parts = [professional.clinic_name, professional.address, professional.district, professional.city].filter(
+    Boolean,
+  );
+  return parts.length > 0 ? escapeHtml(parts.join(', ')) : 'Terapist sizinle görüşme adresini paylaşacaktır.';
+}
+
+export type AppointmentToTherapistInput = {
+  appointment: AppointmentEmailCore & { client_email: string; client_phone: string | null };
+  professional: AppointmentProfessionalInfo & { email: string };
+};
+
+export async function sendAppointmentToTherapist({ appointment, professional }: AppointmentToTherapistInput) {
+  const when = fmtAppointmentRange(appointment.start_at, appointment.end_at);
+  const typeLabel = appointment.session_type === 'online' ? 'Online görüşme' : 'Yüz yüze görüşme';
+
+  const html = layout(
+    'YENİ RANDEVU ALINDI',
+    `<p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
+      Sayın ${escapeHtml(professional.name)},<br>
+      Terapimap profiliniz üzerinden bir danışan, müsait saatlerinizden birini seçerek
+      randevu aldı. Randevu otomatik olarak onaylanmıştır.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+      style="background:${C.bg};border:1px solid ${C.border};border-radius:10px;">
+      ${infoRow('Tarih / Saat', `<strong>${escapeHtml(when)}</strong>`)}
+      ${infoRow('Görüşme Türü', escapeHtml(typeLabel))}
+      ${appointment.session_type === 'online' && appointment.meeting_link
+        ? infoRow('Görüşme Linki', `<a href="${escapeHtml(appointment.meeting_link)}" style="color:${C.primary};">${escapeHtml(appointment.meeting_link)}</a>`)
+        : ''}
+      ${infoRow('Danışan', escapeHtml(appointment.client_name))}
+      ${infoRow('E-posta', `<a href="mailto:${escapeHtml(appointment.client_email)}" style="color:${C.primary};">${escapeHtml(appointment.client_email)}</a>`)}
+      ${appointment.client_phone ? infoRow('Telefon', escapeHtml(appointment.client_phone)) : ''}
+    </table>
+    <p style="margin:16px 0 0;font-size:13px;color:${C.text};line-height:1.6;">
+      Randevuyu panelinizdeki <strong>Randevular</strong> bölümünden görüntüleyebilir,
+      gerekirse iptal edebilirsiniz.
+    </p>`,
+  );
+
+  const text = [
+    `Sayın ${professional.name},`,
+    '',
+    'Terapimap üzerinden yeni bir randevu alındı (otomatik onaylandı):',
+    '',
+    `Tarih / Saat: ${when}`,
+    `Görüşme Türü: ${typeLabel}`,
+    appointment.session_type === 'online' && appointment.meeting_link ? `Görüşme Linki: ${appointment.meeting_link}` : null,
+    `Danışan: ${appointment.client_name}`,
+    `E-posta: ${appointment.client_email}`,
+    appointment.client_phone ? `Telefon: ${appointment.client_phone}` : null,
+    '',
+    'Terapimap — terapimap.com',
+  ]
+    .filter((l) => l !== null)
+    .join('\n');
+
+  await getTransport().sendMail({
+    from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
+    to: professional.email,
+    replyTo: appointment.client_email,
+    subject: `Yeni randevu — ${appointment.client_name} (${fmtAppointmentRange(appointment.start_at, appointment.end_at)})`,
+    html,
+    text,
+  });
+}
+
+export type AppointmentToClientInput = {
+  appointment: AppointmentEmailCore & { client_email: string };
+  professional: AppointmentProfessionalInfo;
+};
+
+export async function sendAppointmentConfirmationToClient({ appointment, professional }: AppointmentToClientInput) {
+  const when = fmtAppointmentRange(appointment.start_at, appointment.end_at);
+  const typeLabel = appointment.session_type === 'online' ? 'Online görüşme' : 'Yüz yüze görüşme';
+
+  const html = layout(
+    'RANDEVUNUZ ONAYLANDI',
+    `<p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
+      Merhaba ${escapeHtml(appointment.client_name)},<br>
+      <strong>${escapeHtml(professional.name)}</strong> ile randevunuz onaylandı.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+      style="background:${C.bg};border:1px solid ${C.border};border-radius:10px;">
+      ${infoRow('Tarih / Saat', `<strong>${escapeHtml(when)}</strong>`)}
+      ${infoRow('Görüşme Türü', escapeHtml(typeLabel))}
+      ${appointment.session_type === 'online' && appointment.meeting_link
+        ? infoRow('Görüşme Linki', `<a href="${escapeHtml(appointment.meeting_link)}" style="color:${C.primary};">${escapeHtml(appointment.meeting_link)}</a>`)
+        : infoRow('Adres', locationBlock(professional))}
+    </table>
+    <p style="margin:16px 0 0;font-size:13px;color:${C.text};line-height:1.6;">
+      Randevunuzu değiştirmeniz veya iptal etmeniz gerekirse, lütfen doğrudan
+      ${escapeHtml(professional.name)} ile iletişime geçin.
+    </p>`,
+  );
+
+  const text = [
+    `Merhaba ${appointment.client_name},`,
+    '',
+    `${professional.name} ile randevunuz onaylandı:`,
+    '',
+    `Tarih / Saat: ${when}`,
+    `Görüşme Türü: ${typeLabel}`,
+    appointment.session_type === 'online' && appointment.meeting_link
+      ? `Görüşme Linki: ${appointment.meeting_link}`
+      : `Adres: ${[professional.clinic_name, professional.address, professional.district, professional.city].filter(Boolean).join(', ') || 'Terapist sizinle paylaşacaktır.'}`,
+    '',
+    'Değişiklik/iptal için doğrudan terapistinizle iletişime geçebilirsiniz.',
+    '',
+    'Terapimap — terapimap.com',
+  ].join('\n');
+
+  await getTransport().sendMail({
+    from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
+    to: appointment.client_email,
+    subject: `Randevunuz onaylandı — ${when}`,
+    html,
+    text,
+  });
+}

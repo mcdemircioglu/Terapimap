@@ -10,7 +10,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import JsonLd from '@/components/JsonLd';
-import AppointmentModalButton from '@/components/therapist/AppointmentModalButton';
+import AppointmentBookingButton from '@/components/therapist/AppointmentBookingButton';
 import DocumentsCard from '@/components/therapist/DocumentsCard';
 import LocationCard from '@/components/therapist/LocationCard';
 import MeetingInfoCard from '@/components/therapist/MeetingInfoCard';
@@ -377,7 +377,7 @@ export async function ProfileDetail({
               <h2 className="text-lg font-semibold text-brand-900">{tDetail('appointmentCta')}</h2>
               <p className="mt-1 text-sm text-brand-600">{tLead('subtitle')}</p>
               <div className="mt-5">
-                <AppointmentModalButton
+                <AppointmentBookingButton
                   professionalId={therapist.id}
                   label={tDetail('appointmentCta')}
                   subtitle={tLead('subtitle')}
@@ -394,7 +394,7 @@ export async function ProfileDetail({
           sabit (fixed) bir CTA bar gösteriyoruz, böylece kullanıcı sayfayı ne kadar
           scroll ederse etsin randevu butonu her zaman görünür kalır. */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-100 bg-white/95 p-3 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] backdrop-blur-sm [padding-bottom:calc(0.75rem_+_env(safe-area-inset-bottom))] lg:hidden">
-        <AppointmentModalButton
+        <AppointmentBookingButton
           professionalId={therapist.id}
           label={tDetail('appointmentCta')}
           subtitle={tLead('subtitle')}

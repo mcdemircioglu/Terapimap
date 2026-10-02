@@ -5,7 +5,7 @@
  */
 import { getTranslations } from 'next-intl/server';
 import { Card } from '@/components/ui/Card';
-import AppointmentModalButton from '@/components/therapist/AppointmentModalButton';
+import AppointmentBookingButton from '@/components/therapist/AppointmentBookingButton';
 import {
   CheckIcon,
   ExternalLinkIcon,
@@ -93,7 +93,7 @@ export default async function MeetingInfoCard({ therapist, locale }: Props) {
 
       {/* Randevu talebi + Instagram */}
       <div className="mt-6 flex flex-col gap-3 border-t border-brand-100 pt-6 sm:flex-row">
-        <AppointmentModalButton
+        <AppointmentBookingButton
           professionalId={therapist.id}
           label={t('appointmentCta')}
           subtitle={tLead('subtitle')}
