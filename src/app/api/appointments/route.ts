@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   const { data: professional } = await supabase
     .from('professionals')
     .select(
-      'id, name, slug, email, session_duration_minutes, is_online, is_in_person, meeting_link, status, is_visible, removed_at, clinic_name, address, district, city',
+      'id, name, slug, email, session_duration_minutes, is_online, is_in_person, meeting_link, status, is_visible, removed_at, clinic_name, address, district, city, booking_tier',
     )
     .eq('id', professionalId)
     .maybeSingle();
@@ -67,6 +67,14 @@ export async function POST(request: Request) {
     professional.removed_at
   ) {
     return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  }
+
+  // İstemci tarafı (AppointmentBookingButton) booking_tier !== 'full' olan
+  // terapistler için zaten anında rezervasyon ekranını hiç göstermiyor
+  // (bkz. available-slots), ama uç nokta doğrudan çağrılabileceği için
+  // burada da aynı kuralı sunucu tarafında zorunlu kılıyoruz.
+  if (professional.booking_tier !== 'full') {
+    return NextResponse.json({ error: 'booking_not_available' }, { status: 403 });
   }
 
   if (sessionType === 'online' && (!professional.is_online || !professional.meeting_link)) {

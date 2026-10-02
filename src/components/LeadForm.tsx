@@ -101,7 +101,18 @@ function SuccessPanel({ onReset }: { onReset: () => void }) {
 // Lead form
 // ---------------------------------------------------------------------------
 
-export default function LeadForm({ professionalId }: { professionalId: string }) {
+export default function LeadForm({
+  professionalId,
+  source,
+}: {
+  professionalId: string;
+  /**
+   * Admin'in /admin/leads listesinde ayırt edebilmesi için opsiyonel talep
+   * kaynağı (örn. "mesaj" — profildeki "Mesaj At" butonundan gelenler).
+   * Boş bırakılırsa normal "iletişim/randevu talebi" formu gibi davranır.
+   */
+  source?: string;
+}) {
   const t = useTranslations('lead');
   const [status, setStatus] = useState<Status>('idle');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -121,6 +132,7 @@ export default function LeadForm({ professionalId }: { professionalId: string })
       email: String(data.get('email') ?? '').trim(),
       phone: String(data.get('phone') ?? '').trim() || null,
       message: String(data.get('message') ?? '').trim(),
+      ...(source ? { source } : {}),
     };
 
     if (!payload.name || !payload.email || !payload.message) {

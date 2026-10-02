@@ -542,6 +542,7 @@ export async function createLead(input: {
   email: string;
   phone?: string | null;
   message: string;
+  source?: string | null;
 }) {
   const supabase = getPublicClient();
   const { error } = await supabase.from('leads').insert({
@@ -550,6 +551,7 @@ export async function createLead(input: {
     email: input.email,
     phone: input.phone ?? null,
     message: input.message,
+    ...(input.source ? { source: input.source } : {}),
   });
 
   if (error) {

@@ -6,6 +6,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Card } from '@/components/ui/Card';
 import AppointmentBookingButton from '@/components/therapist/AppointmentBookingButton';
+import MessageButton from '@/components/therapist/MessageButton';
 import {
   CheckIcon,
   ExternalLinkIcon,
@@ -99,6 +100,17 @@ export default async function MeetingInfoCard({ therapist, locale }: Props) {
           subtitle={tLead('subtitle')}
           closeLabel={t('close')}
         />
+        {/* Panelde kayıtlı (hesabı olan) terapistler için randevu CTA'sının
+            yanında ikinci bir yol: doğrudan mesaj. Paket seviyesinden
+            (booking_tier) bağımsız — tek şartı panel hesabı olması. */}
+        {therapist.user_id && (
+          <MessageButton
+            professionalId={therapist.id}
+            label={t('messageCta')}
+            subtitle={tLead('subtitle')}
+            closeLabel={t('close')}
+          />
+        )}
         {therapist.instagram_url && (
             <a
               href={therapist.instagram_url}

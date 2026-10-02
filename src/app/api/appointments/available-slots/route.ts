@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
   const { data: professional } = await supabase
     .from('professionals')
-    .select('id, session_duration_minutes, is_online, is_in_person, meeting_link, status, is_visible, removed_at')
+    .select('id, session_duration_minutes, is_online, is_in_person, meeting_link, status, is_visible, removed_at, booking_tier')
     .eq('id', professionalId)
     .maybeSingle();
 
@@ -36,6 +36,21 @@ export async function GET(request: Request) {
     professional.removed_at
   ) {
     return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  }
+
+  // booking_tier !== 'full' ise (panel kaydı yok/'none', veya ücretli ama
+  // temel paket/'level1') anında randevu takvimi gösterilmez — boş slot
+  // listesi dönünce AppointmentBookingButton zaten mevcut davranışıyla
+  // (müsaitlik tanımlanmamış durumu) otomatik olarak iletişim formuna geri
+  // düşüyor, burada ayrıca bir dallanmaya gerek yok.
+  if (professional.booking_tier !== 'full') {
+    return NextResponse.json({
+      sessionDurationMinutes: professional.session_duration_minutes,
+      isOnline: professional.is_online,
+      isInPerson: professional.is_in_person,
+      hasMeetingLink: !!professional.meeting_link,
+      slots: {},
+    });
   }
 
   const fromDate = istanbulToday();

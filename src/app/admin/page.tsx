@@ -44,6 +44,7 @@ type Professional = {
   is_featured: boolean;
   status: string | null;
   user_id: string | null;
+  booking_tier: string | null;
   specialties: Specialty[];
 };
 
@@ -70,6 +71,7 @@ type FormData = {
   is_verified: boolean;
   is_featured: boolean;
   status: string;
+  booking_tier: string;
   specialtyIds: string[];
 };
 
@@ -111,6 +113,7 @@ const EMPTY_FORM: FormData = {
   is_verified: false,
   is_featured: false,
   status: 'pending',
+  booking_tier: 'full',
   specialtyIds: [],
 };
 
@@ -156,6 +159,7 @@ function profToForm(p: Professional): FormData {
     is_verified: p.is_verified ?? false,
     is_featured: p.is_featured ?? false,
     status: p.status ?? 'pending',
+    booking_tier: p.booking_tier ?? 'full',
     specialtyIds: (p.specialties ?? []).map((s) => s.id),
   };
 }
@@ -562,6 +566,12 @@ function ProfessionalList({
                         {p.is_featured && (
                           <span className="px-1.5 py-0.5 rounded text-xs bg-yellow-50 text-yellow-700 font-medium">★ Öne Çıkan</span>
                         )}
+                        {p.user_id && p.booking_tier === 'level1' && (
+                          <span className="px-1.5 py-0.5 rounded text-xs bg-orange-50 text-orange-700 font-medium">Paket: Level 1</span>
+                        )}
+                        {p.user_id && p.booking_tier === 'none' && (
+                          <span className="px-1.5 py-0.5 rounded text-xs bg-orange-50 text-orange-700 font-medium">Paket: Yok</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -718,6 +728,7 @@ function ProfessionalForm({
         is_verified: form.is_verified,
         is_featured: form.is_featured,
         status: form.status,
+        booking_tier: form.booking_tier,
         specialtyIds: form.specialtyIds,
       };
 
@@ -888,6 +899,23 @@ function ProfessionalForm({
             ]}
           />
           <p className="text-xs text-gray-400 mt-1">Sadece approved ve featured kayıtlar sitede görünür.</p>
+        </div>
+        <div className="mb-4">
+          <Label required>Randevu Paketi (booking_tier)</Label>
+          <Select
+            value={form.booking_tier}
+            onChange={set('booking_tier')}
+            options={[
+              { value: 'full', label: 'Full — anında randevu takvimi aktif' },
+              { value: 'level1', label: 'Level 1 — sadece iletişim formu' },
+              { value: 'none', label: 'Yok — sadece iletişim formu' },
+            ]}
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Geçici admin anahtarı: gerçek ücret paketi sistemi kurulana kadar bu alan elle
+            yönetilir. Sadece panelde kayıtlı (hesabı olan) terapistler için anlamlıdır —
+            panel hesabı olmayanlar zaten her zaman iletişim formuna düşer.
+          </p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Checkbox checked={form.is_online} onChange={set('is_online') as (v: boolean) => void} label="Online görüşme" />

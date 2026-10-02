@@ -21,6 +21,10 @@ export async function POST(request: Request) {
   const email = String(body?.email ?? '').trim();
   const phone = body?.phone ? String(body.phone).trim() : null;
   const message = String(body?.message ?? '').trim();
+  // Opsiyonel: admin'in /admin/leads listesinde talebin nereden geldiğini
+  // ayırt edebilmesi için (örn. "mesaj" — profildeki "Mesaj At" butonu).
+  const rawSource = body?.source;
+  const source = typeof rawSource === 'string' && rawSource.trim() ? rawSource.trim().slice(0, 50) : null;
 
   if (!professional_id || !name || !email || !message) {
     return NextResponse.json({ error: 'missing_fields' }, { status: 400 });
@@ -33,7 +37,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await createLead({ professional_id, name, email, phone, message });
+    await createLead({ professional_id, name, email, phone, message, source });
   } catch (e: any) {
     return NextResponse.json(
       { error: 'server_error', detail: e?.message ?? null },

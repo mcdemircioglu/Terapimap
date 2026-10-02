@@ -109,6 +109,7 @@ export type Professional = {
   google_maps_url: string | null;
   instagram_url: string | null;
   user_id: string | null;
+  booking_tier: 'none' | 'level1' | 'full';
   documents: TherapistDocument[];
   created_at: string;
   updated_at: string;
