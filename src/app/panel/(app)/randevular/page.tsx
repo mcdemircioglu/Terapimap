@@ -46,7 +46,11 @@ export default async function PanelAppointmentsPage() {
 
   const nowIso = new Date().toISOString();
 
-  const [{ data: upcoming }, { data: past }, { count: rulesCountRaw }] = await Promise.all([
+  const [
+    { data: upcoming, error: upcomingError },
+    { data: past },
+    { count: rulesCountRaw, error: rulesError },
+  ] = await Promise.all([
     supabase
       .from('appointments')
       .select('id, client_name, client_email, client_phone, session_type, start_at, end_at, meeting_link, status')
@@ -66,6 +70,35 @@ export default async function PanelAppointmentsPage() {
       .select('id', { count: 'exact', head: true })
       .eq('professional_id', professional.id),
   ]);
+
+  // appointments/availability_rules tabloları henüz oluşturulmamışsa
+  // (migration çalıştırılmamışsa) Postgres "relation does not exist" hatası
+  // döner — bunu sessizce yutup boş liste göstermek yerine açıkça bildiriyoruz.
+  const dbError = upcomingError ?? rulesError;
+  if (dbError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-xl font-semibold text-brand-900">Randevular</h1>
+        </div>
+        <AppointmentsTabs active="list" />
+        <Card className="border-amber-200 bg-amber-50 p-6">
+          <h2 className="mb-2 text-lg font-semibold text-brand-900">
+            Veritabanı güncellemesi henüz yapılmamış
+          </h2>
+          <p className="text-sm text-brand-700">
+            Randevu sistemi için gereken tablolar veritabanında bulunamadı.
+            <code className="mx-1 rounded bg-white px-1.5 py-0.5 text-xs">
+              supabase/appointments_migration.sql
+            </code>
+            dosyasının Supabase → SQL Editor&#39;da çalıştırılması gerekiyor.
+          </p>
+          <p className="mt-2 text-xs text-brand-400">Teknik detay: {dbError.message}</p>
+        </Card>
+      </div>
+    );
+  }
+
   const hasRules = (rulesCountRaw ?? 0) > 0;
 
   return (

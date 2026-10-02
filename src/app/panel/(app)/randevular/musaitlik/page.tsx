@@ -12,11 +12,33 @@ export default async function PanelAvailabilityPage() {
 
   if (!user) redirect('/panel/giris');
 
-  const { data: professional } = await supabase
+  const { data: professional, error: professionalError } = await supabase
     .from('professionals')
     .select('id, meeting_link, session_duration_minutes, is_online, is_in_person')
     .eq('user_id', user.id)
     .maybeSingle();
+
+  // Yeni kolonlar (meeting_link, session_duration_minutes) henüz eklenmemişse
+  // Postgres "column does not exist" hatası döner ve professional null olur —
+  // bu durumu "profil bulunamadı" ile karıştırmayıp ayrı, anlaşılır bir mesaj
+  // gösteriyoruz (supabase/appointments_migration.sql çalıştırılmamış demektir).
+  if (professionalError) {
+    return (
+      <Card className="border-amber-200 bg-amber-50 p-6">
+        <h1 className="mb-2 text-lg font-semibold text-brand-900">
+          Veritabanı güncellemesi henüz yapılmamış
+        </h1>
+        <p className="text-sm text-brand-700">
+          Randevu sistemi için gereken tablolar/kolonlar veritabanında bulunamadı.
+          <code className="mx-1 rounded bg-white px-1.5 py-0.5 text-xs">
+            supabase/appointments_migration.sql
+          </code>
+          dosyasının Supabase → SQL Editor&#39;da çalıştırılması gerekiyor.
+        </p>
+        <p className="mt-2 text-xs text-brand-400">Teknik detay: {professionalError.message}</p>
+      </Card>
+    );
+  }
 
   if (!professional) {
     return (
