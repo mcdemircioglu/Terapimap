@@ -3,6 +3,7 @@ import { getServerClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { AppointmentsTabs } from '@/components/panel/AppointmentsTabs';
 import { CancelAppointmentButton } from '@/components/panel/CancelAppointmentButton';
+import { PendingAppointmentActions } from '@/components/panel/PendingAppointmentActions';
 
 function fmtDateTime(iso: string): string {
   try {
@@ -47,10 +48,17 @@ export default async function PanelAppointmentsPage() {
   const nowIso = new Date().toISOString();
 
   const [
+    { data: pending, error: pendingError },
     { data: upcoming, error: upcomingError },
     { data: past },
     { count: rulesCountRaw, error: rulesError },
   ] = await Promise.all([
+    supabase
+      .from('appointments')
+      .select('id, client_name, client_email, client_phone, session_type, start_at, end_at, meeting_link, status')
+      .eq('professional_id', professional.id)
+      .eq('status', 'pending')
+      .order('start_at', { ascending: true }),
     supabase
       .from('appointments')
       .select('id, client_name, client_email, client_phone, session_type, start_at, end_at, meeting_link, status')
@@ -62,6 +70,7 @@ export default async function PanelAppointmentsPage() {
       .from('appointments')
       .select('id, client_name, session_type, start_at, status')
       .eq('professional_id', professional.id)
+      .neq('status', 'pending')
       .or(`status.eq.cancelled,start_at.lt.${nowIso}`)
       .order('start_at', { ascending: false })
       .limit(20),
@@ -74,7 +83,7 @@ export default async function PanelAppointmentsPage() {
   // appointments/availability_rules tabloları henüz oluşturulmamışsa
   // (migration çalıştırılmamışsa) Postgres "relation does not exist" hatası
   // döner — bunu sessizce yutup boş liste göstermek yerine açıkça bildiriyoruz.
-  const dbError = upcomingError ?? rulesError;
+  const dbError = pendingError ?? upcomingError ?? rulesError;
   if (dbError) {
     return (
       <div className="space-y-6">
@@ -91,7 +100,11 @@ export default async function PanelAppointmentsPage() {
             <code className="mx-1 rounded bg-white px-1.5 py-0.5 text-xs">
               supabase/appointments_migration.sql
             </code>
-            dosyasının Supabase → SQL Editor&#39;da çalıştırılması gerekiyor.
+            (ve pending durumu için{' '}
+            <code className="mx-1 rounded bg-white px-1.5 py-0.5 text-xs">
+              appointments_pending_status.sql
+            </code>
+            ) dosyalarının Supabase → SQL Editor&#39;da çalıştırılması gerekiyor.
           </p>
           <p className="mt-2 text-xs text-brand-400">Teknik detay: {dbError.message}</p>
         </Card>
@@ -125,49 +138,92 @@ export default async function PanelAppointmentsPage() {
         </Card>
       )}
 
-      {!upcoming || upcoming.length === 0 ? (
-        <Card className="p-6">
-          <p className="text-sm text-brand-500">Yaklaşan randevunuz yok.</p>
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {upcoming.map((a) => (
-            <Card key={a.id} className="p-5">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-brand-900">{fmtDateTime(a.start_at)}</p>
-                  <p className="mt-1 text-sm text-brand-700">
-                    {a.client_name} ·{' '}
-                    <a href={`mailto:${a.client_email}`} className="hover:underline">
-                      {a.client_email}
-                    </a>
-                    {a.client_phone && (
-                      <>
-                        {' · '}
-                        <a href={`tel:${a.client_phone}`} className="hover:underline">
-                          {a.client_phone}
-                        </a>
-                      </>
-                    )}
-                  </p>
-                  <p className="mt-1 text-xs text-brand-500">
-                    {a.session_type === 'online' ? 'Online görüşme' : 'Yüz yüze görüşme'}
-                    {a.session_type === 'online' && a.meeting_link && (
-                      <>
-                        {' · '}
-                        <a href={a.meeting_link} target="_blank" rel="noopener noreferrer" className="underline">
-                          Görüşme linki
-                        </a>
-                      </>
-                    )}
-                  </p>
+      {pending && pending.length > 0 && (
+        <div>
+          <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-brand-700">
+            Onay Bekleyen Randevu Talepleri
+            <span className="rounded-full bg-accent-100 px-2 py-0.5 text-xs font-medium text-accent-800">
+              {pending.length}
+            </span>
+          </h2>
+          <div className="space-y-3">
+            {pending.map((a) => (
+              <Card key={a.id} className="border-accent-200 bg-accent-50/40 p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-brand-900">{fmtDateTime(a.start_at)}</p>
+                    <p className="mt-1 text-sm text-brand-700">
+                      {a.client_name} ·{' '}
+                      <a href={`mailto:${a.client_email}`} className="hover:underline">
+                        {a.client_email}
+                      </a>
+                      {a.client_phone && (
+                        <>
+                          {' · '}
+                          <a href={`tel:${a.client_phone}`} className="hover:underline">
+                            {a.client_phone}
+                          </a>
+                        </>
+                      )}
+                    </p>
+                    <p className="mt-1 text-xs text-brand-500">
+                      {a.session_type === 'online' ? 'Online görüşme' : 'Yüz yüze görüşme'}
+                    </p>
+                  </div>
+                  <PendingAppointmentActions appointmentId={a.id} />
                 </div>
-                <CancelAppointmentButton appointmentId={a.id} />
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))}
+          </div>
         </div>
       )}
+
+      <div>
+        <h2 className="mb-3 text-sm font-semibold text-brand-700">Yaklaşan Randevular</h2>
+        {!upcoming || upcoming.length === 0 ? (
+          <Card className="p-6">
+            <p className="text-sm text-brand-500">Yaklaşan onaylı randevunuz yok.</p>
+          </Card>
+        ) : (
+          <div className="space-y-3">
+            {upcoming.map((a) => (
+              <Card key={a.id} className="p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-brand-900">{fmtDateTime(a.start_at)}</p>
+                    <p className="mt-1 text-sm text-brand-700">
+                      {a.client_name} ·{' '}
+                      <a href={`mailto:${a.client_email}`} className="hover:underline">
+                        {a.client_email}
+                      </a>
+                      {a.client_phone && (
+                        <>
+                          {' · '}
+                          <a href={`tel:${a.client_phone}`} className="hover:underline">
+                            {a.client_phone}
+                          </a>
+                        </>
+                      )}
+                    </p>
+                    <p className="mt-1 text-xs text-brand-500">
+                      {a.session_type === 'online' ? 'Online görüşme' : 'Yüz yüze görüşme'}
+                      {a.session_type === 'online' && a.meeting_link && (
+                        <>
+                          {' · '}
+                          <a href={a.meeting_link} target="_blank" rel="noopener noreferrer" className="underline">
+                            Görüşme linki
+                          </a>
+                        </>
+                      )}
+                    </p>
+                  </div>
+                  <CancelAppointmentButton appointmentId={a.id} />
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
 
       {past && past.length > 0 && (
         <div>

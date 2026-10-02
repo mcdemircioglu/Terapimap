@@ -4,7 +4,20 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 
-export function CancelAppointmentButton({ appointmentId }: { appointmentId: string }) {
+type Props = {
+  appointmentId: string;
+  /** Pending (onay bekleyen) bir talebi reddederken "Reddet" göstermek için. */
+  label?: string;
+  confirmLabel?: string;
+  errorFallback?: string;
+};
+
+export function CancelAppointmentButton({
+  appointmentId,
+  label = 'Randevuyu iptal et',
+  confirmLabel = 'Evet, iptal et',
+  errorFallback = 'İptal edilemedi.',
+}: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [confirming, setConfirming] = useState(false);
@@ -17,7 +30,7 @@ export function CancelAppointmentButton({ appointmentId }: { appointmentId: stri
       const res = await fetch(`/api/panel/appointments/${appointmentId}/cancel`, { method: 'POST' });
       const d = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(d.error ?? 'İptal edilemedi.');
+        setError(d.error ?? errorFallback);
         return;
       }
       router.refresh();
@@ -34,7 +47,7 @@ export function CancelAppointmentButton({ appointmentId }: { appointmentId: stri
       <div className="flex items-center gap-2">
         <span className="text-xs text-brand-600">Emin misiniz?</span>
         <Button size="sm" variant="primary" onClick={handleCancel} disabled={loading}>
-          {loading ? 'İptal ediliyor…' : 'Evet, iptal et'}
+          {loading ? 'İşleniyor…' : confirmLabel}
         </Button>
         <Button size="sm" variant="ghost" onClick={() => setConfirming(false)} disabled={loading}>
           Vazgeç
@@ -46,7 +59,7 @@ export function CancelAppointmentButton({ appointmentId }: { appointmentId: stri
   return (
     <div>
       <Button size="sm" variant="outline" onClick={() => setConfirming(true)}>
-        Randevuyu iptal et
+        {label}
       </Button>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>

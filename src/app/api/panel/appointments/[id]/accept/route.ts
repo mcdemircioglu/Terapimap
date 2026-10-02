@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getServerClient } from '@/lib/supabase/server';
-import { sendAppointmentCancelledToClient } from '@/lib/email';
+import { sendAppointmentConfirmedToClient } from '@/lib/email';
 
 /**
- * POST /api/panel/appointments/[id]/cancel
- * Terapistin kendi randevusunu iptal etmesi (onay bekleyen "pending" bir
- * talebi reddetmek de aynı uçtan geçer — ikisi de 'cancelled' olur).
- * professionals.update deseninin aksine burada RLS'e güveniyoruz
- * (oturumlu istemci, service-role DEĞİL): panel_leads_rls.sql'deki
- * "yalnızca status/cancelled_at kolonunu, yalnızca kendi satırında"
- * deseniyle aynı — appointments_migration.sql'de tanımlı.
+ * POST /api/panel/appointments/[id]/accept
+ * Terapistin onay bekleyen ("pending") bir randevu talebini onaylaması.
+ * Sadece pending → confirmed geçişine izin verir (zaten iptal edilmiş
+ * veya daha önce onaylanmış bir kayda tekrar uygulanamaz). Mevcut
+ * "status/cancelled_at" kolon izniyle aynı RLS politikasını kullanıyor
+ * (appointments_migration.sql) — status='confirmed' bu granted kolonlardan
+ * biri olduğu için ayrı bir politika gerekmiyor.
  */
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   const supabase = getServerClient();
@@ -23,9 +23,9 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   const { data: appointment, error } = await supabase
     .from('appointments')
-    .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
+    .update({ status: 'confirmed' })
     .eq('id', params.id)
-    .neq('status', 'cancelled')
+    .eq('status', 'pending')
     .select('id, client_name, client_email, session_type, start_at, end_at, meeting_link, professional_id')
     .maybeSingle();
 
@@ -33,7 +33,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
   if (!appointment) {
-    return NextResponse.json({ error: 'not_found_or_already_cancelled' }, { status: 404 });
+    return NextResponse.json({ error: 'not_found_or_already_handled' }, { status: 404 });
   }
 
   try {
@@ -43,7 +43,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       .eq('id', appointment.professional_id)
       .maybeSingle();
 
-    await sendAppointmentCancelledToClient({
+    await sendAppointmentConfirmedToClient({
       appointment: {
         client_name: appointment.client_name,
         client_email: appointment.client_email,
@@ -61,7 +61,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
       },
     });
   } catch (e) {
-    console.error('appointment cancelled email failed', e);
+    console.error('appointment confirmed email failed', e);
   }
 
   return NextResponse.json({ ok: true });

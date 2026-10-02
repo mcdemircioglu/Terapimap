@@ -655,45 +655,52 @@ export type AppointmentToTherapistInput = {
   professional: AppointmentProfessionalInfo & { email: string };
 };
 
-export async function sendAppointmentToTherapist({ appointment, professional }: AppointmentToTherapistInput) {
+/**
+ * Terapiste: yeni bir randevu TALEBİ geldi, onayı bekliyor (artık rezervasyon
+ * anında otomatik onaylanmıyor — bkz. appointments.status='pending').
+ */
+export async function sendAppointmentRequestToTherapist({ appointment, professional }: AppointmentToTherapistInput) {
   const when = fmtAppointmentRange(appointment.start_at, appointment.end_at);
   const typeLabel = appointment.session_type === 'online' ? 'Online görüşme' : 'Yüz yüze görüşme';
+  const panelUrl = `${BASE}/panel/randevular`;
 
   const html = layout(
-    'YENİ RANDEVU ALINDI',
+    'ONAYINIZI BEKLEYEN RANDEVU TALEBİ',
     `<p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
       Sayın ${escapeHtml(professional.name)},<br>
-      Terapimap profiliniz üzerinden bir danışan, müsait saatlerinizden birini seçerek
-      randevu aldı. Randevu otomatik olarak onaylanmıştır.
+      Terapimap profiliniz üzerinden bir danışan, müsait saatlerinizden birini
+      seçerek randevu talebinde bulundu. Bu randevunun kesinleşmesi için
+      panelinizden <strong>onaylamanız</strong> gerekiyor.
     </p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
       style="background:${C.bg};border:1px solid ${C.border};border-radius:10px;">
       ${infoRow('Tarih / Saat', `<strong>${escapeHtml(when)}</strong>`)}
       ${infoRow('Görüşme Türü', escapeHtml(typeLabel))}
-      ${appointment.session_type === 'online' && appointment.meeting_link
-        ? infoRow('Görüşme Linki', `<a href="${escapeHtml(appointment.meeting_link)}" style="color:${C.primary};">${escapeHtml(appointment.meeting_link)}</a>`)
-        : ''}
       ${infoRow('Danışan', escapeHtml(appointment.client_name))}
       ${infoRow('E-posta', `<a href="mailto:${escapeHtml(appointment.client_email)}" style="color:${C.primary};">${escapeHtml(appointment.client_email)}</a>`)}
       ${appointment.client_phone ? infoRow('Telefon', escapeHtml(appointment.client_phone)) : ''}
     </table>
+    <div style="margin-top:22px;">
+      ${button(panelUrl, 'Panelden Onayla / Reddet')}
+    </div>
     <p style="margin:16px 0 0;font-size:13px;color:${C.text};line-height:1.6;">
-      Randevuyu panelinizdeki <strong>Randevular</strong> bölümünden görüntüleyebilir,
-      gerekirse iptal edebilirsiniz.
+      Danışana ancak siz onayladıktan sonra onay bilgisi gider; reddederseniz
+      danışana bilgi verilir ve saat tekrar müsait hale gelir.
     </p>`,
   );
 
   const text = [
     `Sayın ${professional.name},`,
     '',
-    'Terapimap üzerinden yeni bir randevu alındı (otomatik onaylandı):',
+    'Terapimap üzerinden onayınızı bekleyen yeni bir randevu talebi var:',
     '',
     `Tarih / Saat: ${when}`,
     `Görüşme Türü: ${typeLabel}`,
-    appointment.session_type === 'online' && appointment.meeting_link ? `Görüşme Linki: ${appointment.meeting_link}` : null,
     `Danışan: ${appointment.client_name}`,
     `E-posta: ${appointment.client_email}`,
     appointment.client_phone ? `Telefon: ${appointment.client_phone}` : null,
+    '',
+    `Onaylamak/reddetmek için: ${panelUrl}`,
     '',
     'Terapimap — terapimap.com',
   ]
@@ -704,7 +711,7 @@ export async function sendAppointmentToTherapist({ appointment, professional }: 
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: professional.email,
     replyTo: appointment.client_email,
-    subject: `Yeni randevu — ${appointment.client_name} (${fmtAppointmentRange(appointment.start_at, appointment.end_at)})`,
+    subject: `Onayınızı bekleyen randevu talebi — ${appointment.client_name} (${when})`,
     html,
     text,
   });
@@ -715,7 +722,52 @@ export type AppointmentToClientInput = {
   professional: AppointmentProfessionalInfo;
 };
 
-export async function sendAppointmentConfirmationToClient({ appointment, professional }: AppointmentToClientInput) {
+/** Danışana: randevu talebi alındı, terapist onayını bekliyor. */
+export async function sendAppointmentPendingToClient({ appointment, professional }: AppointmentToClientInput) {
+  const when = fmtAppointmentRange(appointment.start_at, appointment.end_at);
+  const typeLabel = appointment.session_type === 'online' ? 'Online görüşme' : 'Yüz yüze görüşme';
+
+  const html = layout(
+    'RANDEVU TALEBİNİZ ALINDI',
+    `<p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
+      Merhaba ${escapeHtml(appointment.client_name)},<br>
+      <strong>${escapeHtml(professional.name)}</strong> ile aşağıdaki randevu talebiniz
+      alındı. Terapist onayladığında size ayrıca bir e-posta ile bilgi verilecek.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+      style="background:${C.bg};border:1px solid ${C.border};border-radius:10px;">
+      ${infoRow('Tarih / Saat', `<strong>${escapeHtml(when)}</strong>`)}
+      ${infoRow('Görüşme Türü', escapeHtml(typeLabel))}
+    </table>
+    <p style="margin:16px 0 0;font-size:13px;color:${C.text};line-height:1.6;">
+      Bu bir ön rezervasyondur, henüz kesinleşmemiştir.
+    </p>`,
+  );
+
+  const text = [
+    `Merhaba ${appointment.client_name},`,
+    '',
+    `${professional.name} ile randevu talebiniz alındı (henüz kesinleşmedi):`,
+    '',
+    `Tarih / Saat: ${when}`,
+    `Görüşme Türü: ${typeLabel}`,
+    '',
+    'Terapist onayladığında size ayrıca e-posta ile bilgi verilecek.',
+    '',
+    'Terapimap — terapimap.com',
+  ].join('\n');
+
+  await getTransport().sendMail({
+    from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
+    to: appointment.client_email,
+    subject: `Randevu talebiniz alındı — ${when}`,
+    html,
+    text,
+  });
+}
+
+/** Danışana: terapist randevuyu onayladı, artık kesinleşti. */
+export async function sendAppointmentConfirmedToClient({ appointment, professional }: AppointmentToClientInput) {
   const when = fmtAppointmentRange(appointment.start_at, appointment.end_at);
   const typeLabel = appointment.session_type === 'online' ? 'Online görüşme' : 'Yüz yüze görüşme';
 
@@ -723,7 +775,7 @@ export async function sendAppointmentConfirmationToClient({ appointment, profess
     'RANDEVUNUZ ONAYLANDI',
     `<p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
       Merhaba ${escapeHtml(appointment.client_name)},<br>
-      <strong>${escapeHtml(professional.name)}</strong> ile randevunuz onaylandı.
+      <strong>${escapeHtml(professional.name)}</strong> randevunuzu onayladı — artık kesinleşti.
     </p>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
       style="background:${C.bg};border:1px solid ${C.border};border-radius:10px;">
@@ -742,7 +794,7 @@ export async function sendAppointmentConfirmationToClient({ appointment, profess
   const text = [
     `Merhaba ${appointment.client_name},`,
     '',
-    `${professional.name} ile randevunuz onaylandı:`,
+    `${professional.name} randevunuzu onayladı:`,
     '',
     `Tarih / Saat: ${when}`,
     `Görüşme Türü: ${typeLabel}`,
@@ -759,6 +811,42 @@ export async function sendAppointmentConfirmationToClient({ appointment, profess
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: appointment.client_email,
     subject: `Randevunuz onaylandı — ${when}`,
+    html,
+    text,
+  });
+}
+
+/** Danışana: randevu iptal edildi / reddedildi. */
+export async function sendAppointmentCancelledToClient({ appointment, professional }: AppointmentToClientInput) {
+  const when = fmtAppointmentRange(appointment.start_at, appointment.end_at);
+
+  const html = layout(
+    'RANDEVUNUZ İPTAL EDİLDİ',
+    `<p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
+      Merhaba ${escapeHtml(appointment.client_name)},<br>
+      <strong>${escapeHtml(professional.name)}</strong> ile
+      <strong>${escapeHtml(when)}</strong> tarihli randevunuz iptal edildi.
+    </p>
+    <p style="margin:0;font-size:13px;color:${C.text};line-height:1.6;">
+      Dilerseniz terapistin profil sayfasından yeni bir randevu talebinde
+      bulunabilirsiniz.
+    </p>`,
+  );
+
+  const text = [
+    `Merhaba ${appointment.client_name},`,
+    '',
+    `${professional.name} ile ${when} tarihli randevunuz iptal edildi.`,
+    '',
+    'Dilerseniz terapistin profil sayfasından yeni bir randevu talebinde bulunabilirsiniz.',
+    '',
+    'Terapimap — terapimap.com',
+  ].join('\n');
+
+  await getTransport().sendMail({
+    from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
+    to: appointment.client_email,
+    subject: `Randevunuz iptal edildi — ${when}`,
     html,
     text,
   });

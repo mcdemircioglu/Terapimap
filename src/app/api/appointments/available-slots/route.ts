@@ -57,7 +57,7 @@ export async function GET(request: Request) {
       .from('appointments')
       .select('start_at, end_at')
       .eq('professional_id', professionalId)
-      .eq('status', 'confirmed')
+      .neq('status', 'cancelled')
       .gte('start_at', nowIso),
   ]);
 

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 import { computeAvailableSlots } from '@/lib/appointments/slots';
 import { addMinutesIso, utcIsoToIstanbulLocal } from '@/lib/appointments/time';
-import { sendAppointmentToTherapist, sendAppointmentConfirmationToClient } from '@/lib/email';
+import { sendAppointmentRequestToTherapist, sendAppointmentPendingToClient } from '@/lib/email';
 
 const MIN_LEAD_MINUTES = 120;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       .from('appointments')
       .select('start_at, end_at')
       .eq('professional_id', professionalId)
-      .eq('status', 'confirmed')
+      .neq('status', 'cancelled')
       .gte('start_at', nowIso),
   ]);
 
@@ -128,8 +128,9 @@ export async function POST(request: Request) {
       start_at: new Date(startAt).toISOString(),
       end_at: endAt,
       meeting_link: meetingLink,
+      status: 'pending',
     })
-    .select('id, start_at, end_at, session_type, meeting_link')
+    .select('id, start_at, end_at, session_type, meeting_link, status')
     .single();
 
   if (insertError) {
@@ -143,7 +144,7 @@ export async function POST(request: Request) {
 
   try {
     await Promise.all([
-      sendAppointmentToTherapist({
+      sendAppointmentRequestToTherapist({
         appointment: {
           client_name: name,
           client_email: email,
@@ -162,7 +163,7 @@ export async function POST(request: Request) {
           city: professional.city,
         },
       }),
-      sendAppointmentConfirmationToClient({
+      sendAppointmentPendingToClient({
         appointment: {
           client_name: name,
           client_email: email,
@@ -183,7 +184,7 @@ export async function POST(request: Request) {
   } catch (e) {
     // Randevu zaten kaydedildi; e-posta gönderimindeki bir hata rezervasyonu
     // iptal etmemeli. Sunucu loguna düşsün yeterli.
-    console.error('appointment confirmation email failed', e);
+    console.error('appointment request email failed', e);
   }
 
   // Admin'in /admin/leads üzerinden "panelden kaç randevu gitti, kime gitti"
@@ -209,7 +210,7 @@ export async function POST(request: Request) {
       name,
       email,
       phone,
-      message: `Danışan, randevu takviminden doğrudan randevu aldı: ${whenLabel} (${typeLabel}).`,
+      message: `Danışan, randevu takviminden randevu talebinde bulundu (terapist onayı bekleniyor): ${whenLabel} (${typeLabel}).`,
       source: 'randevu_takvimi',
       status: 'contacted',
       sent_at: new Date().toISOString(),
