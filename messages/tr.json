@@ -177,7 +177,12 @@
     "error": "Randevu oluşturulamadı. Lütfen tekrar deneyin.",
     "validation": "Lütfen tüm zorunlu alanları doldurun.",
     "noSlots": "Şu anda müsait randevu saati bulunmuyor.",
-    "moreDays": "Daha fazla gün göster"
+    "moreDays": "Daha fazla gün göster",
+    "today": "Bugün",
+    "tomorrow": "Yarın",
+    "showMoreTimes": "Daha fazla saat göster",
+    "previousDays": "Önceki günler",
+    "nextDays": "Sonraki günler"
   },
   "footer": {
     "rights": "Tüm hakları saklıdır.",

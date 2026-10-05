@@ -91,6 +91,29 @@ function fmtFullDate(dateStr: string, locale: string): string {
   return d.toLocaleDateString(locale, { weekday: 'long', day: '2-digit', month: 'long', timeZone: 'UTC' });
 }
 
+/** İstanbul yerel tarihine göre bugün/yarın "YYYY-MM-DD" anahtarları. */
+function istanbulTodayTomorrowKeys(): { today: string; tomorrow: string } {
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+  const t = new Date();
+  t.setDate(t.getDate() + 1);
+  const tomorrow = t.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
+  return { today, tomorrow };
+}
+
+/** Masaüstü sütun başlığı: bugün/yarın için özel etiket, diğerlerinde kısa gün adı. */
+function fmtColumnHeader(
+  dateStr: string,
+  locale: string,
+  todayKey: string,
+  tomorrowKey: string,
+  todayLabel: string,
+  tomorrowLabel: string,
+): { label: string; day: string; month: string } {
+  const chip = fmtDateChip(dateStr, locale);
+  const label = dateStr === todayKey ? todayLabel : dateStr === tomorrowKey ? tomorrowLabel : chip.weekday;
+  return { label, day: chip.day, month: chip.month };
+}
+
 export default function AppointmentBookingButton({ professionalId, label, subtitle, closeLabel, className = '' }: Props) {
   const t = useTranslations('booking');
   const locale = useLocale();
@@ -102,6 +125,11 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
   const [fetchState, setFetchState] = useState<FetchState>('idle');
   const [data, setData] = useState<SlotsResponse | null>(null);
   const [visibleDays, setVisibleDays] = useState(7);
+  // Masaüstü (≥md): DoktorTakvimi tarzı çok-günlü sütun ızgarası — bir
+  // seferde desktopColumns kadar gün gösterilip ok tuşlarıyla sayfalanır.
+  // Mobilde değişiklik yok: eski tek-günlük chip + liste akışı korunuyor.
+  const [desktopWindowStart, setDesktopWindowStart] = useState(0);
+  const [showAllTimes, setShowAllTimes] = useState(false);
 
   const [step, setStep] = useState<Step>('pick');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -165,6 +193,8 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
     setSubmitStatus('idle');
     setSubmitError(null);
     setVisibleDays(7);
+    setDesktopWindowStart(0);
+    setShowAllTimes(false);
   }
 
   function handleCloseAndReset() {
@@ -219,6 +249,16 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
   const shownDateKeys = dateKeys.slice(0, visibleDays);
   const timesForSelectedDate = selectedDate && data ? data.slots[selectedDate] ?? [] : [];
   const needsSessionTypeChoice = data?.isOnline && data?.hasMeetingLink && data?.isInPerson;
+
+  // ── Masaüstü çok-günlü ızgara (yalnızca step === 'pick' sırasında kullanılır) ──
+  const DESKTOP_COLUMNS = 4;
+  const DESKTOP_TIMES_CAP = 4;
+  const { today: todayKey, tomorrow: tomorrowKey } = istanbulTodayTomorrowKeys();
+  const desktopDateKeys = dateKeys.slice(desktopWindowStart, desktopWindowStart + DESKTOP_COLUMNS);
+  const canGoNextDays = desktopWindowStart + DESKTOP_COLUMNS < dateKeys.length;
+  const canGoPrevDays = desktopWindowStart > 0;
+  const desktopHasHiddenTimes =
+    !showAllTimes && desktopDateKeys.some((date) => (data?.slots[date]?.length ?? 0) > DESKTOP_TIMES_CAP);
 
   let body: React.ReactNode;
 
@@ -334,63 +374,155 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
     // step === 'pick'
     body = (
       <div>
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-brand-400">{t('chooseDate')}</p>
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {shownDateKeys.map((date) => {
-            const chip = fmtDateChip(date, locale);
-            const active = date === selectedDate;
-            return (
-              <button
-                key={date}
-                type="button"
-                onClick={() => {
-                  setSelectedDate(date);
-                  setSelectedSlot(null);
-                }}
-                className={`flex h-16 w-14 flex-shrink-0 flex-col items-center justify-center rounded-xl border text-xs font-medium transition-colors ${
-                  active
-                    ? 'border-brand-600 bg-brand-600 text-white'
-                    : 'border-brand-200 bg-white text-brand-700 hover:bg-brand-50'
-                }`}
-              >
-                <span className="capitalize">{chip.weekday}</span>
-                <span className="mt-0.5 text-sm font-semibold">{chip.day}</span>
-                <span className="capitalize">{chip.month}</span>
-              </button>
-            );
-          })}
-          {dateKeys.length > visibleDays && (
-            <button
-              type="button"
-              onClick={() => setVisibleDays((d) => d + 7)}
-              className="flex h-16 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-dashed border-brand-200 text-xs text-brand-500 hover:bg-brand-50"
-            >
-              +{Math.min(7, dateKeys.length - visibleDays)}
-            </button>
-          )}
-        </div>
-
-        {selectedDate && (
-          <div className="mt-5">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wide text-brand-400">{t('chooseTime')}</p>
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-              {timesForSelectedDate.map((iso) => (
+        {/* Mobil / dar ekran (<md): eski tek-günlük chip + saat listesi akışı — değişmedi. */}
+        <div className="md:hidden">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-brand-400">{t('chooseDate')}</p>
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {shownDateKeys.map((date) => {
+              const chip = fmtDateChip(date, locale);
+              const active = date === selectedDate;
+              return (
                 <button
-                  key={iso}
+                  key={date}
                   type="button"
-                  onClick={() => setSelectedSlot(iso)}
-                  className={`h-10 rounded-lg border text-sm font-medium transition-colors ${
-                    selectedSlot === iso
+                  onClick={() => {
+                    setSelectedDate(date);
+                    setSelectedSlot(null);
+                  }}
+                  className={`flex h-16 w-14 flex-shrink-0 flex-col items-center justify-center rounded-xl border text-xs font-medium transition-colors ${
+                    active
                       ? 'border-brand-600 bg-brand-600 text-white'
                       : 'border-brand-200 bg-white text-brand-700 hover:bg-brand-50'
                   }`}
                 >
-                  {fmtTime(iso)}
+                  <span className="capitalize">{chip.weekday}</span>
+                  <span className="mt-0.5 text-sm font-semibold">{chip.day}</span>
+                  <span className="capitalize">{chip.month}</span>
                 </button>
-              ))}
+              );
+            })}
+            {dateKeys.length > visibleDays && (
+              <button
+                type="button"
+                onClick={() => setVisibleDays((d) => d + 7)}
+                className="flex h-16 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-dashed border-brand-200 text-xs text-brand-500 hover:bg-brand-50"
+              >
+                +{Math.min(7, dateKeys.length - visibleDays)}
+              </button>
+            )}
+          </div>
+
+          {selectedDate && (
+            <div className="mt-5">
+              <p className="mb-2 text-xs font-medium uppercase tracking-wide text-brand-400">{t('chooseTime')}</p>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {timesForSelectedDate.map((iso) => (
+                  <button
+                    key={iso}
+                    type="button"
+                    onClick={() => setSelectedSlot(iso)}
+                    className={`h-10 rounded-lg border text-sm font-medium transition-colors ${
+                      selectedSlot === iso
+                        ? 'border-brand-600 bg-brand-600 text-white'
+                        : 'border-brand-200 bg-white text-brand-700 hover:bg-brand-50'
+                    }`}
+                  >
+                    {fmtTime(iso)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Masaüstü (≥md): çok-günlü sütun ızgarası — her sütun bir gün, altında o
+            günün saatleri; ok tuşlarıyla 4'er gün sayfalanır (DoktorTakvimi
+            referansıyla aynı desen). Tarih "seçimi" ayrı bir adım değil — doğrudan
+            bir saate tıklamak hem günü hem saati seçer. */}
+        <div className="hidden md:block">
+          <div className="flex items-start gap-2">
+            <div
+              className="grid flex-1 gap-3"
+              style={{ gridTemplateColumns: `repeat(${Math.max(desktopDateKeys.length, 1)}, minmax(0, 1fr))` }}
+            >
+              {desktopDateKeys.map((date) => {
+                const header = fmtColumnHeader(date, locale, todayKey, tomorrowKey, t('today'), t('tomorrow'));
+                const times = data?.slots[date] ?? [];
+                const shownTimes = showAllTimes ? times : times.slice(0, DESKTOP_TIMES_CAP);
+                return (
+                  <div key={date}>
+                    <div className="text-center">
+                      <p className="text-sm font-semibold capitalize text-brand-900">{header.label}</p>
+                      <p className="text-xs capitalize text-brand-500">
+                        {header.day} {header.month}
+                      </p>
+                    </div>
+                    <div className="mt-3 space-y-1.5">
+                      {shownTimes.map((iso) => {
+                        const active = selectedSlot === iso;
+                        return (
+                          <button
+                            key={iso}
+                            type="button"
+                            onClick={() => {
+                              setSelectedDate(date);
+                              setSelectedSlot(iso);
+                            }}
+                            className={`h-10 w-full rounded-lg border text-sm font-medium transition-colors ${
+                              active
+                                ? 'border-brand-600 bg-brand-600 text-white'
+                                : 'border-brand-200 bg-white text-brand-700 hover:bg-brand-50'
+                            }`}
+                          >
+                            {fmtTime(iso)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-shrink-0 flex-col gap-2 pt-7">
+              <button
+                type="button"
+                onClick={() => setDesktopWindowStart((w) => Math.max(0, w - DESKTOP_COLUMNS))}
+                disabled={!canGoPrevDays}
+                aria-label={t('previousDays')}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-200 text-brand-600 transition-colors hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDesktopWindowStart((w) => w + DESKTOP_COLUMNS)}
+                disabled={!canGoNextDays}
+                aria-label={t('nextDays')}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-brand-200 text-brand-600 transition-colors hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
-        )}
+
+          {desktopHasHiddenTimes && (
+            <button
+              type="button"
+              onClick={() => setShowAllTimes(true)}
+              className="mt-4 flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-800"
+            >
+              {t('showMoreTimes')}
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+          )}
+        </div>
 
         <Button
           type="button"
@@ -406,6 +538,10 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
 
   const modalTitle = fetchState === 'empty' || fetchState === 'error' ? label : t('cta');
   const modalSubtitle = fetchState === 'empty' || fetchState === 'error' ? subtitle : t('subtitle');
+  // Masaüstü çok-günlü ızgara daha geniş yer istiyor — yalnızca tarih/saat
+  // seçim adımında modalı genişlet, diğer adımlarda (form/success/empty) eski
+  // dar genişlik korunur.
+  const modalMaxWidthClass = step === 'pick' && fetchState === 'ready' ? 'max-w-md md:max-w-2xl' : 'max-w-md';
 
   return (
     <>
@@ -432,7 +568,7 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
               onClick={handleCloseAndReset}
               aria-hidden="true"
             />
-            <div className="relative flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+            <div className={`relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-2xl bg-white shadow-xl transition-[max-width] ${modalMaxWidthClass}`}>
               <div className="flex flex-shrink-0 items-start justify-between gap-4 p-6 pb-4 md:p-7 md:pb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-brand-900">{modalTitle}</h3>

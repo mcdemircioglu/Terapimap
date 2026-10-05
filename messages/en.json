@@ -177,7 +177,12 @@
     "error": "Couldn't create the appointment. Please try again.",
     "validation": "Please fill in all required fields.",
     "noSlots": "No available appointment times right now.",
-    "moreDays": "Show more days"
+    "moreDays": "Show more days",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "showMoreTimes": "Show more times",
+    "previousDays": "Previous days",
+    "nextDays": "Next days"
   },
   "footer": {
     "rights": "All rights reserved.",
