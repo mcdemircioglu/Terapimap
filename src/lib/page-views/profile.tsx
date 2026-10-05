@@ -17,7 +17,6 @@ import MeetingInfoCard from '@/components/therapist/MeetingInfoCard';
 import NearbyTherapistLinks from '@/components/therapist/NearbyTherapistLinks';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { GlobeIcon } from '@/components/ui/icons';
 import Avatar from '@/components/ui/Avatar';
 import { getTherapistBySlug } from '@/lib/queries';
 import { getCitySlug } from '@/lib/cities';
@@ -358,17 +357,6 @@ export async function ProfileDetail({
               </span>
             </Link>
 
-            {therapist.website_url && (
-              <a
-                href={therapist.website_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-1 text-sm text-gray-400 transition-colors hover:text-brand-600"
-              >
-                <GlobeIcon className="h-4 w-4 flex-shrink-0" />
-                {tDetail('visitWebsite')}
-              </a>
-            )}
           </div>
 
           {/* Randevu talebi — masaüstünde sidebar'da sticky buton (tıklayınca form modalda açılır) */}

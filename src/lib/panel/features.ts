@@ -11,7 +11,6 @@ export type PanelFeatureKey =
   | 'leads'
   | 'blog'
   | 'appointments'
-  | 'miniSite'
   | 'analytics'
   | 'settings';
 
@@ -22,7 +21,6 @@ export const PANEL_FEATURES: Record<PanelFeatureKey, boolean> = {
   settings: true, // Adım 8
   blog: true, // Faz 1 — Blog Yazılarım
   appointments: true, // Faz 2 — panel tarafı (müsaitlik + liste) hazır; danışan tarafı booking akışı Faz 2b'de eklenecek
-  miniSite: false, // Faz 4
   analytics: false, // Faz 2/3
 };
 
@@ -40,6 +38,5 @@ export const PANEL_NAV_ITEMS: PanelNavItem[] = [
   { key: 'blog', label: 'Blog Yazılarım', href: '/panel/blog', icon: 'pen' },
   { key: 'appointments', label: 'Randevular', href: '/panel/randevular', icon: 'calendar' },
   { key: 'analytics', label: 'Performans', href: '/panel/performans', icon: 'chart' },
-  { key: 'miniSite', label: 'Web Sitem', href: '/panel/site', icon: 'globe' },
   { key: 'settings', label: 'Ayarlar', href: '/panel/ayarlar', icon: 'settings' },
 ];
