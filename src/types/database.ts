@@ -168,6 +168,39 @@ export type VerificationRequestWithProfessional = VerificationRequest & {
 };
 
 // ---------------------------------------------------------------------
+// Native danışan değerlendirme sistemi (reviews)
+// ---------------------------------------------------------------------
+
+export type ReviewStatus = 'pending' | 'approved' | 'rejected';
+
+export type Review = {
+  id: string;
+  professional_id: string;
+  reviewer_name: string;
+  /** Herkese gösterilmez — sadece doğrulama/moderasyon için saklanır. */
+  reviewer_email: string;
+  is_anonymous: boolean;
+  rating: number;
+  comment: string;
+  /** Terapiste ait "confirmed" bir randevunun e-postasıyla eşleşirse true. */
+  is_verified: boolean;
+  status: ReviewStatus;
+  admin_note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Public tarafta gösterilecek, kişisel verisi maskelenmiş yorum görünümü. */
+export type PublicReview = {
+  id: string;
+  displayName: string;
+  rating: number;
+  comment: string;
+  is_verified: boolean;
+  created_at: string;
+};
+
+// ---------------------------------------------------------------------
 // Psikoloji Rehberi — articles
 // ---------------------------------------------------------------------
 

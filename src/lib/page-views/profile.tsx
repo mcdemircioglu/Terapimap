@@ -12,13 +12,14 @@ import Container from '@/components/Container';
 import JsonLd from '@/components/JsonLd';
 import AppointmentBookingButton from '@/components/therapist/AppointmentBookingButton';
 import DocumentsCard from '@/components/therapist/DocumentsCard';
+import ReviewsCard from '@/components/therapist/ReviewsCard';
 import LocationCard from '@/components/therapist/LocationCard';
 import MeetingInfoCard from '@/components/therapist/MeetingInfoCard';
 import NearbyTherapistLinks from '@/components/therapist/NearbyTherapistLinks';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import Avatar from '@/components/ui/Avatar';
-import { getTherapistBySlug } from '@/lib/queries';
+import { getApprovedReviewsForProfessional, getTherapistBySlug } from '@/lib/queries';
 import { getCitySlug } from '@/lib/cities';
 import { getResolvedMapsData } from '@/lib/maps';
 import { absUrl, buildTherapistSchema, buildBreadcrumbSchema, buildFaqSchema } from '@/lib/schema';
@@ -156,10 +157,12 @@ export async function ProfileDetail({
   // google_maps_url'i bir kez çözümle (kısa link genişletme + place_id
   // sayfasından koordinat kazıma; sonuç 30 gün cache'lenir) — hem JSON-LD
   // geo hem de Konum kartındaki embed bundan beslenir.
-  const resolvedMaps =
+  const [resolvedMaps, reviewsData] = await Promise.all([
     therapist.is_in_person && therapist.google_maps_url
-      ? await getResolvedMapsData(therapist.google_maps_url)
-      : null;
+      ? getResolvedMapsData(therapist.google_maps_url)
+      : Promise.resolve(null),
+    getApprovedReviewsForProfessional(therapist.id),
+  ]);
 
   const breadcrumbLabel =
     locale === 'tr'
@@ -301,6 +304,15 @@ export async function ProfileDetail({
 
             {/* 📎 Belgeler — yalnızca terapist en az bir belge yüklediyse gösterilir */}
             <DocumentsCard documents={therapist.documents} locale={locale} />
+
+            {/* ⭐ Danışan Değerlendirmeleri — admin onaylı yorumlar + Değerlendirme Yaz CTA */}
+            <ReviewsCard
+              professionalId={therapist.id}
+              reviews={reviewsData.reviews}
+              average={reviewsData.average}
+              count={reviewsData.count}
+              locale={locale}
+            />
 
             {/* Yakındaki Terapistler — internal linking */}
             <NearbyTherapistLinks therapist={therapist} locale={locale} />

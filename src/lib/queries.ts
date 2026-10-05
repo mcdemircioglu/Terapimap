@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache';
-import { getPublicClient } from './supabase/server';
+import { getPublicClient, getServiceClient } from './supabase/server';
 import { getCityName, getCitySlug } from './cities';
 import type {
   Professional,
@@ -8,6 +8,7 @@ import type {
   Specialty,
   PsychologyTest,
   PsychologyTestListItem,
+  PublicReview,
 } from '@/types/database';
 
 // ---------------------------------------------------------------------
@@ -580,6 +581,90 @@ export async function createTestSubmission(input: {
 
   if (error) {
     logError('createTestSubmission', error);
+    throw error;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Reviews (native danışan değerlendirme sistemi)
+// ---------------------------------------------------------------------
+
+/**
+ * Herkese gösterilecek isim: anonimse "Anonim", değilse "Ad S." biçiminde
+ * maskelenir (soyadın tam hali hiçbir zaman public tarafa sızmaz).
+ */
+function maskReviewerName(name: string, isAnonymous: boolean): string {
+  if (isAnonymous) return 'Anonim';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'Anonim';
+  if (parts.length === 1) return parts[0];
+  const first = parts[0];
+  const lastInitial = parts[parts.length - 1].charAt(0);
+  return lastInitial ? `${first} ${lastInitial}.` : first;
+}
+
+export async function getApprovedReviewsForProfessional(
+  professionalId: string,
+): Promise<{ reviews: PublicReview[]; average: number | null; count: number }> {
+  const supabase = getPublicClient();
+  const { data, error } = await supabase
+    .from('reviews')
+    .select('id, reviewer_name, is_anonymous, rating, comment, is_verified, created_at')
+    .eq('professional_id', professionalId)
+    .eq('status', 'approved')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    logError('getApprovedReviewsForProfessional', error);
+    return { reviews: [], average: null, count: 0 };
+  }
+
+  const rows = data ?? [];
+  const reviews: PublicReview[] = rows.map((row) => ({
+    id: row.id,
+    displayName: maskReviewerName(row.reviewer_name, row.is_anonymous),
+    rating: row.rating,
+    comment: row.comment,
+    is_verified: row.is_verified,
+    created_at: row.created_at,
+  }));
+
+  const count = reviews.length;
+  const average =
+    count > 0 ? Math.round((reviews.reduce((sum, r) => sum + r.rating, 0) / count) * 10) / 10 : null;
+
+  return { reviews, average, count };
+}
+
+export async function createReview(input: {
+  professional_id: string;
+  reviewer_name: string;
+  reviewer_email: string;
+  is_anonymous: boolean;
+  rating: number;
+  comment: string;
+  is_verified: boolean;
+}) {
+  // Doğrulanmış danışan (is_verified=true) satırları RLS'in genel anon
+  // insert politikasıyla yazılamaz (bkz. reviews_migration.sql — bilerek
+  // kısıtlı: is_verified=false şartı). Asıl yazma, randevu eşleşmesini
+  // zaten kontrol etmiş /api/reviews route'undan geldiği için burada
+  // service-role kullanıyoruz (therapist_verification_requests ile aynı
+  // desen — bkz. src/app/api/verification-requests/route.ts).
+  const supabase = getServiceClient();
+  const { error } = await supabase.from('reviews').insert({
+    professional_id: input.professional_id,
+    reviewer_name: input.reviewer_name,
+    reviewer_email: input.reviewer_email,
+    is_anonymous: input.is_anonymous,
+    rating: input.rating,
+    comment: input.comment,
+    is_verified: input.is_verified,
+    status: 'pending',
+  });
+
+  if (error) {
+    logError('createReview', error);
     throw error;
   }
 }

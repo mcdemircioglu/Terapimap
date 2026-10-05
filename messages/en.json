@@ -111,7 +111,12 @@
     "nearby": "Nearby Therapists",
     "appointmentCta": "Request an Appointment",
     "messageCta": "Send a Message",
-    "close": "Close"
+    "close": "Close",
+    "reviewsTitle": "Client Reviews",
+    "reviewsCta": "Write a Review",
+    "noReviews": "No reviews yet. Be the first to write one.",
+    "verifiedClient": "Verified Client",
+    "basedOn": "Based on {count} reviews"
   },
   "lead": {
     "title": "Get in touch",
@@ -128,6 +133,26 @@
     "sendAnother": "Send another message",
     "error": "Couldn't send your message. Please try again.",
     "validation": "Please fill in all required fields."
+  },
+  "review": {
+    "title": "Write a Review",
+    "subtitle": "Share your experience with other clients.",
+    "name": "Your full name",
+    "email": "Email",
+    "emailHint": "Never shown publicly — used only to verify your appointment.",
+    "ratingLabel": "Your rating",
+    "comment": "Your review",
+    "commentPlaceholder": "Briefly describe your experience...",
+    "anonymous": "Post my review anonymously",
+    "submit": "Submit",
+    "sending": "Sending...",
+    "successTitle": "Thanks for your review!",
+    "success": "Your review will appear on the profile once it's been checked.",
+    "error": "Couldn't submit your review. Please try again.",
+    "duplicateError": "You already submitted a review for this therapist in the last 24 hours.",
+    "validation": "Please fill in all required fields and select a rating.",
+    "commentTooShort": "Your review must be at least 10 characters.",
+    "close": "Close"
   },
   "booking": {
     "cta": "Book an Appointment",

@@ -111,7 +111,12 @@
     "nearby": "Yakındaki Terapistler",
     "appointmentCta": "Randevu Talebi Oluştur",
     "messageCta": "Mesaj At",
-    "close": "Kapat"
+    "close": "Kapat",
+    "reviewsTitle": "Danışan Değerlendirmeleri",
+    "reviewsCta": "Değerlendirme Yaz",
+    "noReviews": "Henüz değerlendirme yok. İlk değerlendirmeyi siz yazın.",
+    "verifiedClient": "Doğrulanmış Danışan",
+    "basedOn": "{count} değerlendirmeye göre"
   },
   "lead": {
     "title": "İletişime geç",
@@ -128,6 +133,26 @@
     "sendAnother": "Başka bir mesaj gönder",
     "error": "Mesaj gönderilemedi. Lütfen tekrar deneyin.",
     "validation": "Lütfen tüm zorunlu alanları doldurun."
+  },
+  "review": {
+    "title": "Değerlendirme Yaz",
+    "subtitle": "Deneyiminizi diğer danışanlarla paylaşın.",
+    "name": "Adınız Soyadınız",
+    "email": "E-posta",
+    "emailHint": "Herkese görünmez, yalnızca randevu doğrulaması için kullanılır.",
+    "ratingLabel": "Puanınız",
+    "comment": "Yorumunuz",
+    "commentPlaceholder": "Deneyiminizi kısaca anlatın...",
+    "anonymous": "Yorumumu anonim olarak paylaş",
+    "submit": "Gönder",
+    "sending": "Gönderiliyor...",
+    "successTitle": "Değerlendirmeniz alındı!",
+    "success": "Yorumunuz incelendikten sonra profilde yayınlanacak.",
+    "error": "Değerlendirme gönderilemedi. Lütfen tekrar deneyin.",
+    "duplicateError": "Bu terapist için son 24 saat içinde zaten bir değerlendirme gönderdiniz.",
+    "validation": "Lütfen tüm zorunlu alanları doldurun ve bir puan seçin.",
+    "commentTooShort": "Yorumunuz en az 10 karakter olmalı.",
+    "close": "Kapat"
   },
   "booking": {
     "cta": "Randevu Al",
