@@ -31,6 +31,14 @@ export async function PUT(
 
   const supabase = getServiceClient();
 
+  // Revalidation hedefini belirlemek için güncelleme ÖNCESİ slug/tipi alıyoruz
+  // (slug bu PUT içinde değişebilir — her iki URL'i de tazelemek için).
+  const { data: beforeUpdate } = await supabase
+    .from('professionals')
+    .select('slug, professional_type')
+    .eq('id', params.id)
+    .maybeSingle();
+
   // Update professional row
   const { error } = await supabase
     .from('professionals')
@@ -70,6 +78,21 @@ export async function PUT(
         { status: 500 },
       );
     }
+  }
+
+  // Admin'den gelen HER güncelleme (statü, görünürlük, öne çıkarma, slug vb.)
+  // sonrası public sayfaların ISR önbelleğini anında tazele — aksi halde
+  // ana sayfa/liste/detay sayfaları saatlerce eski durumu göstermeye devam
+  // eder (bkz. revalidatePublicTherapistPages yorumu). Slug bu istekte
+  // değiştiyse eski VE yeni slug'ın sayfası ayrı ayrı tazelenir.
+  revalidatePublicTherapistPages(beforeUpdate ?? undefined);
+  const newSlug = cleaned.slug as string | undefined;
+  const newType = cleaned.professional_type as string | undefined;
+  if ((newSlug && newSlug !== beforeUpdate?.slug) || (newType && newType !== beforeUpdate?.professional_type)) {
+    revalidatePublicTherapistPages({
+      slug: newSlug ?? beforeUpdate?.slug,
+      professional_type: newType ?? beforeUpdate?.professional_type,
+    });
   }
 
   return NextResponse.json({ ok: true });
