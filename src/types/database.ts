@@ -201,6 +201,80 @@ export type PublicReview = {
 };
 
 // ---------------------------------------------------------------------
+// Terapist duyuruları (etkinlik / eğitim / iş ilanı)
+// ---------------------------------------------------------------------
+
+export type AnnouncementType = 'etkinlik' | 'egitim' | 'is_ilani';
+
+export const ANNOUNCEMENT_TYPES: readonly AnnouncementType[] = ['etkinlik', 'egitim', 'is_ilani'];
+
+export const ANNOUNCEMENT_TYPE_LABELS: Record<AnnouncementType, string> = {
+  etkinlik: 'Etkinlik',
+  egitim: 'Eğitim',
+  is_ilani: 'İş İlanı',
+};
+
+// Blog (articles) ile birebir aynı durum makinesi: draft → pending →
+// published / rejected.
+export type AnnouncementStatus = 'draft' | 'pending' | 'published' | 'rejected';
+
+export type Announcement = {
+  id: string;
+  professional_id: string;
+  type: AnnouncementType;
+  title: string;
+  description: string;
+  location_text: string | null;
+  is_online: boolean;
+  /** Serbest metin — "Her Cumartesi 14:00" gibi. Yapısal bir tarih değil. */
+  time_label: string | null;
+  /** Kontenjan — yalnızca bilgi amaçlı gösterilir, kayıt sırasında zorunlu kılınmaz. */
+  capacity: number | null;
+  price_info: string | null;
+  image_url: string | null;
+  status: AnnouncementStatus;
+  admin_note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+/** Public /duyurular sayfasında kart için — yazar bilgisiyle birlikte. */
+export type PublicAnnouncement = Pick<
+  Announcement,
+  | 'id'
+  | 'type'
+  | 'title'
+  | 'description'
+  | 'location_text'
+  | 'is_online'
+  | 'time_label'
+  | 'capacity'
+  | 'price_info'
+  | 'image_url'
+  | 'created_at'
+> & {
+  professional: {
+    id: string;
+    slug: string;
+    name: string;
+    title: string | null;
+    image_url: string | null;
+    professional_type: ProfessionalType | null;
+  } | null;
+};
+
+export type AnnouncementRegistration = {
+  id: string;
+  announcement_id: string;
+  professional_id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  message: string | null;
+  created_at: string;
+};
+
+// ---------------------------------------------------------------------
 // Psikoloji Rehberi — articles
 // ---------------------------------------------------------------------
 

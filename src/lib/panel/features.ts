@@ -11,6 +11,7 @@ export type PanelFeatureKey =
   | 'leads'
   | 'blog'
   | 'appointments'
+  | 'announcements'
   | 'analytics'
   | 'settings';
 
@@ -21,6 +22,7 @@ export const PANEL_FEATURES: Record<PanelFeatureKey, boolean> = {
   settings: true, // Adım 8
   blog: true, // Faz 1 — Blog Yazılarım
   appointments: true, // Faz 2 — panel tarafı (müsaitlik + liste) hazır; danışan tarafı booking akışı Faz 2b'de eklenecek
+  announcements: true, // Faz 5 — Duyurularım (etkinlik/eğitim/iş ilanı)
   analytics: false, // Faz 2/3
 };
 
@@ -28,7 +30,7 @@ export type PanelNavItem = {
   key: PanelFeatureKey;
   label: string;
   href: string;
-  icon: 'home' | 'user' | 'inbox' | 'calendar' | 'globe' | 'chart' | 'settings' | 'pen';
+  icon: 'home' | 'user' | 'inbox' | 'calendar' | 'globe' | 'chart' | 'settings' | 'pen' | 'megaphone';
 };
 
 export const PANEL_NAV_ITEMS: PanelNavItem[] = [
@@ -37,6 +39,7 @@ export const PANEL_NAV_ITEMS: PanelNavItem[] = [
   { key: 'profile', label: 'Profilim', href: '/panel/profil', icon: 'user' },
   { key: 'blog', label: 'Blog Yazılarım', href: '/panel/blog', icon: 'pen' },
   { key: 'appointments', label: 'Randevular', href: '/panel/randevular', icon: 'calendar' },
+  { key: 'announcements', label: 'Duyurularım', href: '/panel/duyurular', icon: 'megaphone' },
   { key: 'analytics', label: 'Performans', href: '/panel/performans', icon: 'chart' },
   { key: 'settings', label: 'Ayarlar', href: '/panel/ayarlar', icon: 'settings' },
 ];

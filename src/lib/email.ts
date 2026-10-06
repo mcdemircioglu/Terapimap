@@ -851,3 +851,99 @@ export async function sendAppointmentCancelledToClient({ appointment, profession
     text,
   });
 }
+
+/* ── Admin'e: yeni duyuru incelemeye gönderildi ───────────────────────── */
+
+export type AnnouncementSubmissionEmailInput = {
+  announcement: {
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    location_text: string | null;
+    is_online: boolean;
+    time_label: string | null;
+    capacity: number | null;
+    price_info: string | null;
+  };
+  professional: {
+    name: string;
+    slug: string;
+  };
+};
+
+const ANNOUNCEMENT_TYPE_LABELS_EMAIL: Record<string, string> = {
+  etkinlik: 'Etkinlik',
+  egitim: 'Eğitim',
+  is_ilani: 'İş İlanı',
+};
+
+export async function sendAnnouncementSubmissionNotification({
+  announcement,
+  professional,
+}: AnnouncementSubmissionEmailInput) {
+  const adminAddr = process.env.GMAIL_USER;
+  if (!adminAddr) {
+    throw new Error('GMAIL_USER ortam değişkeni tanımlı değil.');
+  }
+
+  const adminUrl = `${BASE}/admin/duyurular`;
+  const typeLabel = ANNOUNCEMENT_TYPE_LABELS_EMAIL[announcement.type] ?? announcement.type;
+
+  const rows = [
+    infoRow('Terapist', escapeHtml(professional.name)),
+    infoRow('Tür', escapeHtml(typeLabel)),
+    infoRow('Başlık', escapeHtml(announcement.title)),
+    announcement.location_text ? infoRow('Yer', escapeHtml(announcement.location_text)) : '',
+    infoRow('Online mı', announcement.is_online ? 'Evet' : 'Hayır'),
+    announcement.time_label ? infoRow('Zaman', escapeHtml(announcement.time_label)) : '',
+    announcement.capacity ? infoRow('Kontenjan', String(announcement.capacity)) : '',
+    announcement.price_info ? infoRow('Fiyat', escapeHtml(announcement.price_info)) : '',
+    infoRow('Açıklama', escapeHtml(announcement.description).replace(/\n/g, '<br>')),
+  ].join('');
+
+  const html = layout(
+    'Yeni duyuru incelemeyi bekliyor',
+    `<p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
+      ${escapeHtml(professional.name)} panelden yeni bir duyuru gönderdi. Onaylamak veya
+      reddetmek için admin panelindeki
+      <a href="${adminUrl}" style="color:${C.primary};">Duyurular</a> bölümünü kullanın.
+      Siz onaylayana kadar duyuru yayınlanmaz.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+      style="background:${C.bg};border:1px solid ${C.border};border-radius:10px;">
+      ${rows}
+    </table>
+    <div style="margin-top:24px;">
+      ${button(adminUrl, 'Duyuruları Görüntüle')}
+    </div>`,
+  );
+
+  const text = [
+    'Terapimap — yeni duyuru incelemeyi bekliyor:',
+    '',
+    `Terapist: ${professional.name}`,
+    `Tür: ${typeLabel}`,
+    `Başlık: ${announcement.title}`,
+    announcement.location_text ? `Yer: ${announcement.location_text}` : null,
+    `Online mı: ${announcement.is_online ? 'Evet' : 'Hayır'}`,
+    announcement.time_label ? `Zaman: ${announcement.time_label}` : null,
+    announcement.capacity ? `Kontenjan: ${announcement.capacity}` : null,
+    announcement.price_info ? `Fiyat: ${announcement.price_info}` : null,
+    `Açıklama: ${announcement.description}`,
+    '',
+    `Duyuruları görüntüle: ${adminUrl}`,
+    '',
+    'Terapimap — terapimap.com',
+  ]
+    .filter((l) => l !== null)
+    .join('\n');
+
+  await getTransport().sendMail({
+    from: { name: FROM_NAME, address: adminAddr },
+    to: adminAddr,
+    subject: `Yeni Duyuru İncelemesi — ${professional.name}`,
+    html,
+    text,
+  });
+}
