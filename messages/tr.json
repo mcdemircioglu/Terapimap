@@ -10,6 +10,7 @@
     "tests": "Testler",
     "about": "Hakkımızda",
     "guide": "Psikoloji Rehberi",
+    "announcements": "Duyurular",
     "forTherapists": "Terapistler İçin",
     "applyExpert": "Uzman Üye Ol",
     "panelLogin": "Panel Girişi"
@@ -175,7 +176,8 @@
     "successTitle": "Kaydınız alındı!",
     "success": "Bilgileriniz etkinliği düzenleyen terapiste iletildi.",
     "error": "Kayıt gönderilemedi. Lütfen tekrar deneyin.",
-    "validation": "Lütfen ad soyad ve e-posta alanlarını doldurun."
+    "validation": "Lütfen ad soyad ve e-posta alanlarını doldurun.",
+    "viewAll": "Tüm duyuruları gör"
   },
   "booking": {
     "cta": "Randevu Al",

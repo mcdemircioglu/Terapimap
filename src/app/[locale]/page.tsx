@@ -11,6 +11,7 @@ import { UsersIcon, MapPinIcon, VideoIcon } from '@/components/ui/icons';
 import { getFeaturedTherapists, getSpecialties, getHomeStats, getPublishedTests } from '@/lib/queries';
 import { getTherapistsListPath } from '@/lib/utils';
 import FeaturedArticles from '@/components/guide/FeaturedArticles';
+import FeaturedAnnouncements from '@/components/announcements/FeaturedAnnouncements';
 
 // ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
 export const revalidate = 3600;
@@ -158,6 +159,9 @@ export default async function HomePage({
 
       {/* Psikoloji Rehberi — öne çıkan içerikler (içerik yoksa render edilmez) */}
       <FeaturedArticles locale={locale} />
+
+      {/* Duyurular — en yeni 3 yayınlanmış duyuru (hiç yoksa render edilmez) */}
+      <FeaturedAnnouncements locale={locale} />
 
       {/* Value props */}
       <section>

@@ -13,6 +13,7 @@ export default async function Navbar({ locale }: { locale: Locale }) {
   const therapists = getTherapistsListPath(locale);
   const tests = `/${locale}/testler`;
   const guide = `/${locale}/psikoloji-rehberi`;
+  const announcements = `/${locale}/duyurular`;
   const about = `/${locale}/about`;
   const applyExpert = `/${locale}/uzman-basvuru`;
   const panelLogin = '/panel/giris';
@@ -22,6 +23,7 @@ export default async function Navbar({ locale }: { locale: Locale }) {
     { href: therapists,  label: t('therapists') },
     { href: tests,       label: t('tests') },
     { href: guide,       label: t('guide') },
+    { href: announcements, label: t('announcements') },
     { href: about,       label: t('about') },
     { href: applyExpert, label: t('applyExpert') },
     { href: panelLogin,  label: t('panelLogin') },
@@ -45,6 +47,7 @@ export default async function Navbar({ locale }: { locale: Locale }) {
           <Link href={therapists} className="text-brand-700 hover:text-brand-900">{t('therapists')}</Link>
           <Link href={tests}      className="text-brand-700 hover:text-brand-900">{t('tests')}</Link>
           <Link href={guide}      className="text-brand-700 hover:text-brand-900">{t('guide')}</Link>
+          <Link href={announcements} className="text-brand-700 hover:text-brand-900">{t('announcements')}</Link>
           <Link href={about}      className="text-brand-700 hover:text-brand-900">{t('about')}</Link>
         </nav>
 

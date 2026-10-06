@@ -10,6 +10,7 @@
     "tests": "Tests",
     "about": "About",
     "guide": "Psychology Guide",
+    "announcements": "Announcements",
     "forTherapists": "For therapists",
     "applyExpert": "Join as Expert",
     "panelLogin": "Panel Login"
@@ -175,7 +176,8 @@
     "successTitle": "You're registered!",
     "success": "Your details were sent to the therapist organizing this.",
     "error": "Couldn't submit your registration. Please try again.",
-    "validation": "Please fill in your name and email."
+    "validation": "Please fill in your name and email.",
+    "viewAll": "View all announcements"
   },
   "booking": {
     "cta": "Book an Appointment",
