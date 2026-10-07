@@ -331,15 +331,27 @@ export async function sendVerificationInvite({
       </p>`
     : '<div style="height:12px;"></div>';
 
-  // Kampanya bloğu — CAMPAIGN_FEATURED_DAYS>0 ise gösterilir (grant mantığıyla senkron).
-  const campaignDays = parseInt(process.env.CAMPAIGN_FEATURED_DAYS ?? '30', 10) || 0;
+  // Kampanya bloğu — CAMPAIGN_FEATURED_UNTIL (sabit tarih) gelecekteyse gösterilir
+  // (verification-requests route'undaki grant mantığıyla senkron; "off" = kapalı).
+  const campaignRaw = process.env.CAMPAIGN_FEATURED_UNTIL ?? '2027-01-01T00:00:00+03:00';
+  const campaignEnd = campaignRaw.toLowerCase() === 'off' ? null : new Date(campaignRaw);
+  const campaignActive =
+    !!campaignEnd && !Number.isNaN(campaignEnd.getTime()) && campaignEnd.getTime() > Date.now();
+  const campaignDateText = campaignActive
+    ? campaignEnd!.toLocaleDateString('tr-TR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Europe/Istanbul',
+      })
+    : '';
   const campaignBox =
-    campaignDays > 0
+    campaignActive
       ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;background:#eef8f5;border:1px solid #bfe6dd;border-radius:10px;">
           <tr><td style="padding:14px 16px;">
             <span style="display:inline-block;background:${C.primary};color:#ffffff;font-size:11px;font-weight:bold;padding:3px 9px;border-radius:20px;letter-spacing:.3px;">KAMPANYA</span>
             <p style="margin:10px 0 0;font-size:14px;color:${C.dark};line-height:1.6;">
-              Şimdi profilini doğrulayan uzmanları <strong>${campaignDays} gün boyunca ücretsiz öne çıkarıyoruz.</strong>
+              Şimdi profilini doğrulayan uzmanları <strong>${campaignDateText} tarihine kadar ücretsiz öne çıkarıyoruz.</strong>
               Arama sonuçlarında üst sırada ve ana sayfada <strong>&quot;Öne Çıkan&quot;</strong> olarak yer alırsınız.
             </p>
           </td></tr>
@@ -394,8 +406,8 @@ export async function sendVerificationInvite({
     '- "Doğrulanmış Profil" rozeti kazanın',
     '- Danışan taleplerini doğrudan yönetin',
     '- Tamamen ücretsiz, ödeme gerekmez',
-    ...(campaignDays > 0
-      ? ['', `KAMPANYA: Şimdi doğrulayan uzmanları ${campaignDays} gün boyunca ücretsiz öne çıkarıyoruz.`]
+    ...(campaignActive
+      ? ['', `KAMPANYA: Şimdi doğrulayan uzmanları ${campaignDateText} tarihine kadar ücretsiz öne çıkarıyoruz.`]
       : []),
     '',
     `Doğrulama bağlantısı: ${verifyUrl}`,

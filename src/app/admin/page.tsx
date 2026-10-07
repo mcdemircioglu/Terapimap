@@ -42,6 +42,8 @@ type Professional = {
   image_url: string | null;
   is_verified: boolean;
   is_featured: boolean;
+  featured_until?: string | null;
+  featured_source?: string | null;
   status: string | null;
   user_id: string | null;
   booking_tier: string | null;
@@ -70,6 +72,8 @@ type FormData = {
   image_url: string;
   is_verified: boolean;
   is_featured: boolean;
+  featured_until: string; // YYYY-MM-DD, boş = süresiz
+  featured_source: string;
   status: string;
   booking_tier: string;
   specialtyIds: string[];
@@ -112,6 +116,8 @@ const EMPTY_FORM: FormData = {
   image_url: '',
   is_verified: false,
   is_featured: false,
+  featured_until: '',
+  featured_source: 'manual',
   status: 'pending',
   booking_tier: 'full',
   specialtyIds: [],
@@ -158,6 +164,10 @@ function profToForm(p: Professional): FormData {
     image_url: p.image_url ?? '',
     is_verified: p.is_verified ?? false,
     is_featured: p.is_featured ?? false,
+    featured_until: p.featured_until
+      ? new Date(p.featured_until).toLocaleDateString('sv-SE', { timeZone: 'Europe/Istanbul' })
+      : '',
+    featured_source: p.featured_source ?? 'manual',
     status: p.status ?? 'pending',
     booking_tier: p.booking_tier ?? 'full',
     specialtyIds: (p.specialties ?? []).map((s) => s.id),
@@ -564,7 +574,13 @@ function ProfessionalList({
                           <span className="px-1.5 py-0.5 rounded text-xs bg-brand-50 text-brand-700 font-medium">✓ Doğrulandı</span>
                         )}
                         {p.is_featured && (
-                          <span className="px-1.5 py-0.5 rounded text-xs bg-yellow-50 text-yellow-700 font-medium">★ Öne Çıkan</span>
+                          p.featured_until && new Date(p.featured_until).getTime() <= Date.now() ? (
+                            <span className="px-1.5 py-0.5 rounded text-xs bg-red-50 text-red-700 font-medium">★ Süresi doldu</span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-xs bg-yellow-50 text-yellow-700 font-medium">
+                              ★ Öne Çıkan{p.featured_source === 'paid' ? ' (ödemeli)' : p.featured_source === 'campaign' ? ' (kampanya)' : ''}
+                            </span>
+                          )
                         )}
                         {p.user_id && p.booking_tier === 'level1' && (
                           <span className="px-1.5 py-0.5 rounded text-xs bg-orange-50 text-orange-700 font-medium">Paket: Level 1</span>
@@ -727,6 +743,12 @@ function ProfessionalForm({
         image_url: form.image_url || null,
         is_verified: form.is_verified,
         is_featured: form.is_featured,
+        // Öne çıkarma kapalıysa tarih/kaynak temizlenir; açıkken boş tarih = süresiz.
+        featured_until:
+          form.is_featured && form.featured_until
+            ? `${form.featured_until}T23:59:59+03:00`
+            : null,
+        featured_source: form.is_featured ? form.featured_source || 'manual' : null,
         status: form.status,
         booking_tier: form.booking_tier,
         specialtyIds: form.specialtyIds,
@@ -923,6 +945,29 @@ function ProfessionalForm({
           <Checkbox checked={form.is_verified} onChange={set('is_verified') as (v: boolean) => void} label="Doğrulandı (rozet)" />
           <Checkbox checked={form.is_featured} onChange={set('is_featured') as (v: boolean) => void} label="Öne çıkan" />
         </div>
+        {form.is_featured && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <Label>Öne çıkma bitişi</Label>
+              <Input type="date" value={form.featured_until} onChange={set('featured_until')} />
+              <p className="text-xs text-gray-400 mt-1">
+                Boş bırakırsan süresiz. Tarih geçince profil sitede öne çıkanlarda görünmez.
+              </p>
+            </div>
+            <div>
+              <Label>Öne çıkma kaynağı</Label>
+              <Select
+                value={form.featured_source}
+                onChange={set('featured_source')}
+                options={[
+                  { value: 'manual', label: 'Elle (admin)' },
+                  { value: 'paid', label: 'Ödemeli' },
+                  { value: 'campaign', label: 'Lansman kampanyası' },
+                ]}
+              />
+            </div>
+          </div>
+        )}
 
         {/* ── Specialties ── */}
         <SectionHeading>Uzmanlık Alanları</SectionHeading>

@@ -49,7 +49,7 @@ export default function MessageButton({ professionalId, label, subtitle, closeLa
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-brand-200 bg-white px-5 text-sm font-medium text-brand-800 shadow-soft transition-colors hover:bg-brand-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${className}`}
+        className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-5 text-sm font-medium text-orange-700 shadow-soft transition-colors hover:bg-amber-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${className}`}
       >
         <MessageCircleIcon className="h-[18px] w-[18px]" />
         {label}

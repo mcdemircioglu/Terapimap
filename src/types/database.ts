@@ -96,6 +96,10 @@ export type Professional = {
   is_online: boolean;
   is_in_person: boolean;
   is_featured: boolean;
+  /** Öne çıkarma bitişi. NULL = süresiz. */
+  featured_until?: string | null;
+  /** campaign | paid | manual */
+  featured_source?: 'campaign' | 'paid' | 'manual' | null;
   is_verified: boolean;
   status: ProfessionalStatus | null;
   experience_years: number;

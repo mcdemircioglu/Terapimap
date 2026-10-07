@@ -9,18 +9,25 @@ function verifyAuth(request: Request): boolean {
 }
 
 /**
- * Kampanya: profilini doğrulayan uzmana N gün ücretsiz öne çıkarma.
- * CAMPAIGN_FEATURED_DAYS=0 ile kapatılır (varsayılan 30).
+ * Lansman kampanyası: doğrulanan uzmana, SABİT bir bitiş tarihine kadar ücretsiz
+ * öne çıkarma. Tarih env ile ayarlanır (CAMPAIGN_FEATURED_UNTIL, ISO biçimi;
+ * varsayılan 2027-01-01). Kampanyayı kapatmak için "off" yazın. Tarih geçmişteyse
+ * kampanya kendiliğinden devre dışı sayılır.
  */
-const CAMPAIGN_FEATURED_DAYS =
-  parseInt(process.env.CAMPAIGN_FEATURED_DAYS ?? '30', 10) || 0;
+const CAMPAIGN_FEATURED_UNTIL_RAW =
+  process.env.CAMPAIGN_FEATURED_UNTIL ?? '2027-01-01T00:00:00+03:00';
 
 function campaignFeaturedUntil(): string | null {
-  if (CAMPAIGN_FEATURED_DAYS <= 0) return null;
-  return new Date(Date.now() + CAMPAIGN_FEATURED_DAYS * 86_400_000).toISOString();
+  if (CAMPAIGN_FEATURED_UNTIL_RAW.toLowerCase() === 'off') return null;
+  const d = new Date(CAMPAIGN_FEATURED_UNTIL_RAW);
+  if (Number.isNaN(d.getTime()) || d.getTime() <= Date.now()) return null;
+  return d.toISOString();
 }
 
-/** Mevcut profile kampanya öne çıkarması uygular; kalıcı öne çıkanı bozmaz. */
+/**
+ * Mevcut profile kampanya öne çıkarması uygular. Aktif kalıcı / ödemeli / elle
+ * verilmiş öne çıkarmayı bozmaz; süresi dolmuş olanı kampanya tarihine çeker.
+ */
 async function applyCampaignFeature(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
@@ -30,14 +37,17 @@ async function applyCampaignFeature(
   if (!until) return;
   const { data: cur } = await supabase
     .from('professionals')
-    .select('is_featured, featured_until')
+    .select('is_featured, featured_until, featured_source')
     .eq('id', professionalId)
     .maybeSingle();
-  // Kalıcı öne çıkarma (is_featured && featured_until NULL) → süreli yapıp düşürme.
-  if (cur?.is_featured && !cur.featured_until) return;
+  const active =
+    !!cur?.is_featured &&
+    (!cur.featured_until || new Date(cur.featured_until).getTime() > Date.now());
+  // Aktif kalıcı → dokunma. Aktif ödemeli/elle → dokunma.
+  if (active && (!cur.featured_until || cur.featured_source !== 'campaign')) return;
   await supabase
     .from('professionals')
-    .update({ is_featured: true, featured_until: until })
+    .update({ is_featured: true, featured_until: until, featured_source: 'campaign' })
     .eq('id', professionalId);
 }
 
@@ -141,11 +151,12 @@ export async function PATCH(
         is_online: vr.offers_online ?? false,
         is_in_person: vr.offers_in_person ?? false,
       };
-      // Kampanya: doğrulama karşılığı N gün ücretsiz öne çıkarma.
+      // Lansman kampanyası: doğrulama karşılığı ücretsiz öne çıkarma (sabit bitiş tarihi).
       const newFeaturedUntil = campaignFeaturedUntil();
       if (newFeaturedUntil) {
         insertPayload.is_featured = true;
         insertPayload.featured_until = newFeaturedUntil;
+        insertPayload.featured_source = 'campaign';
       }
       if (vr.title) insertPayload.title = vr.title;
       if (vr.district) insertPayload.district = vr.district;
@@ -247,7 +258,7 @@ export async function PATCH(
         return NextResponse.json({ error: 'Profesyonel güncellenemedi: ' + profErr.message }, { status: 500 });
       }
 
-      // Kampanya: doğrulama karşılığı N gün ücretsiz öne çıkarma.
+      // Lansman kampanyası: doğrulama karşılığı ücretsiz öne çıkarma (sabit bitiş tarihi).
       await applyCampaignFeature(supabase, vr.professional_id);
 
       // ── Uzmanlık alanları ──────────────────────────────────────────────
