@@ -192,7 +192,9 @@ export const getTherapists = unstable_cache(
     if (clean) query = query.ilike('name', `%${clean}%`);
   }
 
-  query = query.order('rating', { ascending: false });
+  query = query
+    .order('rating', { ascending: false, nullsFirst: false })
+    .order('name', { ascending: true });
   if (filters.limit) query = query.limit(filters.limit);
 
   const { data, error } = await query;
@@ -224,7 +226,9 @@ export const getTherapists = unstable_cache(
     const fa = a.is_featured ? 1 : 0;
     const fb = b.is_featured ? 1 : 0;
     if (fb !== fa) return fb - fa;
-    return (b.rating ?? 0) - (a.rating ?? 0);
+    const dr = (b.rating ?? 0) - (a.rating ?? 0);
+    if (dr !== 0) return dr;
+    return (a.name ?? '').localeCompare(b.name ?? '', 'tr');
   });
 
     return rows;
@@ -393,43 +397,94 @@ const getTherapistsPagedByCity = unstable_cache(
   const pageSize = filters.pageSize ?? 12;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
+  const nowIso = new Date().toISOString();
 
-  let query = supabase
-    .from('professionals')
-    .select(PROFESSIONAL_LIST_SELECT, { count: 'exact' })
-    .in('status', ['approved', 'featured'])
-    .eq('is_visible', true)
-    .is('removed_at', null);
+  // Süresi geçmemiş (veya süresiz) öne çıkarma — getFeaturedTherapists ile aynı kural.
+  const activeFeaturedOr = `featured_until.is.null,featured_until.gt.${nowIso}`;
+  // Öne çıkan OLMAYANLAR: hiç öne çıkmamış ya da süresi dolmuş olanlar.
+  const notFeaturedOr = `is_featured.is.null,is_featured.eq.false,featured_until.lte.${nowIso}`;
 
-  if (filters.citySlug) {
-    const cityName = getCityName(filters.citySlug);
-    if (cityName) query = query.eq('city', cityName);
+  // Ortak filtreler + sıralama (puan, eşitlikte ada göre: sıra her istekte aynı kalır).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const base = (cols: string, opts?: { count: 'exact'; head?: boolean }): any => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query: any = supabase.from('professionals').select(cols, opts);
+    query = query
+      .in('status', ['approved', 'featured'])
+      .eq('is_visible', true)
+      .is('removed_at', null);
+    if (filters.citySlug) {
+      const cityName = getCityName(filters.citySlug);
+      if (cityName) query = query.eq('city', cityName);
+    }
+    if (filters.district) query = query.eq('district', filters.district);
+    if (filters.professionalType) query = query.eq('professional_type', filters.professionalType);
+    if (filters.online === true) query = query.eq('is_online', true);
+    if (filters.inPerson === true) query = query.eq('is_in_person', true);
+    if (filters.search) {
+      // İsimle arama (terapist adı). Virgül/yüzde gibi PostgREST'i bozabilecek
+      // karakterleri temizle; ilike ile kısmi eşleşme yap.
+      const clean = filters.search.replace(/[%,()]/g, ' ').trim();
+      if (clean) query = query.ilike('name', `%${clean}%`);
+    }
+    return query;
+  };
+  const featuredQ = (q: any) => q.eq('is_featured', true).or(activeFeaturedOr);
+  const restQ = (q: any) => q.or(notFeaturedOr);
+  const ordered = (q: any) =>
+    q.order('rating', { ascending: false, nullsFirst: false }).order('name', { ascending: true });
+
+  // 1) Önce iki grubun sayısı (hafif, "head" sorgusu). Aralık dışı sayfa isteğinde
+  //    PostgREST hata verdiği için dilimleri sayıya bakarak çekiyoruz.
+  const [fCountRes, rCountRes] = await Promise.all([
+    featuredQ(base('id', { count: 'exact', head: true })),
+    restQ(base('id', { count: 'exact', head: true })),
+  ]);
+  if (fCountRes.error || rCountRes.error) {
+    logError('getTherapistsPaged', fCountRes.error ?? rCountRes.error);
+    return { therapists: [], total: 0 };
   }
-  if (filters.district) query = query.eq('district', filters.district);
-  if (filters.professionalType) query = query.eq('professional_type', filters.professionalType);
-  if (filters.online === true) query = query.eq('is_online', true);
-  if (filters.inPerson === true) query = query.eq('is_in_person', true);
-  if (filters.search) {
-    // İsimle arama (terapist adı). Virgül/yüzde gibi PostgREST'i bozabilecek
-    // karakterleri temizle; ilike ile kısmi eşleşme yap.
-    const clean = filters.search.replace(/[%,()]/g, ' ').trim();
-    if (clean) query = query.ilike('name', `%${clean}%`);
-  }
-  query = query.order('rating', { ascending: false }).range(from, to);
+  const featuredTotal: number = fCountRes.count ?? 0;
+  const restTotal: number = rCountRes.count ?? 0;
 
-  const { data, error, count } = await query;
+  // 2) Sayfa dilimi: önce öne çıkanlar, sonra diğerleri. İki grup arasında sayfa
+  //    geçişi (ör. 5 öne çıkan + 7 diğer) doğru çalışır.
+  const featuredFrom = from;
+  const featuredTo = Math.min(to, featuredTotal - 1);
+  const featuredCount = featuredFrom <= featuredTo ? featuredTo - featuredFrom + 1 : 0;
 
-  if (error) {
-    logError('getTherapistsPaged', error);
+  const restFrom = Math.max(0, from - featuredTotal);
+  const restNeeded = pageSize - featuredCount;
+  const restTo = restFrom + restNeeded - 1;
+
+  const [fRes, rRes] = await Promise.all([
+    featuredCount > 0
+      ? ordered(featuredQ(base(PROFESSIONAL_LIST_SELECT))).range(featuredFrom, featuredTo)
+      : Promise.resolve({ data: [], error: null }),
+    restNeeded > 0 && restFrom < restTotal
+      ? ordered(restQ(base(PROFESSIONAL_LIST_SELECT))).range(restFrom, restTo)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (fRes.error || rRes.error) {
+    logError('getTherapistsPaged', fRes.error ?? rRes.error);
     return { therapists: [], total: 0 };
   }
 
-  const therapists = (data ?? []).map((row: any) => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapRow = (row: any, featured: boolean) => ({
     ...(row as Professional),
+    is_featured: featured,
     specialties: flattenSpecialties(row),
-  })) as ProfessionalWithSpecialties[];
+  }) as ProfessionalWithSpecialties;
 
-    return { therapists, total: count ?? 0 };
+  const therapists = [
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...((fRes.data ?? []) as any[]).map((r) => mapRow(r, true)),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...((rRes.data ?? []) as any[]).map((r) => mapRow(r, false)),
+  ];
+
+  return { therapists, total: featuredTotal + restTotal };
   },
   ['getTherapistsPaged'],
   { revalidate: 21600, tags: ['therapists-list'] },
