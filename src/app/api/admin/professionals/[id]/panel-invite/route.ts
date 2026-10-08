@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
+import { sendPanelInviteEmail } from '@/lib/email';
 
 function verifyAuth(request: Request): boolean {
   const pw = request.headers.get('x-admin-password');
@@ -10,7 +11,8 @@ function verifyAuth(request: Request): boolean {
  * POST /api/admin/professionals/[id]/panel-invite
  *
  * Doğrulama onayından TAMAMEN bağımsız, admin'in bilinçli tetiklediği bir
- * aksiyon: terapiste bir Supabase Auth hesabı açar (davet e-postasıyla) ve
+ * aksiyon: terapiste bir Supabase Auth hesabı açar ve kendi Gmail SMTP
+ * sistemimizle (sendPanelInviteEmail) markalı bir davet e-postası gönderir ve
  * professionals.user_id alanına bağlar. Panel erişimi ücretli bir ürün
  * olduğu için bu asla otomatik/toplu çalışmaz — yalnızca admin panelden
  * tek tek, admin ödeme/anlaşma sonrası karar verdiğinde çağrılır.
@@ -53,16 +55,22 @@ export async function POST(
   // deploy etmeden doğru redirect linkini üretir. Kullanılan origin,
   // Supabase Dashboard → Authentication → URL Configuration → Redirect
   // URLs allow-list'inde kayıtlı olmalı (localhost:3000 için de ekleyin).
+  //
+  // Supabase'in kendi (markasız, mail.app.supabase.io'dan giden) davet
+  // e-postası yerine: hesabı generateLink ile e-posta GÖNDERMEDEN
+  // oluşturuyoruz, dönen action_link'i kendi Gmail SMTP sistemimizle
+  // (iletisim@terapimap.com, bkz. sendPanelInviteEmail) gönderiyoruz.
   const siteUrl = new URL(request.url).origin;
-  const { data: invited, error: inviteErr } = await supabase.auth.admin.inviteUserByEmail(
-    prof.email,
-    {
+  const { data: generated, error: inviteErr } = await supabase.auth.admin.generateLink({
+    type: 'invite',
+    email: prof.email,
+    options: {
       data: { professional_id: prof.id },
       redirectTo: `${siteUrl}/panel/auth/callback`,
     },
-  );
+  });
 
-  if (inviteErr || !invited?.user?.id) {
+  if (inviteErr || !generated?.user?.id || !generated.properties?.action_link) {
     return NextResponse.json(
       { error: 'Davet gönderilemedi: ' + (inviteErr?.message ?? 'bilinmeyen hata') },
       { status: 500 },
@@ -71,12 +79,31 @@ export async function POST(
 
   const { error: linkErr } = await supabase
     .from('professionals')
-    .update({ user_id: invited.user.id })
+    .update({ user_id: generated.user.id })
     .eq('id', prof.id);
 
   if (linkErr) {
     return NextResponse.json(
       { error: 'Hesap oluşturuldu ama profile bağlanamadı: ' + linkErr.message },
+      { status: 500 },
+    );
+  }
+
+  try {
+    await sendPanelInviteEmail({
+      name: prof.name,
+      email: prof.email,
+      inviteUrl: generated.properties.action_link,
+    });
+  } catch (mailErr) {
+    // Hesap zaten oluşturuldu ve profile bağlandı — yalnızca e-posta
+    // gönderimi başarısız oldu. Admin'i bunun farkında olması için hata
+    // döndürüyoruz (bilinen sınırlama: user_id artık dolu olduğu için bu
+    // route idempotent davranır ve tekrar çağrılırsa "alreadyLinked: true"
+    // döner — tekrar e-posta denemek için önce o alan elle temizlenmeli).
+    console.error('[panel-invite] davet e-postası gönderilemedi:', mailErr);
+    return NextResponse.json(
+      { error: 'Hesap oluşturuldu ama davet e-postası gönderilemedi: ' + (mailErr as Error).message },
       { status: 500 },
     );
   }
