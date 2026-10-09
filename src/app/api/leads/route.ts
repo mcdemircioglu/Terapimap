@@ -1,16 +1,21 @@
 import { NextResponse } from 'next/server';
 import { createLead } from '@/lib/queries';
 
+import { isRateLimited, tooManyRequests, isHoneypotTripped, fakeOk, JSON_LIMIT, UPLOAD_LIMIT } from '@/lib/spamGuard';
 // Basic email check; the DB doesn't validate beyond NOT NULL.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
+  if (isRateLimited(request, 'leads', JSON_LIMIT.limit, JSON_LIMIT.windowMs)) return tooManyRequests();
   let body: any;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 });
   }
+
+  // Honeypot: botlara sessiz sahte başarı.
+  if (isHoneypotTripped(body)) return fakeOk();
 
   // Accept the new field name; fall back to the legacy one for compatibility
   // with any callers still sending psychologist_id.

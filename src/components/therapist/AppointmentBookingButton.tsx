@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { CalendarPlusIcon, XIcon } from '@/components/ui/icons';
 
+import { Honeypot, readHoneypot } from '@/components/Honeypot';
 type Props = {
   professionalId: string;
   label: string;
@@ -204,6 +205,7 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
 
   async function handleConfirm(e: React.FormEvent) {
     e.preventDefault();
+    const hp = readHoneypot(e.currentTarget as Element);
     if (!selectedSlot || !sessionType || !name.trim() || !email.trim()) {
       setSubmitStatus('error');
       setSubmitError(t('validation'));
@@ -216,6 +218,7 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          hp_company: hp,
           professional_id: professionalId,
           start_at: selectedSlot,
           session_type: sessionType,
@@ -295,6 +298,7 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
   } else if (step === 'form') {
     body = (
       <form onSubmit={handleConfirm} noValidate>
+      <Honeypot />
         <div className="mb-4 rounded-xl border border-brand-100 bg-brand-50/50 p-3.5 text-sm text-brand-800">
           <p className="font-semibold text-brand-900">{t('selectedSummary')}</p>
           <p className="mt-0.5">

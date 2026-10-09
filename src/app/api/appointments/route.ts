@@ -4,6 +4,7 @@ import { computeAvailableSlots } from '@/lib/appointments/slots';
 import { addMinutesIso, utcIsoToIstanbulLocal } from '@/lib/appointments/time';
 import { sendAppointmentRequestToTherapist, sendAppointmentPendingToClient } from '@/lib/email';
 
+import { isRateLimited, tooManyRequests, isHoneypotTripped, fakeOk, JSON_LIMIT, UPLOAD_LIMIT } from '@/lib/spamGuard';
 const MIN_LEAD_MINUTES = 120;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -17,10 +18,14 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * olabilir, ya da terapist müsaitliğini değiştirmiş olabilir).
  */
 export async function POST(request: Request) {
+  if (isRateLimited(request, 'appointments', JSON_LIMIT.limit, JSON_LIMIT.windowMs)) return tooManyRequests();
   const body = await request.json().catch(() => null);
   if (!body) {
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 });
   }
+
+  // Honeypot: botlara sessiz sahte başarı.
+  if (isHoneypotTripped(body)) return fakeOk();
 
   const professionalId = String(body.professional_id ?? '').trim();
   const startAt = String(body.start_at ?? '').trim();

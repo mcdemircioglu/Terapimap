@@ -1,10 +1,65 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
-import { revalidatePublicTherapistPages } from '@/lib/revalidatePublicPages';
+import { verifyAdminRequest } from '@/lib/admin/auth';
+import {
+  revalidatePublicTherapistPages,
+  revalidateProfessionalPageOnly,
+  LIST_AFFECTING_FIELDS,
+} from '@/lib/revalidatePublicPages';
+
+// Karşılaştırma için null/undefined/'' ve sayı/metin farklarını eşitler.
+const norm = (v: unknown) => (v === null || v === undefined ? '' : String(v));
+// Zaman damgaları farklı biçimde (+03:00 / UTC) gelebilir → anlık olarak karşılaştır.
+const sameValue = (key: string, a: unknown, b: unknown) => {
+  if (key === 'featured_until' && a && b) {
+    const ta = new Date(String(a)).getTime();
+    const tb = new Date(String(b)).getTime();
+    if (!Number.isNaN(ta) && !Number.isNaN(tb)) return ta === tb;
+  }
+  return norm(a) === norm(b);
+};
 
 function verifyAuth(request: Request): boolean {
-  const pw = request.headers.get('x-admin-password');
-  return !!pw && pw === process.env.ADMIN_PASSWORD;
+  return verifyAdminRequest(request);
+}
+
+// PostgREST, fonksiyon veritabanında yoksa PGRST202 (veya "could not find the
+// function") döner; bu durumda eski yola düşeriz.
+function isMissingRpc(err: { code?: string; message?: string }): boolean {
+  return err.code === 'PGRST202' || /could not find the function|function .* does not exist/i.test(err.message ?? '');
+}
+
+/* ── GET /api/admin/professionals/[id] ────────────────────────────────────── */
+// Düzenleme formu için tek profesyonelin TAM kaydı (+ uzmanlıkları).
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } },
+) {
+  if (!verifyAuth(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const supabase = getServiceClient();
+  const { data, error } = await supabase
+    .from('professionals')
+    .select(`*, professional_specialties ( specialties ( id, slug, name ) )`)
+    .eq('id', params.id)
+    .maybeSingle();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  if (!data) {
+    return NextResponse.json({ error: 'Profesyonel bulunamadı.' }, { status: 404 });
+  }
+
+  const { professional_specialties, ...rest } = data as any;
+  return NextResponse.json({
+    ...rest,
+    specialties: (professional_specialties ?? [])
+      .map((ps: any) => ps.specialties)
+      .filter(Boolean),
+  });
 }
 
 /* ── PUT /api/admin/professionals/[id] ────────────────────────────────────── */
@@ -35,48 +90,73 @@ export async function PUT(
   // (slug bu PUT içinde değişebilir — her iki URL'i de tazelemek için).
   const { data: beforeUpdate } = await supabase
     .from('professionals')
-    .select('slug, professional_type')
+    .select(['slug', 'professional_type', ...LIST_AFFECTING_FIELDS].filter((v, i, a) => a.indexOf(v) === i).join(', '))
     .eq('id', params.id)
     .maybeSingle();
-
-  // Update professional row
-  const { error } = await supabase
-    .from('professionals')
-    .update(cleaned)
-    .eq('id', params.id);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  // Replace specialty relations: delete old → insert new
-  const { error: delError } = await supabase
+  const { data: beforeSpecs } = await supabase
     .from('professional_specialties')
-    .delete()
+    .select('specialty_id')
     .eq('professional_id', params.id);
 
-  if (delError) {
-    return NextResponse.json(
-      { error: `Updated professional but failed to clear specialties: ${delError.message}` },
-      { status: 500 },
-    );
+  // Tercih edilen yol: tek transaction'lık Postgres fonksiyonu (professionals
+  // güncelle + uzmanlıkları değiştir). Bir adım patlarsa hepsi geri alınır →
+  // terapist yarım kalmış uzmanlıkla bırakılmaz. Fonksiyon henüz oluşturulmadıysa
+  // (supabase/admin_update_professional_rpc.sql) eski 3 adımlı yola düşülür.
+  let usedRpc = false;
+  {
+    const { error: rpcError } = await supabase.rpc('admin_update_professional', {
+      p_id: params.id,
+      p_fields: cleaned,
+      p_specialty_ids: specialtyIds,
+    });
+    if (!rpcError) {
+      usedRpc = true;
+    } else if (!isMissingRpc(rpcError)) {
+      const status = rpcError.code === 'P0002' ? 404 : rpcError.code === '22023' ? 400 : 500;
+      return NextResponse.json({ error: rpcError.message }, { status });
+    }
   }
 
-  if (specialtyIds.length > 0) {
-    const { error: insError } = await supabase
-      .from('professional_specialties')
-      .insert(
-        specialtyIds.map((id: string) => ({
-          professional_id: params.id,
-          specialty_id: id,
-        })),
-      );
+  if (!usedRpc) {
+    // Update professional row
+    const { error } = await supabase
+      .from('professionals')
+      .update(cleaned)
+      .eq('id', params.id);
 
-    if (insError) {
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Replace specialty relations: delete old → insert new
+    const { error: delError } = await supabase
+      .from('professional_specialties')
+      .delete()
+      .eq('professional_id', params.id);
+
+    if (delError) {
       return NextResponse.json(
-        { error: `Updated professional but failed to save specialties: ${insError.message}` },
+        { error: `Updated professional but failed to clear specialties: ${delError.message}` },
         { status: 500 },
       );
+    }
+
+    if (specialtyIds.length > 0) {
+      const { error: insError } = await supabase
+        .from('professional_specialties')
+        .insert(
+          specialtyIds.map((id: string) => ({
+            professional_id: params.id,
+            specialty_id: id,
+          })),
+        );
+
+      if (insError) {
+        return NextResponse.json(
+          { error: `Updated professional but failed to save specialties: ${insError.message}` },
+          { status: 500 },
+        );
+      }
     }
   }
 
@@ -85,7 +165,22 @@ export async function PUT(
   // ana sayfa/liste/detay sayfaları saatlerce eski durumu göstermeye devam
   // eder (bkz. revalidatePublicTherapistPages yorumu). Slug bu istekte
   // değiştiyse eski VE yeni slug'ın sayfası ayrı ayrı tazelenir.
-  revalidatePublicTherapistPages(beforeUpdate ?? undefined);
+  // Liste kartını / filtreleri etkileyen bir alan (veya uzmanlık seti) değiştiyse
+  // tüm liste sayfaları tazelenir; aksi halde (örn. yalnızca about/iletişim)
+  // sadece profilin kendi sayfası — gereksiz ISR yazımını önler.
+  const before = (beforeUpdate ?? {}) as Record<string, unknown>;
+  const listFieldChanged = LIST_AFFECTING_FIELDS.some(
+    (k) => k in cleaned && !sameValue(k, cleaned[k], before[k]),
+  );
+  const oldSpecIds = (beforeSpecs ?? []).map((r: { specialty_id: string }) => r.specialty_id).sort().join(',');
+  const newSpecIds = [...(specialtyIds as string[])].sort().join(',');
+  const listAffected = !beforeUpdate || listFieldChanged || oldSpecIds !== newSpecIds;
+
+  if (listAffected) {
+    revalidatePublicTherapistPages(beforeUpdate ?? undefined);
+  } else {
+    revalidateProfessionalPageOnly(beforeUpdate ?? undefined);
+  }
   const newSlug = cleaned.slug as string | undefined;
   const newType = cleaned.professional_type as string | undefined;
   if ((newSlug && newSlug !== beforeUpdate?.slug) || (newType && newType !== beforeUpdate?.professional_type)) {

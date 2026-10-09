@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 
+import { verifyAdminRequest } from '@/lib/admin/auth';
 function verifyAuth(request: Request): boolean {
-  const pw = request.headers.get('x-admin-password');
-  return !!pw && pw === process.env.ADMIN_PASSWORD;
+  return verifyAdminRequest(request);
 }
 
 /* ── GET /api/admin/reviews ───────────────────────────────────────────── */

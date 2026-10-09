@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 
+import { verifyAdminRequest } from '@/lib/admin/auth';
 function verifyAuth(request: Request): boolean {
-  const pw = request.headers.get('x-admin-password');
-  return !!pw && pw === process.env.ADMIN_PASSWORD;
+  return verifyAdminRequest(request);
 }
 
 /* ── GET /api/admin/verification-requests ─────────────────────────────────── */
@@ -18,9 +18,16 @@ export async function GET(request: Request) {
 
   const supabase = getServiceClient();
 
+  // Liste görünümleri için yalnızca gereken kolonlar (documents, message gibi
+  // ağır alanlar yok). Tam kayıt GET /[id] ile çekilir.
+  const columns =
+    type === 'new'
+      ? 'id, request_type, full_name, email, phone, title, professional_type, city, district, bio, price_range, website, instagram, google_maps_url, offers_online, offers_in_person, specialties, photo_url, status, admin_note, created_at'
+      : 'id, professional_id, request_type, full_name, email, phone, status, admin_note, created_at';
+
   let query = supabase
     .from('therapist_verification_requests')
-    .select('*')
+    .select(columns)
     .order('created_at', { ascending: false });
 
   if (status !== 'all') {

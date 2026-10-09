@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CITIES } from '@/lib/cities';
 import { getDistricts } from '@/lib/districts';
 
+import { Honeypot, readHoneypot } from '@/components/Honeypot';
 type RequestType = 'update' | 'photo_update' | 'removal' | '';
 
 interface SpecialtyOption {
@@ -216,6 +217,7 @@ export default function VerificationRequestForm({
   // ── Submit ──
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const hp = readHoneypot(e.currentTarget as Element);
     setError('');
 
     if (!requestType) { setError('Lütfen bir talep tipi seçin.'); return; }
@@ -280,7 +282,7 @@ export default function VerificationRequestForm({
       const res = await fetch('/api/verification-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, hp_company: hp }),
       });
       const data = await res.json();
 
@@ -335,6 +337,7 @@ export default function VerificationRequestForm({
   // ── Form ──
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <Honeypot />
       {/* Request type */}
       <Section title="Talep Tipi">
         <div className="space-y-3">

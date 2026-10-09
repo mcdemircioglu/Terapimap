@@ -2,16 +2,21 @@ import { NextResponse } from 'next/server';
 import { getTestBySlug, createTestSubmission } from '@/lib/queries';
 import { sendTestResultEmail } from '@/lib/email';
 
+import { isRateLimited, tooManyRequests, isHoneypotTripped, fakeOk, JSON_LIMIT, UPLOAD_LIMIT } from '@/lib/spamGuard';
 // Basic email check; mirrors src/app/api/leads/route.ts.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
+  if (isRateLimited(request, 'testler', JSON_LIMIT.limit, JSON_LIMIT.windowMs)) return tooManyRequests();
   let body: any;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 });
   }
+
+  // Honeypot: botlara sessiz sahte başarı.
+  if (isHoneypotTripped(body)) return fakeOk();
 
   const testSlug = String(body?.testSlug ?? '').trim();
   const score = Number(body?.score);

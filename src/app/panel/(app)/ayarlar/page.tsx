@@ -1,12 +1,9 @@
 import { redirect } from 'next/navigation';
-import { getServerClient } from '@/lib/supabase/server';
+import { getPanelUser } from '@/lib/panel/session';
 import { PasswordChangeForm } from '@/components/panel/PasswordChangeForm';
 
 export default async function PanelSettingsPage() {
-  const supabase = getServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getPanelUser();
 
   if (!user) redirect('/panel/giris');
 

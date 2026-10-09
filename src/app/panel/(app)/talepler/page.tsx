@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getServerClient } from '@/lib/supabase/server';
+import { getPanelProfessional, PANEL_BASE_COLUMNS } from '@/lib/panel/session';
 import { Card } from '@/components/ui/Card';
 import { LeadContactButton } from '@/components/panel/LeadContactButton';
 
@@ -19,17 +20,10 @@ function fmtDateTime(iso: string): string {
 
 export default async function PanelLeadsPage() {
   const supabase = getServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Layout ile aynı kolonlar → auth + profil sorgusu paylaşılır.
+  const { user, professional } = await getPanelProfessional(PANEL_BASE_COLUMNS);
 
   if (!user) redirect('/panel/giris');
-
-  const { data: professional } = await supabase
-    .from('professionals')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle();
 
   if (!professional) {
     return (

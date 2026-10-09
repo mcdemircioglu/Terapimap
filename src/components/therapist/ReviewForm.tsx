@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { Input, Textarea } from '../ui/Input';
 import { StarIcon } from '../ui/icons';
 
+import { Honeypot, readHoneypot } from '@/components/Honeypot';
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 // ---------------------------------------------------------------------------
@@ -143,6 +144,7 @@ export default function ReviewForm({ professionalId }: { professionalId: string 
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const hp = readHoneypot(e.currentTarget as Element);
     setErrorMsg(null);
 
     const data = new FormData(e.currentTarget);
@@ -168,6 +170,7 @@ export default function ReviewForm({ professionalId }: { professionalId: string 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          hp_company: hp,
           professional_id: professionalId,
           name,
           email,
@@ -201,6 +204,7 @@ export default function ReviewForm({ professionalId }: { professionalId: string 
 
   return (
     <form ref={formRef} onSubmit={onSubmit} noValidate>
+      <Honeypot />
       <fieldset
         disabled={isLoading}
         className="space-y-4 transition-opacity disabled:pointer-events-none disabled:opacity-50"

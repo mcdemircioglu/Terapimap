@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 
+import { verifyAdminRequest } from '@/lib/admin/auth';
 function verifyAuth(request: Request): boolean {
-  const pw = request.headers.get('x-admin-password');
-  return !!pw && pw === process.env.ADMIN_PASSWORD;
+  return verifyAdminRequest(request);
 }
 
 /* ── GET /api/admin/professionals ─────────────────────────────────────────── */
@@ -21,8 +21,12 @@ export async function GET(request: Request) {
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await supabase
       .from('professionals')
+      // Liste için yalnızca kartta/filtrede gereken kolonlar (about, documents,
+      // adres, iletişim vb. ağır alanlar yok). Tam kayıt GET /[id] ile çekilir.
       .select(
-        `*,
+        `id, name, slug, title, professional_type, city, district,
+         is_online, is_in_person, is_verified, is_featured, featured_until,
+         featured_source, status, user_id, image_url, booking_tier, created_at,
          professional_specialties (
            specialties ( id, slug, name )
          )`,

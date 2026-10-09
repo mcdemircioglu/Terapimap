@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 
+import { isRateLimited, tooManyRequests, isHoneypotTripped, fakeOk, JSON_LIMIT, UPLOAD_LIMIT } from '@/lib/spamGuard';
 /**
  * POST /api/verification-requests/upload-document
  *
@@ -25,6 +26,7 @@ const ALLOWED_TYPES: Record<string, 'pdf' | 'image'> = {
 };
 
 export async function POST(request: Request) {
+  if (isRateLimited(request, 'upload', UPLOAD_LIMIT.limit, UPLOAD_LIMIT.windowMs)) return tooManyRequests();
   let formData: FormData;
   try {
     formData = await request.formData();

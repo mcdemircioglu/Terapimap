@@ -1,24 +1,17 @@
 import { redirect } from 'next/navigation';
 import { getServerClient } from '@/lib/supabase/server';
+import { getPanelProfessional } from '@/lib/panel/session';
 import { Card } from '@/components/ui/Card';
 import { ProfileEditForm } from '@/components/panel/ProfileEditForm';
 
 export default async function PanelProfilePage() {
   const supabase = getServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, professional } = await getPanelProfessional(
+    `id, name, city, title, district, clinic_name, address, google_maps_url,
+       website_url, instagram_url, about, is_online, is_in_person, image_url, documents`,
+  );
 
   if (!user) redirect('/panel/giris');
-
-  const { data: professional } = await supabase
-    .from('professionals')
-    .select(
-      `id, name, city, title, district, clinic_name, address, google_maps_url,
-       website_url, instagram_url, about, is_online, is_in_person, image_url, documents`,
-    )
-    .eq('user_id', user.id)
-    .maybeSingle();
 
   if (!professional) {
     return (

@@ -18,6 +18,7 @@ import { CheckIcon, ShieldCheckIcon, ArrowUpRightIcon } from '@/components/ui/ic
 import { scoreTier } from '@/types/database';
 import type { PsychologyTest } from '@/types/database';
 
+import { Honeypot, readHoneypot } from '@/components/Honeypot';
 type Props = {
   test: PsychologyTest;
   locale: string;
@@ -110,6 +111,7 @@ export default function TestRunner({ test, locale }: Props) {
 
   async function submitEmail(e: React.FormEvent) {
     e.preventDefault();
+    const hp = readHoneypot(e.currentTarget as Element);
     if (!EMAIL_RE.test(email) || !consent || !hasResult) return;
     setSubmitting(true);
     setSubmitError(null);
@@ -125,6 +127,7 @@ export default function TestRunner({ test, locale }: Props) {
           resultKey: isCategorical ? winningCategory?.key : undefined,
           email,
           consentMarketing: consent,
+          hp_company: hp,
         }),
       });
       if (!res.ok) throw new Error('request_failed');
@@ -263,6 +266,7 @@ export default function TestRunner({ test, locale }: Props) {
             </p>
           ) : (
             <form onSubmit={submitEmail} className="flex flex-col gap-3">
+      <Honeypot />
               <label className="text-sm font-medium text-brand-800">
                 {tr ? 'Sonucumu e-postama gönder (opsiyonel)' : 'Email me this result (optional)'}
               </label>

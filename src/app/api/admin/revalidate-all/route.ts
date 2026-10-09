@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { revalidatePublicTherapistPages } from '@/lib/revalidatePublicPages';
 
+import { verifyAdminRequest } from '@/lib/admin/auth';
 function verifyAuth(request: Request): boolean {
-  const pw = request.headers.get('x-admin-password');
-  return !!pw && pw === process.env.ADMIN_PASSWORD;
+  return verifyAdminRequest(request);
 }
 
 /**

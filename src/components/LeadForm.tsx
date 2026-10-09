@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Button } from './ui/Button';
 import { Input, Textarea } from './ui/Input';
 
+import { Honeypot, readHoneypot } from '@/components/Honeypot';
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 // ---------------------------------------------------------------------------
@@ -122,6 +123,7 @@ export default function LeadForm({
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const hp = readHoneypot(e.currentTarget as Element);
     setErrorMsg(null);
     setStatus('loading');
 
@@ -145,7 +147,7 @@ export default function LeadForm({
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, hp_company: hp }),
       });
       if (!res.ok) throw new Error('failed');
       formRef.current?.reset();
@@ -162,6 +164,7 @@ export default function LeadForm({
 
   return (
     <form ref={formRef} onSubmit={onSubmit} noValidate>
+      <Honeypot />
       {/* fieldset[disabled] mutes & dims all inputs atomically during loading */}
       <fieldset
         disabled={isLoading}

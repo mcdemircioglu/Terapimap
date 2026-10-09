@@ -2,6 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import ImageUpload from '@/components/admin/ImageUpload';
+import {
+  CACHE_KEY_PROFESSIONALS,
+  CACHE_KEY_SPECIALTIES,
+  clearAdminCache,
+  readAdminCache,
+  writeAdminCache,
+} from '@/lib/admin/sessionCache';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,6 +56,21 @@ type Professional = {
   booking_tier: string | null;
   specialties: Specialty[];
 };
+
+// Liste satırı: yalnızca listede/filtrede gereken alanlar (tam kayıt düzenleme
+// formu açılınca GET /api/admin/professionals/[id] ile çekilir).
+const LIST_ITEM_KEYS = [
+  'id', 'name', 'slug', 'title', 'professional_type', 'city', 'district',
+  'is_online', 'is_in_person', 'is_verified', 'is_featured', 'featured_until',
+  'featured_source', 'status', 'user_id', 'image_url', 'booking_tier', 'specialties',
+] as const;
+type ProfessionalListItem = Pick<Professional, (typeof LIST_ITEM_KEYS)[number]>;
+
+function toListItem(p: Professional): ProfessionalListItem {
+  const item: Record<string, unknown> = {};
+  for (const k of LIST_ITEM_KEYS) item[k] = (p as Record<string, unknown>)[k];
+  return item as ProfessionalListItem;
+}
 
 type FormData = {
   name: string;
@@ -348,7 +370,7 @@ function LoginView({ onAuth }: { onAuth: (pw: string) => void }) {
         sessionStorage.setItem(SESSION_KEY, pw);
         onAuth(pw);
       } else {
-        setError('Hatalı şifre. Lütfen tekrar deneyin.');
+        setError(res.status === 429 ? (data.error || 'Çok fazla hatalı deneme. Daha sonra tekrar deneyin.') : 'Hatalı şifre. Lütfen tekrar deneyin.');
       }
     } catch {
       setError('Bağlantı hatası. Lütfen tekrar deneyin.');
@@ -398,13 +420,15 @@ function ProfessionalList({
   professionals,
   loading,
   onAdd,
+  onRefresh,
   onEdit,
   onDelete,
   onInvitePanel,
 }: {
-  professionals: Professional[];
+  professionals: ProfessionalListItem[];
   loading: boolean;
   onAdd: () => void;
+  onRefresh: () => void;
   onEdit: (id: string) => void;
   onDelete: (id: string, name: string) => void;
   onInvitePanel: (id: string, name: string) => void;
@@ -443,12 +467,17 @@ function ProfessionalList({
             <h2 className="text-lg font-bold text-gray-800">Profesyoneller</h2>
             <p className="text-xs text-gray-500">{filtered.length} / {professionals.length} kayıt</p>
           </div>
-          <Btn onClick={onAdd}>
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            Ekle
-          </Btn>
+          <div className="flex items-center gap-2">
+            <Btn variant="ghost" onClick={onRefresh} disabled={loading}>
+              {loading ? 'Yenileniyor…' : 'Yenile'}
+            </Btn>
+            <Btn onClick={onAdd}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Ekle
+            </Btn>
+          </div>
         </div>
         {/* Filters */}
         <div className="flex flex-wrap gap-2">
@@ -656,9 +685,9 @@ function ProfessionalList({
 
 // ── Professional Form ─────────────────────────────────────────────────────────
 
-function ProfessionalForm({
+// Düzenlemede tam kaydı tek istekle çeker, sonra formu açar.
+function ProfessionalEditor({
   editingId,
-  professionals,
   specialties,
   onSave,
   onCancel,
@@ -666,14 +695,71 @@ function ProfessionalForm({
   adminPassword,
 }: {
   editingId: string | null;
-  professionals: Professional[];
   specialties: Specialty[];
-  onSave: (msg: string) => void;
+  onSave: (msg: string, savedId?: string) => void;
   onCancel: () => void;
   apiFetch: (path: string, options?: RequestInit) => Promise<Response>;
   adminPassword: string;
 }) {
-  const existing = editingId ? professionals.find((p) => p.id === editingId) ?? null : null;
+  const [existing, setExisting] = useState<Professional | null>(null);
+  const [state, setState] = useState<'loading' | 'ready' | 'error'>(editingId ? 'loading' : 'ready');
+
+  useEffect(() => {
+    if (!editingId) return;
+    let cancelled = false;
+    setState('loading');
+    apiFetch(`/api/admin/professionals/${editingId}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error('fetch failed');
+        const data = (await res.json()) as Professional;
+        if (!cancelled) { setExisting(data); setState('ready'); }
+      })
+      .catch(() => { if (!cancelled) setState('error'); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingId]);
+
+  if (state === 'loading') {
+    return <p className="text-sm text-gray-500 py-10 text-center">Yükleniyor…</p>;
+  }
+  if (state === 'error') {
+    return (
+      <div className="max-w-4xl mx-auto py-10 text-center space-y-3">
+        <p className="text-sm text-red-600">Kayıt yüklenemedi.</p>
+        <Btn variant="ghost" onClick={onCancel}>Listeye dön</Btn>
+      </div>
+    );
+  }
+  return (
+    <ProfessionalForm
+      editingId={editingId}
+      existing={existing}
+      specialties={specialties}
+      apiFetch={apiFetch}
+      adminPassword={adminPassword}
+      onSave={onSave}
+      onCancel={onCancel}
+    />
+  );
+}
+
+function ProfessionalForm({
+  editingId,
+  existing,
+  specialties,
+  onSave,
+  onCancel,
+  apiFetch,
+  adminPassword,
+}: {
+  editingId: string | null;
+  existing: Professional | null;
+  specialties: Specialty[];
+  onSave: (msg: string, savedId?: string) => void;
+  onCancel: () => void;
+  apiFetch: (path: string, options?: RequestInit) => Promise<Response>;
+  adminPassword: string;
+}) {
   const [form, setForm] = useState<FormData>(existing ? profToForm(existing) : EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -771,10 +857,11 @@ function ProfessionalForm({
         return;
       }
 
+      const savedId: string | undefined = editingId ?? data.id;
       if (data.warning) {
-        onSave(`Kaydedildi, ancak uyarı: ${data.warning}`);
+        onSave(`Kaydedildi, ancak uyarı: ${data.warning}`, savedId);
       } else {
-        onSave(editingId ? 'Profesyonel güncellendi.' : 'Profesyonel oluşturuldu.');
+        onSave(editingId ? 'Profesyonel güncellendi.' : 'Profesyonel oluşturuldu.', savedId);
       }
     } catch (err) {
       setError('Bağlantı hatası. Lütfen tekrar deneyin.');
@@ -1035,7 +1122,7 @@ export default function AdminPage() {
   const [adminPassword, setAdminPassword] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'form'>('list');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [professionals, setProfessionals] = useState<ProfessionalListItem[]>([]);
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [listLoading, setListLoading] = useState(false);
   const [flash, setFlash] = useState<Flash | null>(null);
@@ -1066,27 +1153,77 @@ export default function AdminPage() {
     [adminPassword],
   );
 
-  const loadData = useCallback(async () => {
+  // Terapist listesi ve uzmanlıklar kısa süreliğine sessionStorage'da tutulur
+  // (bkz. lib/admin/sessionCache.ts); süre dolmadan geri dönüşte ağ isteği yok.
+  // `force` (Yenile düğmesi) önbelleği atlar.
+  const profsLoadedAt = useRef(0);
+  const loadData = useCallback(async (force = false) => {
     if (!adminPassword) return;
+
+    const cachedProfs = force ? null : readAdminCache<ProfessionalListItem[]>(CACHE_KEY_PROFESSIONALS);
+    const cachedSpecs = force ? null : readAdminCache<Specialty[]>(CACHE_KEY_SPECIALTIES);
+    const profsOk = !!cachedProfs && Array.isArray(cachedProfs.data);
+    const specsOk = !!cachedSpecs && Array.isArray(cachedSpecs.data);
+
+    if (profsOk) {
+      profsLoadedAt.current = cachedProfs!.ts;
+      setProfessionals(cachedProfs!.data);
+    }
+    if (specsOk) setSpecialties(cachedSpecs!.data);
+    if (profsOk && specsOk) return;
+
     setListLoading(true);
     try {
       const [profRes, specRes] = await Promise.all([
-        apiFetch('/api/admin/professionals'),
-        apiFetch('/api/admin/specialties'),
+        profsOk ? null : apiFetch('/api/admin/professionals'),
+        specsOk ? null : apiFetch('/api/admin/specialties'),
       ]);
-      if (profRes.ok) setProfessionals(await profRes.json());
-      if (specRes.ok) setSpecialties(await specRes.json());
+      if (profRes?.ok) {
+        const data = (await profRes.json()) as ProfessionalListItem[];
+        profsLoadedAt.current = Date.now();
+        setProfessionals(data);
+      }
+      if (specRes?.ok) {
+        const data = (await specRes.json()) as Specialty[];
+        writeAdminCache(CACHE_KEY_SPECIALTIES, data);
+        setSpecialties(data);
+      }
     } finally {
       setListLoading(false);
     }
   }, [adminPassword, apiFetch]);
 
+  // Yerel güncellemeler (kaydet/sil/davet) önbelleğe de yazılır; tazelik süresi
+  // uzamaz (ilk yükleme zamanı korunur).
+  useEffect(() => {
+    if (profsLoadedAt.current > 0) {
+      writeAdminCache(CACHE_KEY_PROFESSIONALS, professionals, profsLoadedAt.current);
+    }
+  }, [professionals]);
+
   useEffect(() => {
     if (adminPassword) loadData();
   }, [adminPassword, loadData]);
 
+  // Tek kaydı yeniden çekip listede günceller (yoksa başa ekler); tüm listeyi
+  // yeniden indirmez.
+  const refreshOne = useCallback(
+    async (id: string) => {
+      const res = await apiFetch(`/api/admin/professionals/${id}`);
+      if (!res.ok) return;
+      const full = (await res.json()) as Professional;
+      const item = toListItem(full);
+      setProfessionals((prev) =>
+        prev.some((x) => x.id === id) ? prev.map((x) => (x.id === id ? item : x)) : [item, ...prev],
+      );
+    },
+    [apiFetch],
+  );
+
   const handleLogout = () => {
     sessionStorage.removeItem(SESSION_KEY);
+    profsLoadedAt.current = 0;
+    clearAdminCache();
     setAdminPassword(null);
     setProfessionals([]);
     setSpecialties([]);
@@ -1109,7 +1246,7 @@ export default function AdminPage() {
     const res = await apiFetch(`/api/admin/professionals/${id}`, { method: 'DELETE' });
     if (res.ok) {
       showFlash({ type: 'success', text: `"${name}" başarıyla silindi.` });
-      loadData();
+      setProfessionals((prev) => prev.filter((x) => x.id !== id));
     } else {
       const d = await res.json();
       showFlash({ type: 'error', text: d.error ?? 'Silme işlemi başarısız.' });
@@ -1132,7 +1269,7 @@ export default function AdminPage() {
           ? `"${name}" için panel hesabı zaten bağlıydı.`
           : `"${name}" için panel daveti gönderildi.`,
       });
-      loadData();
+      void refreshOne(id);
     } else {
       showFlash({ type: 'error', text: d.error ?? 'Panel daveti gönderilemedi.' });
     }
@@ -1263,21 +1400,22 @@ export default function AdminPage() {
             professionals={professionals}
             loading={listLoading}
             onAdd={() => { setEditingId(null); setView('form'); setFlash(null); }}
+            onRefresh={() => { void loadData(true); }}
             onEdit={(id) => { setEditingId(id); setView('form'); setFlash(null); }}
             onDelete={handleDelete}
             onInvitePanel={handleInvitePanel}
           />
         ) : (
-          <ProfessionalForm
+          <ProfessionalEditor
+            key={editingId ?? 'new'}
             editingId={editingId}
-            professionals={professionals}
             specialties={specialties}
             apiFetch={apiFetch}
             adminPassword={adminPassword ?? ''}
-            onSave={(msg) => {
+            onSave={(msg, savedId) => {
               setView('list');
               setEditingId(null);
-              loadData();
+              if (savedId) void refreshOne(savedId);
               showFlash({ type: 'success', text: msg });
             }}
             onCancel={() => { setView('list'); setEditingId(null); }}

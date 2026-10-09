@@ -12,6 +12,7 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
 
+import { Honeypot, readHoneypot } from '@/components/Honeypot';
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 function Spinner() {
@@ -77,6 +78,7 @@ export default function RegisterForm({ announcementId }: { announcementId: strin
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const hp = readHoneypot(e.currentTarget as Element);
     setErrorMsg(null);
 
     const data = new FormData(e.currentTarget);
@@ -97,7 +99,7 @@ export default function RegisterForm({ announcementId }: { announcementId: strin
       const res = await fetch(`/api/announcements/${announcementId}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, phone: phone || null, message: message || null }),
+        body: JSON.stringify({ name, email, phone: phone || null, message: message || null, hp_company: hp }),
       });
       if (!res.ok) throw new Error('failed');
       formRef.current?.reset();
@@ -114,6 +116,7 @@ export default function RegisterForm({ announcementId }: { announcementId: strin
 
   return (
     <form ref={formRef} onSubmit={onSubmit} noValidate>
+      <Honeypot />
       <fieldset
         disabled={isLoading}
         className="space-y-4 transition-opacity disabled:pointer-events-none disabled:opacity-50"

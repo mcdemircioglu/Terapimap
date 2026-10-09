@@ -7,7 +7,7 @@
  */
 import { useState, useEffect, useCallback } from 'react';
 
-type Result = { name: string; email: string; ok: boolean; error?: string };
+type Result = { id: string; name: string; email: string; ok: boolean; error?: string };
 type ListItem = { id: string; name: string; city: string | null; email: string; verification_invited_at: string | null };
 type Counts = { pending: number; invited: number; list: ListItem[] };
 const SESSION_KEY = 'terapimap_admin_pw';
@@ -110,7 +110,23 @@ export default function DavetlerPage() {
       if (!res.ok) { setFlash(d.error ?? 'Gönderim başarısız.'); return; }
       setResults(d.results ?? []);
       setFlash(`${d.sent} gönderildi, ${d.failed} başarısız. Kalan: ${d.remaining}.`);
-      loadCounts();
+      // Listeyi yeniden indirmek yerine gönderim sonucunu yerelde uygula.
+      const sentIds = new Set<string>((d.results as Result[] | undefined)?.filter((r) => r.ok).map((r) => r.id) ?? []);
+      const stamp = new Date().toISOString();
+      setCounts((c) => {
+        if (!c) return c;
+        const list = c.list
+          .map((p) => (sentIds.has(p.id) ? { ...p, verification_invited_at: stamp } : p))
+          // Sunucudaki sıralama: bekleyenler önce, sonra gönderim zamanı, sonra şehir.
+          .sort((a, b) => {
+            if (!a.verification_invited_at !== !b.verification_invited_at) return a.verification_invited_at ? 1 : -1;
+            if (a.verification_invited_at && b.verification_invited_at && a.verification_invited_at !== b.verification_invited_at) {
+              return a.verification_invited_at < b.verification_invited_at ? -1 : 1;
+            }
+            return (a.city ?? '').localeCompare(b.city ?? '', 'tr');
+          });
+        return { pending: d.remaining ?? c.pending, invited: c.invited + sentIds.size, list };
+      });
     } finally { setSending(false); }
   };
 

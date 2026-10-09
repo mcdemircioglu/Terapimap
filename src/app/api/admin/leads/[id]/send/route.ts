@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 import { sendLeadToTherapist, sendConfirmationToClient } from '@/lib/email';
 
+import { verifyAdminRequest } from '@/lib/admin/auth';
 export const runtime = 'nodejs';
 
 function verifyAuth(request: Request): boolean {
-  const pw = request.headers.get('x-admin-password');
-  return !!pw && pw === process.env.ADMIN_PASSWORD;
+  return verifyAdminRequest(request);
 }
 
 /* ── POST /api/admin/leads/[id]/send ──────────────────────────────────

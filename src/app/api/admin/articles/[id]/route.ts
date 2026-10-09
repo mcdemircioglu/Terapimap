@@ -7,9 +7,9 @@ import { revalidatePath } from 'next/cache';
 import { getServiceClient } from '@/lib/supabase/server';
 import { validateArticlePayload } from '@/lib/articles';
 
+import { verifyAdminRequest } from '@/lib/admin/auth';
 function verifyAuth(request: Request): boolean {
-  const pw = request.headers.get('x-admin-password');
-  return !!pw && pw === process.env.ADMIN_PASSWORD;
+  return verifyAdminRequest(request);
 }
 
 /** Yayındaki/kategorideki Psikoloji Rehberi sayfalarını anında tazeler. */

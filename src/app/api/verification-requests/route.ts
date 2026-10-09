@@ -2,18 +2,23 @@ import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 import { sendApplicationNotification } from '@/lib/email';
 
+import { isRateLimited, tooManyRequests, isHoneypotTripped, fakeOk, JSON_LIMIT, UPLOAD_LIMIT } from '@/lib/spamGuard';
 const MAX_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const BUCKET = 'therapist-photos';
 
 /* ── POST /api/verification-requests ──────────────────────────────────────── */
 export async function POST(request: Request) {
+  if (isRateLimited(request, 'vreq', JSON_LIMIT.limit, JSON_LIMIT.windowMs)) return tooManyRequests();
   let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Geçersiz istek.' }, { status: 400 });
   }
+
+  // Honeypot: botlara sessiz sahte başarı.
+  if (isHoneypotTripped(body)) return fakeOk();
 
   // ── Required field validation ──
   const { professional_id, request_type, full_name, email, phone } = body as Record<string, string>;

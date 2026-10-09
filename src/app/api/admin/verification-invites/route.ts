@@ -2,15 +2,16 @@ import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 import { sendVerificationInvite } from '@/lib/email';
 
+import { verifyAdminRequest } from '@/lib/admin/auth';
 // Gmail SMTP ile sıralı gönderim uzun sürebilir → süreyi uzat.
 export const maxDuration = 60;
 
 const MAX_BATCH = 40;
 const DEFAULT_BATCH = 20;
+const LIST_LIMIT = 2000;
 
 function verifyAuth(request: Request): boolean {
-  const pw = request.headers.get('x-admin-password');
-  return !!pw && pw === process.env.ADMIN_PASSWORD;
+  return verifyAdminRequest(request);
 }
 
 /**
@@ -38,34 +39,48 @@ export async function GET(request: Request) {
   }
   const supabase = getServiceClient();
 
-  const { count: pending, error: pErr } = await applyPending(
-    supabase.from('professionals').select('id', { count: 'exact', head: true }),
-  );
-  const { count: invited, error: iErr } = await supabase
-    .from('professionals')
-    .select('id', { count: 'exact', head: true })
-    .not('verification_invited_at', 'is', null);
-
   // Outreach kohortu (doğrulanmamış + geçerli e-postalı) — davet gönderilenler
   // ve bekleyenler birlikte; bekleyenler (invited_at null) en üstte.
-  const { data: list, error: lErr } = await supabase
-    .from('professionals')
-    .select('id, name, city, email, verification_invited_at')
-    .in('status', ['approved', 'featured'])
-    .eq('is_visible', true)
-    .is('removed_at', null)
-    .eq('is_verified', false)
-    .not('email', 'is', null)
-    .neq('email', '')
-    .like('email', '%@%')
-    .order('verification_invited_at', { ascending: true, nullsFirst: true })
-    .order('city', { ascending: true })
-    .limit(2000);
+  // İki sorgu paralel çalışır; "bekleyen" sayısı listeyle aynı filtreleri
+  // kullandığı için ayrı count sorgusu yerine listeden türetilir.
+  const [listRes, invitedRes] = await Promise.all([
+    supabase
+      .from('professionals')
+      .select('id, name, city, email, verification_invited_at')
+      .in('status', ['approved', 'featured'])
+      .eq('is_visible', true)
+      .is('removed_at', null)
+      .eq('is_verified', false)
+      .not('email', 'is', null)
+      .neq('email', '')
+      .like('email', '%@%')
+      .order('verification_invited_at', { ascending: true, nullsFirst: true })
+      .order('city', { ascending: true })
+      .limit(LIST_LIMIT),
+    supabase
+      .from('professionals')
+      .select('id', { count: 'exact', head: true })
+      .not('verification_invited_at', 'is', null),
+  ]);
 
-  if (pErr || iErr || lErr) {
-    return NextResponse.json({ error: (pErr ?? iErr ?? lErr)?.message }, { status: 500 });
+  if (listRes.error || invitedRes.error) {
+    return NextResponse.json({ error: (listRes.error ?? invitedRes.error)?.message }, { status: 500 });
   }
-  return NextResponse.json({ pending: pending ?? 0, invited: invited ?? 0, list: list ?? [] });
+
+  const list = listRes.data ?? [];
+  let pending: number;
+  if (list.length < LIST_LIMIT) {
+    pending = list.filter((p: { verification_invited_at: string | null }) => !p.verification_invited_at).length;
+  } else {
+    // Liste kesildiyse türetilen sayı eksik olur → gerçek sayıyı ayrıca say.
+    const { count, error: pErr } = await applyPending(
+      supabase.from('professionals').select('id', { count: 'exact', head: true }),
+    );
+    if (pErr) return NextResponse.json({ error: pErr.message }, { status: 500 });
+    pending = count ?? 0;
+  }
+
+  return NextResponse.json({ pending, invited: invitedRes.count ?? 0, list });
 }
 
 /* ── POST: sıradaki grubu gönder ──────────────────────────────────────── */
@@ -122,7 +137,7 @@ export async function POST(request: Request) {
 
   let sent = 0;
   let failed = 0;
-  const results: { name: string; email: string; ok: boolean; error?: string }[] = [];
+  const results: { id: string; name: string; email: string; ok: boolean; error?: string }[] = [];
 
   for (const p of rows as {
     id: string;
@@ -151,10 +166,11 @@ export async function POST(request: Request) {
         .update({ verification_invited_at: new Date().toISOString() })
         .eq('id', p.id);
       sent++;
-      results.push({ name: p.name, email: p.email, ok: true });
+      results.push({ id: p.id, name: p.name, email: p.email, ok: true });
     } catch (e) {
       failed++;
       results.push({
+        id: p.id,
         name: p.name,
         email: p.email,
         ok: false,

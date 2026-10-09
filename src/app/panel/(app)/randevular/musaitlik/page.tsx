@@ -1,22 +1,17 @@
 import { redirect } from 'next/navigation';
 import { getServerClient } from '@/lib/supabase/server';
+import { getPanelProfessional } from '@/lib/panel/session';
 import { Card } from '@/components/ui/Card';
 import { AppointmentsTabs } from '@/components/panel/AppointmentsTabs';
 import { AvailabilityForm } from '@/components/panel/AvailabilityForm';
 
 export default async function PanelAvailabilityPage() {
   const supabase = getServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, professional, error: professionalError } = await getPanelProfessional(
+    'id, meeting_link, session_duration_minutes, is_online, is_in_person',
+  );
 
   if (!user) redirect('/panel/giris');
-
-  const { data: professional, error: professionalError } = await supabase
-    .from('professionals')
-    .select('id, meeting_link, session_duration_minutes, is_online, is_in_person')
-    .eq('user_id', user.id)
-    .maybeSingle();
 
   // Yeni kolonlar (meeting_link, session_duration_minutes) henüz eklenmemişse
   // Postgres "column does not exist" hatası döner ve professional null olur —

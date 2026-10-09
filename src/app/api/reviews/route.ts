@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 import { createReview } from '@/lib/queries';
 
+import { isRateLimited, tooManyRequests, isHoneypotTripped, fakeOk, JSON_LIMIT, UPLOAD_LIMIT } from '@/lib/spamGuard';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_COMMENT_LENGTH = 2000;
 const MIN_COMMENT_LENGTH = 10;
@@ -17,12 +18,16 @@ const MIN_COMMENT_LENGTH = 10;
  * otomatik işaretlenir (bkz. appointments_migration.sql).
  * ────────────────────────────────────────────────────────────────────── */
 export async function POST(request: Request) {
+  if (isRateLimited(request, 'reviews', JSON_LIMIT.limit, JSON_LIMIT.windowMs)) return tooManyRequests();
   let body: any;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 });
   }
+
+  // Honeypot: botlara sessiz sahte başarı.
+  if (isHoneypotTripped(body)) return fakeOk();
 
   const professional_id = String(body?.professional_id ?? '').trim();
   const reviewer_name = String(body?.name ?? '').trim();

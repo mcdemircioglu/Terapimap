@@ -58,17 +58,32 @@ export function getServerClient() {
 /**
  * Service-role client for privileged inserts/reads (e.g. admin tools).
  * Only call this from Route Handlers or Server Actions, never expose to the client.
+ *
+ * Tek örnek (singleton): önceden her çağrıda yeni client üretiliyordu. Service-role
+ * client kullanıcıya/çereze bağlı bir durum taşımaz (persistSession: false), bu yüzden
+ * istekler arasında paylaşmak güvenlidir. autoRefreshToken kapalı: uzun ömürlü
+ * örnekte gereksiz zamanlayıcı çalışmasın.
+ *
+ * SUPABASE_SERVICE_ROLE_KEY tanımlı değilse HATA fırlatılır. Önceden sessizce anon
+ * istemciye düşülüyordu; bu, admin işlemlerinin ve yüklemelerin RLS yüzünden
+ * fark edilmeden başarısız olmasına yol açıyordu.
  */
-export function getServiceClient() {
+let _serviceClient: ReturnType<typeof createServerClient> | null = null;
+
+// Dönüş tipi bilerek `any`: önceden (lazy `require` yüzünden) de `any` idi ve 35+
+// çağıran buna göre yazıldı; daha sıkı tip vermek ayrı bir temizlik işi.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function getServiceClient(): any {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) {
-    // Fall back to anon — RLS policies still allow public lead inserts.
-    return getServerClient();
+    throw new Error(
+      'SUPABASE_SERVICE_ROLE_KEY ortam değişkeni tanımlı değil (service client oluşturulamadı).',
+    );
   }
-  // Lazy import so the service-role bundle doesn't ship to the client.
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { createClient } = require('@supabase/supabase-js');
-  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {
-    auth: { persistSession: false },
-  });
+  if (!_serviceClient) {
+    _serviceClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    }) as unknown as ReturnType<typeof createServerClient>;
+  }
+  return _serviceClient;
 }

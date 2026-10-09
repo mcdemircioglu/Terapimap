@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getServerClient } from '@/lib/supabase/server';
+import { getPanelProfessional } from '@/lib/panel/session';
 import { Card } from '@/components/ui/Card';
 import { PANEL_FEATURES } from '@/lib/panel/features';
 import { calculateProfileCompleteness } from '@/lib/panel/profileCompleteness';
@@ -13,22 +14,14 @@ import { LeadsSummaryCard } from '@/components/panel/LeadsSummaryCard';
  */
 export default async function PanelOverviewPage() {
   const supabase = getServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user, professional } = await getPanelProfessional(
+    `id, name, city, status, is_verified, title, district, about, image_url,
+       phone, price_range, experience_years, is_online, is_in_person,
+       website_url, instagram_url`,
+  );
 
   // Savunma amaçlı: layout zaten yönlendirir, ama tip güvenliği için.
   if (!user) redirect('/panel/giris');
-
-  const { data: professional } = await supabase
-    .from('professionals')
-    .select(
-      `id, name, city, status, is_verified, title, district, about, image_url,
-       phone, price_range, experience_years, is_online, is_in_person,
-       website_url, instagram_url`,
-    )
-    .eq('user_id', user.id)
-    .maybeSingle();
 
   if (!professional) {
     return (

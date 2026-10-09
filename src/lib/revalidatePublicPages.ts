@@ -37,3 +37,25 @@ export function revalidatePublicTherapistPages(professional?: ProfessionalRef): 
     revalidatePath(getProfessionalUrl(professional.slug, professional.professional_type, 'tr'));
   }
 }
+
+/**
+ * Herkese açık LİSTE / kart görünümünü (grid, şehir, şehir+uzmanlık, SEO landing,
+ * anasayfa, öne çıkanlar, sitemap) etkileyen `professionals` kolonları.
+ * `src/lib/queries.ts` içindeki PROFESSIONAL_LIST_SELECT alanları + sorgu
+ * filtre/sıralamalarında kullanılan kolonlar. Bunların dışındaki bir alan
+ * (about, iletişim, adres, belgeler, booking_tier vb.) değişirse yalnızca o
+ * profilin kendi detay sayfası tazelenir; liste önbelleği silinmez.
+ */
+export const LIST_AFFECTING_FIELDS = [
+  'slug', 'name', 'title', 'professional_type', 'city', 'district',
+  'is_online', 'is_in_person', 'is_verified', 'is_featured', 'featured_until',
+  'experience_years', 'price_range', 'rating', 'image_url',
+  'status', 'is_visible', 'removed_at', 'is_published',
+] as const;
+
+/** Yalnızca verilen profesyonelin kendi detay sayfasını tazeler (liste etiketine dokunmaz). */
+export function revalidateProfessionalPageOnly(professional?: ProfessionalRef): void {
+  if (professional?.slug) {
+    revalidatePath(getProfessionalUrl(professional.slug, professional.professional_type, 'tr'));
+  }
+}

@@ -1,4 +1,5 @@
-import nodemailer from 'nodemailer';
+import nodemailer, { type SendMailOptions, type Transporter } from 'nodemailer';
+import type SMTPPool from 'nodemailer/lib/smtp-pool';
 
 /**
  * Gmail SMTP üzerinden mail gönderimi (Google Workspace).
@@ -11,18 +12,57 @@ import nodemailer from 'nodemailer';
 const BASE = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://terapimap.com').replace(/\/$/, '');
 const FROM_NAME = 'Terapimap';
 
-function getTransport() {
+// Havuzlu (pooled) tek transport: her gönderimde yeni SMTP bağlantısı + TLS el
+// sıkışması yerine bağlantılar yeniden kullanılır. Özellikle toplu davet
+// gönderiminde (admin → Davetler) 20-40 ayrı el sıkışmasını önler. Modül
+// düzeyinde tutulduğu için aynı sıcak fonksiyon örneğindeki istekler paylaşır.
+type Transport = Transporter<SMTPPool.SentMessageInfo>;
+let cachedTransport: Transport | null = null;
+
+function getTransport(): Transport {
+  if (cachedTransport) return cachedTransport;
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
   if (!user || !pass) {
     throw new Error('GMAIL_USER / GMAIL_APP_PASSWORD ortam değişkenleri tanımlı değil.');
   }
-  return nodemailer.createTransport({
+  cachedTransport = nodemailer.createTransport({
     host: 'smtp.gmail.com',
     port: 465,
     secure: true,
     auth: { user, pass },
+    pool: true,
+    maxConnections: 2, // Gmail'i zorlamamak için düşük tutuldu
+    maxMessages: 100,
   });
+  return cachedTransport;
+}
+
+function resetTransport(): void {
+  try {
+    cachedTransport?.close();
+  } catch {
+    /* yok say */
+  }
+  cachedTransport = null;
+}
+
+// Yalnızca bağlantı düzeyindeki hatalarda (boşta kalıp kopmuş havuz bağlantısı)
+// bir kez yeniden denenir. Zaman aşımı gibi gönderimin ulaşmış olabileceği hatalar
+// bilerek DIŞARIDA: mükerrer e-posta riski bağlantı kopmasından daha kötü.
+const RETRYABLE_CODES = new Set(['ECONNECTION', 'ECONNRESET', 'EPIPE', 'ESOCKET']);
+
+async function sendMail(options: SendMailOptions) {
+  try {
+    return await getTransport().sendMail(options);
+  } catch (err) {
+    const code = (err as { code?: string } | null)?.code;
+    if (code && RETRYABLE_CODES.has(code)) {
+      resetTransport();
+      return await getTransport().sendMail(options);
+    }
+    throw err;
+  }
 }
 
 /* ── Ortak şablon parçaları ─────────────────────────────────────────── */
@@ -164,7 +204,7 @@ export async function sendLeadToTherapist({ lead, professional }: LeadEmailInput
     .filter((l) => l !== null)
     .join('\n');
 
-  await getTransport().sendMail({
+  await sendMail({
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: professional.email,
     replyTo: lead.email,
@@ -262,7 +302,7 @@ export async function sendApplicationNotification(app: ApplicationEmailInput) {
     .filter((l) => l !== null)
     .join('\n');
 
-  await getTransport().sendMail({
+  await sendMail({
     from: { name: FROM_NAME, address: adminAddr },
     to: adminAddr,
     replyTo: app.email,
@@ -417,7 +457,7 @@ export async function sendVerificationInvite({
     'Terapimap — terapimap.com',
   ].join('\n');
 
-  await getTransport().sendMail({
+  await sendMail({
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: email,
     subject: `${name}, Terapimap profiliniz yayında — ücretsiz doğrulayın`,
@@ -471,7 +511,7 @@ export async function sendPanelInviteEmail({ name, email, inviteUrl }: PanelInvi
     'Terapimap — terapimap.com',
   ].join('\n');
 
-  await getTransport().sendMail({
+  await sendMail({
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: email,
     subject: `${name}, Terapimap panel hesabınız hazır`,
@@ -519,7 +559,7 @@ export async function sendConfirmationToClient({ lead, professional }: LeadEmail
     'Terapimap — terapimap.com',
   ].join('\n');
 
-  await getTransport().sendMail({
+  await sendMail({
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: lead.email,
     subject: `Talebiniz ${professional.name}'a iletildi — Terapimap`,
@@ -605,7 +645,7 @@ export async function sendTestResultEmail({
     'Terapimap — terapimap.com',
   ].join('\n');
 
-  await getTransport().sendMail({
+  await sendMail({
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: email,
     subject: `${testTitle} Sonucunuz — Terapimap`,
@@ -719,7 +759,7 @@ export async function sendAppointmentRequestToTherapist({ appointment, professio
     .filter((l) => l !== null)
     .join('\n');
 
-  await getTransport().sendMail({
+  await sendMail({
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: professional.email,
     replyTo: appointment.client_email,
@@ -769,7 +809,7 @@ export async function sendAppointmentPendingToClient({ appointment, professional
     'Terapimap — terapimap.com',
   ].join('\n');
 
-  await getTransport().sendMail({
+  await sendMail({
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: appointment.client_email,
     subject: `Randevu talebiniz alındı — ${when}`,
@@ -819,7 +859,7 @@ export async function sendAppointmentConfirmedToClient({ appointment, profession
     'Terapimap — terapimap.com',
   ].join('\n');
 
-  await getTransport().sendMail({
+  await sendMail({
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: appointment.client_email,
     subject: `Randevunuz onaylandı — ${when}`,
@@ -855,7 +895,7 @@ export async function sendAppointmentCancelledToClient({ appointment, profession
     'Terapimap — terapimap.com',
   ].join('\n');
 
-  await getTransport().sendMail({
+  await sendMail({
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: appointment.client_email,
     subject: `Randevunuz iptal edildi — ${when}`,
@@ -951,7 +991,7 @@ export async function sendAnnouncementSubmissionNotification({
     .filter((l) => l !== null)
     .join('\n');
 
-  await getTransport().sendMail({
+  await sendMail({
     from: { name: FROM_NAME, address: adminAddr },
     to: adminAddr,
     subject: `Yeni Duyuru İncelemesi — ${professional.name}`,

@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getServerClient } from '@/lib/supabase/server';
+import { getPanelProfessional, PANEL_BASE_COLUMNS } from '@/lib/panel/session';
 import { PanelShell } from '@/components/panel/PanelShell';
 
 /**
@@ -13,20 +13,13 @@ export default async function PanelAppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = getServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Kullanıcı + temel profil istek başına tek sefer çekilir; aynı kolonları
+  // isteyen sayfalar (randevular, talepler) bu sorguyu paylaşır.
+  const { user, professional } = await getPanelProfessional(PANEL_BASE_COLUMNS);
 
   if (!user) {
     redirect('/panel/giris');
   }
-
-  const { data: professional } = await supabase
-    .from('professionals')
-    .select('id, name, city, status, is_verified')
-    .eq('user_id', user.id)
-    .maybeSingle();
 
   return <PanelShell professional={professional}>{children}</PanelShell>;
 }

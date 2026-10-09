@@ -18,6 +18,7 @@ import {
 } from '@/types/database';
 import type { ProfessionalType, Specialty, TherapistDocument } from '@/types/database';
 
+import { Honeypot, readHoneypot } from '@/components/Honeypot';
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 const PROF_TYPES: ProfessionalType[] = [
@@ -180,6 +181,7 @@ export default function TherapistApplicationForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const hp = readHoneypot(e.currentTarget as Element);
     setErrorMsg(null);
 
     if (!firstName.trim() || !lastName.trim()) return fail('Ad ve soyad zorunludur.');
@@ -213,6 +215,7 @@ export default function TherapistApplicationForm({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          hp_company: hp,
           request_type: 'new',
           full_name: `${firstName.trim()} ${lastName.trim()}`,
           professional_type: profType,
@@ -265,6 +268,7 @@ export default function TherapistApplicationForm({
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-6">
+      <Honeypot />
       <fieldset disabled={isLoading} className="space-y-6 disabled:opacity-60">
         {/* Kişisel */}
         <div className="grid gap-4 sm:grid-cols-2">

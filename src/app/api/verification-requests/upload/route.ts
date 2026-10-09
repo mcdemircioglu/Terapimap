@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 
+import { isRateLimited, tooManyRequests, isHoneypotTripped, fakeOk, JSON_LIMIT, UPLOAD_LIMIT } from '@/lib/spamGuard';
 const BUCKET = 'therapist-photos';
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 /* ── POST /api/verification-requests/upload ───────────────────────────────── */
 export async function POST(request: Request) {
+  if (isRateLimited(request, 'upload', UPLOAD_LIMIT.limit, UPLOAD_LIMIT.windowMs)) return tooManyRequests();
   let formData: FormData;
   try {
     formData = await request.formData();

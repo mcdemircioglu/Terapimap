@@ -3,9 +3,9 @@ import { getServiceClient } from '@/lib/supabase/server';
 import { slugifyTr } from '@/lib/utils';
 import { revalidatePublicTherapistPages } from '@/lib/revalidatePublicPages';
 
+import { verifyAdminRequest } from '@/lib/admin/auth';
 function verifyAuth(request: Request): boolean {
-  const pw = request.headers.get('x-admin-password');
-  return !!pw && pw === process.env.ADMIN_PASSWORD;
+  return verifyAdminRequest(request);
 }
 
 /**

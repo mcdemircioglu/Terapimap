@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 
+import { isRateLimited, tooManyRequests, isHoneypotTripped, fakeOk, JSON_LIMIT, UPLOAD_LIMIT } from '@/lib/spamGuard';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Params = { params: { id: string } };
@@ -13,12 +14,16 @@ type Params = { params: { id: string } };
  * yapılmıyor — Terapimap yalnızca duyuruyu yayınlayan taraf.
  * ────────────────────────────────────────────────────────────────────── */
 export async function POST(request: Request, { params }: Params) {
+  if (isRateLimited(request, 'ann-register', JSON_LIMIT.limit, JSON_LIMIT.windowMs)) return tooManyRequests();
   let body: any;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Geçersiz istek gövdesi.' }, { status: 400 });
   }
+
+  // Honeypot: botlara sessiz sahte başarı.
+  if (isHoneypotTripped(body)) return fakeOk();
 
   const name = String(body?.name ?? '').trim();
   const email = String(body?.email ?? '').trim();

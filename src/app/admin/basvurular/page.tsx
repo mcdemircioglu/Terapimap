@@ -6,6 +6,7 @@
  * (PUT /api/admin/verification-requests/[id] action=approve).
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { CACHE_KEY_PROFESSIONALS, clearAdminCache } from '@/lib/admin/sessionCache';
 
 type Application = {
   id: string;
@@ -138,13 +139,22 @@ export default function BasvurularPage() {
     setBusyId(id);
     try {
       const res = await apiFetch(`/api/admin/verification-requests/${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         body: JSON.stringify({ action }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok) {
         showFlash({ type: 'success', text: action === 'approve' ? 'Başvuru onaylandı, profil oluşturuldu.' : 'Başvuru reddedildi.' });
-        load();
+        // Onay yeni bir profil oluşturur → /admin terapist listesi önbelleği bayatladı.
+        if (action === 'approve') clearAdminCache(CACHE_KEY_PROFESSIONALS);
+        // Listeyi yeniden indirmek yerine yerelde güncelle: aktif filtreyle
+        // uyuşmayan satır listeden çıkar, 'all' filtresinde durumu değişir.
+        const newStatus = action === 'approve' ? 'approved' : 'rejected';
+        setItems((prev) =>
+          statusFilter === 'all'
+            ? prev.map((x) => (x.id === id ? { ...x, status: newStatus } : x))
+            : prev.filter((x) => x.id !== id),
+        );
       } else {
         showFlash({ type: 'error', text: data.error ?? 'İşlem başarısız.' });
       }

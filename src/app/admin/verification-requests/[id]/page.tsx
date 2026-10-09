@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { CACHE_KEY_PROFESSIONALS, clearAdminCache } from '@/lib/admin/sessionCache';
 import { useParams } from 'next/navigation';
 
 type VerificationRequest = {
@@ -158,6 +159,8 @@ export default function VerificationRequestDetailPage() {
           note: 'Not kaydedildi.',
         };
         setFlash({ type: 'success', text: msgs[action] ?? 'İşlem tamamlandı.' });
+        // Onay/ret/kaldırma profil alanlarını değiştirir → /admin liste önbelleği bayatladı.
+        if (action !== 'note') clearAdminCache(CACHE_KEY_PROFESSIONALS);
         loadData();
       } else {
         setFlash({ type: 'error', text: data.error ?? 'Bir hata oluştu.' });
