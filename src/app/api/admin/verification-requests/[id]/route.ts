@@ -181,7 +181,7 @@ export async function PATCH(
       const { data: created, error: createErr } = await supabase
         .from('professionals')
         .insert(insertPayload)
-        .select('id')
+        .select('id, slug, professional_type')
         .single();
 
       if (createErr || !created) {
@@ -222,6 +222,8 @@ export async function PATCH(
           admin_note: admin_note ?? null,
         })
         .eq('id', params.id);
+
+      revalidatePublicTherapistPages(created);
 
       return NextResponse.json({ ok: true, action: 'approved', professionalId: created.id });
     }
@@ -327,6 +329,19 @@ export async function PATCH(
     if (vrUpdateErr) {
       return NextResponse.json({ error: vrUpdateErr.message }, { status: 500 });
     }
+
+    // Onaylanan profil herkese açık sayfalarda (liste + kendi detay sayfası)
+    // anında güncellensin.
+    let approvedRef: { slug?: string | null; professional_type?: string | null } | null = null;
+    if (vr.professional_id) {
+      const { data: approvedProf } = await supabase
+        .from('professionals')
+        .select('slug, professional_type')
+        .eq('id', vr.professional_id)
+        .maybeSingle();
+      approvedRef = approvedProf;
+    }
+    revalidatePublicTherapistPages(approvedRef);
 
     return NextResponse.json({ ok: true, action: 'approved' });
   }

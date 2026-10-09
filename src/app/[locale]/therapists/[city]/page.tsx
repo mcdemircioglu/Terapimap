@@ -4,7 +4,7 @@ import { generateMetadataImpl, CityPage } from '@/lib/page-views/city';
 
 // Bu rota searchParams OKUMAZ -> statik/ISR. Filtreli/sayfali istekler
 // (?page=, ?online= ...) middleware'de /dyn/... rotasina rewrite edilir.
-export const revalidate = 21600; // 6 saat; admin işlemleri etiketle anında temizler
+export const revalidate = 86400; // 24 saat; admin işlemleri etiketle anında temizler
 export const dynamicParams = true;
 
 export function generateStaticParams() {

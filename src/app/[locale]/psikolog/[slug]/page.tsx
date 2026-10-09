@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { generateMetadataImpl, ProfileDetail } from '@/lib/page-views/profile';
 
 // /[locale]/psikolog/[slug] — canonical profil sayfasi (mantik: lib/page-views/profile.tsx)
-export const revalidate = 3600;
+export const revalidate = 604800; // 7 gün; admin işlemleri yola göre anında temizler
 export const dynamicParams = true;
 
 // Profiller ilk istekte uretilir ve ISR ile onbellege alinir (ƒ yerine ● olur).

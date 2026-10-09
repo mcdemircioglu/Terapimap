@@ -1094,6 +1094,16 @@ export default function AdminPage() {
     setEditingId(null);
   };
 
+  const handleClearCache = async () => {
+    if (!window.confirm('Sitedeki tüm sayfa önbelleği temizlensin mi?\n\nSayfalar bir sonraki ziyarette yeniden oluşturulur.')) return;
+    const res = await apiFetch('/api/admin/revalidate-all', { method: 'POST' });
+    showFlash(
+      res.ok
+        ? { type: 'success', text: 'Önbellek temizlendi.' }
+        : { type: 'error', text: 'Önbellek temizlenemedi.' },
+    );
+  };
+
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`"${name}" adlı profesyoneli silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz.`)) return;
     const res = await apiFetch(`/api/admin/professionals/${id}`, { method: 'DELETE' });
@@ -1217,6 +1227,9 @@ export default function AdminPage() {
             </svg>
             Duyurular
           </a>
+          <Btn variant="ghost" onClick={handleClearCache} className="text-sm text-gray-500 hover:text-gray-800 hover:bg-gray-100">
+            Önbelleği Temizle
+          </Btn>
           <Btn variant="ghost" onClick={handleLogout} className="text-sm text-gray-400 hover:text-red-600 hover:bg-red-50">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
