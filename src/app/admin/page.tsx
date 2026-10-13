@@ -438,6 +438,61 @@ function ProfessionalList({
   const [verifiedFilter, setVerifiedFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
+  // ── Liste durumunu koru (filtre + scroll) ─────────────────────────────────
+  // Terapist düzenlemeye girip çıkınca bu bileşen yeniden mount olur; filtreler
+  // ve scroll konumu sessionStorage'da saklanıp geri yüklenerek baştan başlama
+  // / tekrar aşağı kaydırma sorunu giderilir.
+  const filtersRestored = useRef(false);
+  const scrollRestored = useRef(false);
+
+  useEffect(() => {
+    try {
+      const g = (k: string) => sessionStorage.getItem(k) ?? '';
+      setSearch(g('admList_search'));
+      setCityFilter(g('admList_city'));
+      setVerifiedFilter(g('admList_verified'));
+      setStatusFilter(g('admList_status'));
+    } catch {
+      /* sessionStorage erişilemezse sessiz geç */
+    }
+    filtersRestored.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (!filtersRestored.current) return;
+    try {
+      sessionStorage.setItem('admList_search', search);
+      sessionStorage.setItem('admList_city', cityFilter);
+      sessionStorage.setItem('admList_verified', verifiedFilter);
+      sessionStorage.setItem('admList_status', statusFilter);
+    } catch {
+      /* no-op */
+    }
+  }, [search, cityFilter, verifiedFilter, statusFilter]);
+
+  // Veri geldikten sonra kaydedilen scroll konumuna dön (mount başına bir kez)
+  useEffect(() => {
+    if (scrollRestored.current || professionals.length === 0) return;
+    scrollRestored.current = true;
+    let y = 0;
+    try {
+      y = Number(sessionStorage.getItem('admList_scroll') || 0);
+    } catch {
+      /* no-op */
+    }
+    if (y > 0) setTimeout(() => window.scrollTo(0, y), 60);
+  }, [professionals.length]);
+
+  // Terapiste girmeden hemen önce scroll konumunu kaydet
+  const handleEdit = (id: string) => {
+    try {
+      sessionStorage.setItem('admList_scroll', String(window.scrollY));
+    } catch {
+      /* no-op */
+    }
+    onEdit(id);
+  };
+
   // Unique cities sorted alphabetically
   const cities = Array.from(new Set(professionals.map((p) => p.city).filter(Boolean))).sort();
 
@@ -635,7 +690,7 @@ function ProfessionalList({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-1 justify-end">
-                        <Btn variant="ghost" onClick={() => onEdit(p.id)} className="px-2 py-1.5">
+                        <Btn variant="ghost" onClick={() => handleEdit(p.id)} className="px-2 py-1.5">
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                           </svg>

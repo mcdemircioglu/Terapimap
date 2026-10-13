@@ -3,7 +3,7 @@ import { generateMetadataImpl, TherapistsPage } from '@/lib/page-views/therapist
 
 // Bu rota searchParams OKUMAZ -> statik/ISR. Filtreli/sayfali istekler
 // (?page=, ?online= ...) middleware'de /dyn/... rotasina rewrite edilir.
-export const revalidate = 86400; // 24 saat; admin işlemleri etiketle anında temizler
+export const revalidate = 604800; // 7 gün; admin işlemleri etiketle anında temizler (ISR yazma maliyeti için uzun TTL)
 export const dynamicParams = true;
 
 type Params = { locale: string };

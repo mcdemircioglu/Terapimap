@@ -62,7 +62,10 @@ export default async function PanelOverviewPage() {
   const { data: leadsForSummary } = await supabase
     .from('leads')
     .select('id, therapist_contacted_at')
-    .eq('professional_id', professional.id);
+    .eq('professional_id', professional.id)
+    // Talepler sayfasıyla aynı filtre: randevu takviminden gelen bilgilendirme
+    // kayıtları "Talepler"de gösterilmediği için sayıma da girmez.
+    .or('source.is.null,source.neq.randevu_takvimi');
 
   const leadsTotal = leadsForSummary?.length ?? 0;
   const leadsPending = leadsForSummary?.filter((l) => !l.therapist_contacted_at).length ?? 0;

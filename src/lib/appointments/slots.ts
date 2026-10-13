@@ -30,7 +30,7 @@ function fromMinutes(total: number): string {
  * Döndürülen saatler UTC ISO string (appointments.start_at ile doğrudan
  * karşılaştırılabilir/kaydedilebilir).
  */
-export function computeAvailableSlots(params: {
+export function computeSlotsDetailed(params: {
   sessionDurationMinutes: number;
   rules: AvailabilityRuleRow[];
   exceptions: AvailabilityExceptionRow[];
@@ -38,7 +38,7 @@ export function computeAvailableSlots(params: {
   fromDate: string; // "YYYY-MM-DD" (İstanbul yerel)
   days: number;
   minLeadMinutes: number;
-}): Record<string, string[]> {
+}): { available: Record<string, string[]>; booked: Record<string, string[]> } {
   const { sessionDurationMinutes, rules, exceptions, existingAppointments, fromDate, days, minLeadMinutes } = params;
 
   const nowMs = Date.now();
@@ -49,6 +49,7 @@ export function computeAvailableSlots(params: {
   }));
 
   const result: Record<string, string[]> = {};
+  const bookedResult: Record<string, string[]> = {};
 
   for (let i = 0; i < days; i++) {
     const date = addDays(fromDate, i);
@@ -67,6 +68,7 @@ export function computeAvailableSlots(params: {
     if (windows.length === 0) continue;
 
     const daySlots: string[] = [];
+    const dayBooked: string[] = [];
     for (const w of windows) {
       const startMin = toMinutes(w.start);
       const endMin = toMinutes(w.end);
@@ -77,7 +79,11 @@ export function computeAvailableSlots(params: {
 
         const slotEndMs = slotStartMs + sessionDurationMinutes * 60_000;
         const overlaps = busy.some((b) => b.start < slotEndMs && b.end > slotStartMs);
-        if (overlaps) continue;
+        if (overlaps) {
+          // Dolu saat: müsait değil ama arayüzde üstü çizili göstermek için ayrıca döner.
+          dayBooked.push(slotStartIso);
+          continue;
+        }
 
         daySlots.push(slotStartIso);
       }
@@ -86,7 +92,17 @@ export function computeAvailableSlots(params: {
     if (daySlots.length > 0) {
       result[date] = daySlots.sort();
     }
+    if (dayBooked.length > 0) {
+      bookedResult[date] = dayBooked.sort();
+    }
   }
 
-  return result;
+  return { available: result, booked: bookedResult };
+}
+
+/** Yalnızca müsait saatler (rezervasyon anında yeniden doğrulama için). */
+export function computeAvailableSlots(
+  params: Parameters<typeof computeSlotsDetailed>[0],
+): Record<string, string[]> {
+  return computeSlotsDetailed(params).available;
 }

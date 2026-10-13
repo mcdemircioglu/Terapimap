@@ -14,6 +14,7 @@ import Navbar from '@/components/Navbar';
 import JsonLd from '@/components/JsonLd';
 import { buildOrganizationSchema } from '@/lib/schema';
 import Footer from '@/components/Footer';
+import WhatsAppButton from '@/components/WhatsAppButton';
 import { CookieConsentProvider } from '@/components/cookie-consent/CookieConsentProvider';
 import CookieBanner from '@/components/cookie-consent/CookieBanner';
 import CookiePreferencesModal from '@/components/cookie-consent/CookiePreferencesModal';
@@ -93,6 +94,7 @@ export default async function LocaleLayout({
             <CookieBanner />
             <CookiePreferencesModal />
             <ConsentScripts />
+            <WhatsAppButton locale={locale as Locale} />
           </CookieConsentProvider>
         </NextIntlClientProvider>
         <Analytics />

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
-import { computeAvailableSlots } from '@/lib/appointments/slots';
+import { computeSlotsDetailed } from '@/lib/appointments/slots';
 import { addDays, istanbulToday } from '@/lib/appointments/time';
 
 const DAYS_AHEAD = 21;
@@ -76,7 +76,7 @@ export async function GET(request: Request) {
       .gte('start_at', nowIso),
   ]);
 
-  const slots = computeAvailableSlots({
+  const { available: slots, booked: bookedSlots } = computeSlotsDetailed({
     sessionDurationMinutes: professional.session_duration_minutes,
     rules: rules ?? [],
     exceptions: exceptions ?? [],
@@ -92,5 +92,6 @@ export async function GET(request: Request) {
     isInPerson: professional.is_in_person,
     hasMeetingLink: !!professional.meeting_link,
     slots,
+    bookedSlots,
   });
 }

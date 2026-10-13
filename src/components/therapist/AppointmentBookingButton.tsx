@@ -38,6 +38,8 @@ type SlotsResponse = {
   isInPerson: boolean;
   hasMeetingLink: boolean;
   slots: Record<string, string[]>;
+  /** Dolu saatler (tarih → ISO); arayüzde üstü çizili, tıklanamaz gösterilir. */
+  bookedSlots?: Record<string, string[]>;
 };
 
 type FetchState = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
@@ -248,9 +250,19 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
     }
   }
 
-  const dateKeys = data ? Object.keys(data.slots).sort() : [];
+  // Müsait + dolu saatler birlikte listelenir; dolu olanlar üstü çizili ve tıklanamaz.
+  const bookedSet = new Set<string>(Object.values(data?.bookedSlots ?? {}).flat());
+  const allSlots: Record<string, string[]> = {};
+  if (data) {
+    for (const [d, times] of Object.entries(data.slots)) allSlots[d] = [...times];
+    for (const [d, times] of Object.entries(data.bookedSlots ?? {})) {
+      allSlots[d] = [...(allSlots[d] ?? []), ...times];
+    }
+    for (const d of Object.keys(allSlots)) allSlots[d].sort();
+  }
+  const dateKeys = data ? Object.keys(allSlots).sort() : [];
   const shownDateKeys = dateKeys.slice(0, visibleDays);
-  const timesForSelectedDate = selectedDate && data ? data.slots[selectedDate] ?? [] : [];
+  const timesForSelectedDate = selectedDate && data ? allSlots[selectedDate] ?? [] : [];
   const needsSessionTypeChoice = data?.isOnline && data?.hasMeetingLink && data?.isInPerson;
 
   // ── Masaüstü çok-günlü ızgara (yalnızca step === 'pick' sırasında kullanılır) ──
@@ -261,7 +273,7 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
   const canGoNextDays = desktopWindowStart + DESKTOP_COLUMNS < dateKeys.length;
   const canGoPrevDays = desktopWindowStart > 0;
   const desktopHasHiddenTimes =
-    !showAllTimes && desktopDateKeys.some((date) => (data?.slots[date]?.length ?? 0) > DESKTOP_TIMES_CAP);
+    !showAllTimes && desktopDateKeys.some((date) => (allSlots[date]?.length ?? 0) > DESKTOP_TIMES_CAP);
 
   let body: React.ReactNode;
 
@@ -424,9 +436,13 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
                   <button
                     key={iso}
                     type="button"
+                    disabled={bookedSet.has(iso)}
+                    aria-disabled={bookedSet.has(iso)}
                     onClick={() => setSelectedSlot(iso)}
                     className={`h-10 rounded-lg border text-sm font-medium transition-colors ${
-                      selectedSlot === iso
+                      bookedSet.has(iso)
+                        ? 'cursor-not-allowed border-brand-100 bg-brand-50 text-brand-300 line-through'
+                        : selectedSlot === iso
                         ? 'border-brand-600 bg-brand-600 text-white'
                         : 'border-brand-200 bg-white text-brand-700 hover:bg-brand-50'
                     }`}
@@ -451,7 +467,7 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
             >
               {desktopDateKeys.map((date) => {
                 const header = fmtColumnHeader(date, locale, todayKey, tomorrowKey, t('today'), t('tomorrow'));
-                const times = data?.slots[date] ?? [];
+                const times = allSlots[date] ?? [];
                 const shownTimes = showAllTimes ? times : times.slice(0, DESKTOP_TIMES_CAP);
                 return (
                   <div key={date}>
@@ -468,12 +484,16 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
                           <button
                             key={iso}
                             type="button"
+                            disabled={bookedSet.has(iso)}
+                            aria-disabled={bookedSet.has(iso)}
                             onClick={() => {
                               setSelectedDate(date);
                               setSelectedSlot(iso);
                             }}
                             className={`h-10 w-full rounded-lg border text-sm font-medium transition-colors ${
-                              active
+                              bookedSet.has(iso)
+                                ? 'cursor-not-allowed border-brand-100 bg-brand-50 text-brand-300 line-through'
+                                : active
                                 ? 'border-brand-600 bg-brand-600 text-white'
                                 : 'border-brand-200 bg-white text-brand-700 hover:bg-brand-50'
                             }`}
