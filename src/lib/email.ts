@@ -399,16 +399,16 @@ export async function sendVerificationInvite({
       : '';
 
   const html = layout(
-    'Terapimap profiliniz yayında',
+    'Terapimap&#39;te sizin için profil hazırladık',
     `<p style="margin:0 0 16px;font-size:14px;color:${C.text};line-height:1.7;">
       Sayın ${escapeHtml(name)},<br><br>
-      Sizin için Terapimap&#39;te adınıza profil oluşturduk. İsterseniz profilinizi ücretsiz
-      güncelleyip onaylı profil avantajlarından yararlanabilirsiniz. Danışanlar arama sonuçlarında
-      bu profille karşılaşıyor. Terapimap, danışanların şehir ve uzmanlık alanına göre terapist
-      bulduğu ücretsiz bir dizin platformudur.
+      Size Terapimap ekibinden ulaşıyoruz. Terapimap, ruh sağlığı profesyonellerinin danışanlar
+      tarafından daha kolay keşfedilmesini amaçlayan bir uzman dizin platformudur. Mesleki
+      görünürlüğünüzü desteklemek amacıyla Terapimap&#39;te sizin için <strong>ücretsiz bir uzman
+      profili</strong> hazırladık.
     </p>
     <p style="margin:0 0 16px;font-size:14px;color:${C.primary};font-weight:bold;line-height:1.6;">
-      Profilinizi doğrulayarak daha fazla görüntülenme ve danışan talebi alabilirsiniz.
+      Profiliniz şimdiden arama sonuçlarında görünmeye başladı.
     </p>
     ${previewCard}
     ${viewLink}
@@ -426,19 +426,22 @@ export async function sendVerificationInvite({
     </p>
     ${campaignBox}
     ${button(verifyUrl, 'Profilimi Ücretsiz Doğrula')}
-    <p style="margin:22px 0 0;font-size:12px;color:${C.muted};line-height:1.6;">
-      Bu e-postayı, adınıza kayıtlı profil Terapimap&#39;te yayında olduğu için aldınız. Profilin size
-      ait olmadığını düşünüyorsanız ya da <strong>kaldırılmasını</strong> isterseniz, yukarıdaki
-      bağlantıdan talep oluşturabilir ya da bu e-postayı yanıtlayabilirsiniz.
+    <p style="margin:22px 0 0;font-size:13px;color:${C.text};line-height:1.6;">
+      Profilinizin platformda yer almasını istemiyorsanız aynı bağlantı üzerinden
+      <strong>kaldırılmasını</strong> da talep edebilirsiniz.
+    </p>
+    <p style="margin:18px 0 0;font-size:14px;color:${C.text};line-height:1.6;">
+      İyi çalışmalar dileriz,<br>
+      <strong>Terapimap Ekibi</strong>
     </p>`,
   );
 
   const text = [
     `Sayın ${name},`,
     '',
-    'Sizin için Terapimap\'te adınıza profil oluşturduk. İsterseniz profilinizi ücretsiz güncelleyip onaylı profil avantajlarından yararlanabilirsiniz. Danışanlar arama sonuçlarında bu profille karşılaşıyor. Terapimap, danışanların şehir ve uzmanlık alanına göre terapist bulduğu ücretsiz bir dizin platformudur.',
+    'Size Terapimap ekibinden ulaşıyoruz. Terapimap, ruh sağlığı profesyonellerinin danışanlar tarafından daha kolay keşfedilmesini amaçlayan bir uzman dizin platformudur. Mesleki görünürlüğünüzü desteklemek amacıyla Terapimap\'te sizin için ücretsiz bir uzman profili hazırladık.',
     '',
-    'Profilinizi doğrulayarak daha fazla görüntülenme ve danışan talebi alabilirsiniz.',
+    'Profiliniz şimdiden arama sonuçlarında görünmeye başladı.',
     ...(profileUrl ? ['', `Profiliniz: ${profileUrl}`] : []),
     '',
     'Profilinizi ücretsiz doğrulayarak:',
@@ -452,15 +455,16 @@ export async function sendVerificationInvite({
     '',
     `Doğrulama bağlantısı: ${verifyUrl}`,
     '',
-    'Profilin size ait olmadığını düşünüyorsanız ya da kaldırılmasını isterseniz aynı bağlantıdan talep edebilir veya bu e-postayı yanıtlayabilirsiniz.',
+    'Profilinizin platformda yer almasını istemiyorsanız aynı bağlantı üzerinden kaldırılmasını da talep edebilirsiniz.',
     '',
-    'Terapimap — terapimap.com',
+    'İyi çalışmalar dileriz,',
+    'Terapimap Ekibi',
   ].join('\n');
 
   await sendMail({
     from: { name: FROM_NAME, address: process.env.GMAIL_USER! },
     to: email,
-    subject: `${name}, Terapimap profiliniz yayında — ücretsiz doğrulayın`,
+    subject: `${name}, Terapimap'te sizin için bir profil hazırladık`,
     html,
     text,
   });
