@@ -11,6 +11,7 @@ type Lead = {
   professional_id: string;
   professional_name: string | null;
   professional_slug: string | null;
+  professional_phone: string | null;
   name: string;
   email: string;
   phone: string | null;
@@ -66,6 +67,25 @@ function leadWhatsAppUrl(lead: Lead): string | null {
     `en kısa sürede sizinle iletişime geçecektir. ` +
     `Makul bir süre içinde dönüş alamazsanız lütfen bu numaradan bize bildirin, ` +
     `size yardımcı olalım. İyi günler dileriz.\nTerapimap Ekibi`;
+  return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+}
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://terapimap.com';
+
+// Terapiste gönderilecek lead bilgisi + "iletişime geçtim" bildirim linki (telefon yoksa null).
+function therapistWhatsAppUrl(lead: Lead): string | null {
+  const num = normalizeTrPhone(lead.professional_phone);
+  if (!num) return null;
+  const confirmUrl = `${SITE_URL}/iletisime-gectim/${lead.id}`;
+  const msg =
+    `Merhaba, Terapimap'ten yazıyoruz. Size yeni bir danışan talebi iletildi:\n\n` +
+    `Danışan: ${lead.name}\n` +
+    `Telefon: ${lead.phone ?? '-'}\n` +
+    `E-posta: ${lead.email}\n` +
+    `Mesajı: ${lead.message}\n\n` +
+    `Lütfen danışanla en kısa sürede iletişime geçin. Görüştükten sonra aşağıdaki bağlantıdan ` +
+    `bize bildirebilirsiniz:\n${confirmUrl}\n\n` +
+    `Teşekkürler,\nTerapimap Ekibi`;
   return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
 }
 
@@ -510,6 +530,20 @@ export default function LeadsPage() {
                               </>
                             )}
                           </Btn>
+                        )}
+                        {therapistWhatsAppUrl(lead) && (
+                          <a
+                            href={therapistWhatsAppUrl(lead) as string}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Terapiste WhatsApp'tan lead bilgisi gönder"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-950 bg-amber-400 hover:bg-amber-500 transition-colors ml-1 align-middle"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 018.413 3.488 11.82 11.82 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24z" />
+                            </svg>
+                            Terapist
+                          </a>
                         )}
                         {leadWhatsAppUrl(lead) && (
                           <a

@@ -344,7 +344,7 @@ export async function ProfileDetail({
               </Card>
             )}
 
-            {/* Bu profil size mi ait? — belirgin doğrulama kartı */}
+            {/* Doğrulama / güncelleme kartı — doğrulanmışsa "güncelle", değilse "doğrula" */}
             <Link
               href={`/profil-dogrula/${therapist.id}`}
               className="group flex items-center gap-4 rounded-2xl border-2 border-brand-200 bg-brand-50 p-5 transition-colors hover:border-brand-400 hover:bg-brand-100/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 md:p-6"
@@ -355,14 +355,30 @@ export async function ProfileDetail({
                 </svg>
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-lg font-bold text-brand-900 md:text-xl">Bu profil size mi ait?</p>
-                <p className="mt-1 text-sm leading-relaxed text-brand-700 md:text-base">
-                  Profilinizi <strong>ücretsiz</strong> doğrulayın; bilgilerinizi güncelleyin ve
-                  &quot;Doğrulanmış Profil&quot; rozeti kazanın.
+                <p className="text-lg font-bold text-brand-900 md:text-xl">
+                  {therapist.is_verified ? 'Profili güncelle' : 'Bu profil size mi ait?'}
                 </p>
+                <p className="mt-1 text-sm leading-relaxed text-brand-700 md:text-base">
+                  {therapist.is_verified ? (
+                    <>
+                      Bilgilerinizi <strong>güncelleyin</strong> veya düzenleme / kaldırma talebinde
+                      bulunun.
+                    </>
+                  ) : (
+                    <>
+                      Profilinizi <strong>ücretsiz</strong> doğrulayın; bilgilerinizi güncelleyin ve
+                      &quot;Doğrulanmış Profil&quot; rozeti kazanın.
+                    </>
+                  )}
+                </p>
+                {!therapist.is_verified && (
+                  <p className="mt-2 text-xs text-brand-500">
+                    Bu profil kamuya açık bilgiler kullanılarak oluşturulmuştur.
+                  </p>
+                )}
               </div>
               <span className="hidden flex-shrink-0 items-center gap-1.5 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors group-hover:bg-brand-700 sm:inline-flex">
-                Doğrula
+                {therapist.is_verified ? 'Güncelle' : 'Doğrula'}
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>

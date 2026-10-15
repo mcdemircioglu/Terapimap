@@ -110,5 +110,5 @@ export default async function middleware(request: NextRequest) {
 
 export const config = {
   // Skip API routes, admin panel, _next, static files, favicon.
-  matcher: ['/((?!api|admin|profil-dogrula|_next|.*[.].*).*)'],
+  matcher: ['/((?!api|admin|profil-dogrula|iletisime-gectim|_next|.*[.].*).*)'],
 };
