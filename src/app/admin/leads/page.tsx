@@ -43,6 +43,32 @@ const FILTER_OPTIONS: { value: '' | LeadStatus; label: string }[] = [
   { value: 'spam',      label: 'Spam' },
 ];
 
+// Türk telefon numarasını WhatsApp formatına (90XXXXXXXXXX) çevirir; geçersizse null.
+function normalizeTrPhone(p: string | null): string | null {
+  if (!p) return null;
+  const d = p.replace(/\D/g, '');
+  let nat = '';
+  if (d.startsWith('90') && d.length === 12) nat = d.slice(2);
+  else if (d.startsWith('0') && d.length === 11) nat = d.slice(1);
+  else if (d.length === 10) nat = d;
+  else return null;
+  return nat.length === 10 ? '90' + nat : null;
+}
+
+// Danışana gönderilecek bilgilendirme mesajını içeren wa.me linki (telefon yoksa null).
+function leadWhatsAppUrl(lead: Lead): string | null {
+  const num = normalizeTrPhone(lead.phone);
+  if (!num) return null;
+  const terapist = lead.professional_name ?? 'ilgili uzmanımız';
+  const msg =
+    `Merhaba ${lead.name}, Terapimap'ten yazıyoruz. ` +
+    `${terapist} için ilettiğiniz randevu talebiniz kendisine ulaştırılmıştır; ` +
+    `en kısa sürede sizinle iletişime geçecektir. ` +
+    `Makul bir süre içinde dönüş alamazsanız lütfen bu numaradan bize bildirin, ` +
+    `size yardımcı olalım. İyi günler dileriz.\nTerapimap Ekibi`;
+  return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+}
+
 // ── Shared UI primitives (matches admin/page.tsx style) ───────────────────────
 
 function Btn({
@@ -484,6 +510,20 @@ export default function LeadsPage() {
                               </>
                             )}
                           </Btn>
+                        )}
+                        {leadWhatsAppUrl(lead) && (
+                          <a
+                            href={leadWhatsAppUrl(lead) as string}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Danışana WhatsApp'tan bilgilendirme gönder"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[#25D366] hover:bg-[#1ebe5d] transition-colors ml-1 align-middle"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.945C.16 5.335 5.495 0 12.05 0a11.82 11.82 0 018.413 3.488 11.82 11.82 0 013.48 8.414c-.003 6.557-5.338 11.892-11.893 11.892a11.9 11.9 0 01-5.688-1.448L.057 24z" />
+                            </svg>
+                            WhatsApp
+                          </a>
                         )}
                         <Btn
                           variant="ghost"
