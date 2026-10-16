@@ -424,6 +424,7 @@ function ProfessionalList({
   onEdit,
   onDelete,
   onInvitePanel,
+  onRemovePanel,
 }: {
   professionals: ProfessionalListItem[];
   loading: boolean;
@@ -432,6 +433,7 @@ function ProfessionalList({
   onEdit: (id: string) => void;
   onDelete: (id: string, name: string) => void;
   onInvitePanel: (id: string, name: string) => void;
+  onRemovePanel: (id: string, name: string) => void;
 }) {
   const [search, setSearch] = useState('');
   const [cityFilter, setCityFilter] = useState('');
@@ -697,11 +699,20 @@ function ProfessionalList({
                           Düzenle
                         </Btn>
                         {p.user_id ? (
-                          <span
-                            title="Panel hesabı bağlı"
-                            className="px-2 py-1.5 text-xs font-medium text-brand-600"
-                          >
-                            Panel ✓
+                          <span className="inline-flex items-center gap-1 align-middle">
+                            <span
+                              title="Panel hesabı bağlı"
+                              className="px-2 py-1.5 text-xs font-medium text-brand-600"
+                            >
+                              Panel ✓
+                            </span>
+                            <Btn
+                              variant="ghost"
+                              onClick={() => onRemovePanel(p.id, p.name)}
+                              className="px-2 py-1.5 text-red-400 hover:text-red-600 hover:bg-red-50"
+                            >
+                              Çıkar
+                            </Btn>
                           </span>
                         ) : (
                           <Btn
@@ -1330,6 +1341,28 @@ export default function AdminPage() {
     }
   };
 
+  const handleRemovePanel = async (id: string, name: string) => {
+    if (
+      !window.confirm(
+        `"${name}" panelden çıkarılsın mı?\n\nTerapistin panel giriş hesabı silinir ve panel erişimi iptal olur. Profili sitede kalır. Bu işlem geri alınamaz; gerekirse tekrar davet edebilirsiniz.`,
+      )
+    )
+      return;
+    const res = await apiFetch(`/api/admin/professionals/${id}/panel-invite`, { method: 'DELETE' });
+    const d = await res.json();
+    if (res.ok) {
+      showFlash({
+        type: 'success',
+        text: d.alreadyRemoved
+          ? `"${name}" zaten panele bağlı değildi.`
+          : `"${name}" panelden çıkarıldı.`,
+      });
+      void refreshOne(id);
+    } else {
+      showFlash({ type: 'error', text: d.error ?? 'Panelden çıkarma başarısız.' });
+    }
+  };
+
   // ── Not authenticated ──
   if (!adminPassword) {
     return <LoginView onAuth={setAdminPassword} />;
@@ -1459,6 +1492,7 @@ export default function AdminPage() {
             onEdit={(id) => { setEditingId(id); setView('form'); setFlash(null); }}
             onDelete={handleDelete}
             onInvitePanel={handleInvitePanel}
+            onRemovePanel={handleRemovePanel}
           />
         ) : (
           <ProfessionalEditor

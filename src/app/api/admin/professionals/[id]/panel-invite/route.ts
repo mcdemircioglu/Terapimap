@@ -110,3 +110,59 @@ export async function POST(
 
   return NextResponse.json({ ok: true, alreadyLinked: false });
 }
+
+/**
+ * DELETE /api/admin/professionals/[id]/panel-invite
+ *
+ * Terapisti panelden çıkarır: Supabase Auth hesabını siler (giriş iptal) ve
+ * professionals.user_id / booking_tier alanlarını temizler. Sonrasında admin'de
+ * satırda yeniden "Panel'e davet et" görünür. Idempotent — zaten bağlı değilse
+ * sorun çıkarmaz.
+ */
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } },
+) {
+  if (!verifyAuth(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const supabase = getServiceClient();
+
+  const { data: prof, error: profErr } = await supabase
+    .from('professionals')
+    .select('id, user_id')
+    .eq('id', params.id)
+    .maybeSingle();
+
+  if (profErr || !prof) {
+    return NextResponse.json({ error: 'Profesyonel bulunamadı.' }, { status: 404 });
+  }
+
+  if (!prof.user_id) {
+    return NextResponse.json({ ok: true, alreadyRemoved: true });
+  }
+
+  // Auth hesabını sil — kullanıcı zaten yoksa (manuel silinmişse) hatayı yut.
+  const { error: delErr } = await supabase.auth.admin.deleteUser(prof.user_id);
+  if (delErr && !/not found|does not exist/i.test(delErr.message)) {
+    return NextResponse.json(
+      { error: 'Auth hesabı silinemedi: ' + delErr.message },
+      { status: 500 },
+    );
+  }
+
+  const { error: updErr } = await supabase
+    .from('professionals')
+    .update({ user_id: null, booking_tier: null })
+    .eq('id', prof.id);
+
+  if (updErr) {
+    return NextResponse.json(
+      { error: 'Hesap silindi ama profil güncellenemedi: ' + updErr.message },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ ok: true });
+}

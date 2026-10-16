@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createLead } from '@/lib/queries';
+import { getPublicClient } from '@/lib/supabase/server';
+import { sendLeadNotification } from '@/lib/email';
 
 import { isRateLimited, tooManyRequests, isHoneypotTripped, fakeOk, JSON_LIMIT, UPLOAD_LIMIT } from '@/lib/spamGuard';
 // Basic email check; the DB doesn't validate beyond NOT NULL.
@@ -48,6 +50,27 @@ export async function POST(request: Request) {
       { error: 'server_error', detail: e?.message ?? null },
       { status: 500 },
     );
+  }
+
+  // Admin'e (iletisim@terapimap.com) bildirim — lead KAYDEDİLDİKTEN sonra.
+  // Mail gönderimi başarısız olsa bile lead kaybolmaz; sadece loglanır.
+  try {
+    const supabase = getPublicClient();
+    const { data: prof } = await supabase
+      .from('professionals')
+      .select('name')
+      .eq('id', professional_id)
+      .maybeSingle();
+    await sendLeadNotification({
+      professionalName: prof?.name ?? null,
+      name,
+      email,
+      phone,
+      message,
+      source,
+    });
+  } catch (e) {
+    console.error('[leads] admin bildirim maili gönderilemedi:', e);
   }
 
   return NextResponse.json({ ok: true });

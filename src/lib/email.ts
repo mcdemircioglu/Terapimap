@@ -312,6 +312,77 @@ export async function sendApplicationNotification(app: ApplicationEmailInput) {
   });
 }
 
+/* ── Admin'e: yeni danışan talebi (lead) bildirimi ──────────────────── */
+
+export type LeadNotificationInput = {
+  professionalName: string | null;
+  name: string;
+  email: string;
+  phone?: string | null;
+  message: string;
+  source?: string | null;
+};
+
+export async function sendLeadNotification(lead: LeadNotificationInput) {
+  const adminAddr = process.env.GMAIL_USER;
+  if (!adminAddr) {
+    throw new Error('GMAIL_USER ortam değişkeni tanımlı değil.');
+  }
+
+  const adminUrl = `${BASE}/admin/leads`;
+
+  const rows = [
+    infoRow('Terapist', escapeHtml(lead.professionalName ?? '—')),
+    infoRow('Danışan', escapeHtml(lead.name)),
+    infoRow('E-posta', `<a href="mailto:${escapeHtml(lead.email)}" style="color:${C.primary};">${escapeHtml(lead.email)}</a>`),
+    lead.phone ? infoRow('Telefon', escapeHtml(lead.phone)) : '',
+    lead.source ? infoRow('Kaynak', escapeHtml(lead.source)) : '',
+    infoRow('Mesaj', escapeHtml(lead.message).replace(/\n/g, '<br>')),
+  ].join('');
+
+  const html = layout(
+    'Yeni danışan talebi (lead)',
+    `<p style="margin:0 0 20px;font-size:14px;color:${C.text};line-height:1.7;">
+      Terapimap üzerinden yeni bir danışan talebi alındı. Detaylar aşağıdadır.
+      Yönetmek için admin panelindeki
+      <a href="${adminUrl}" style="color:${C.primary};">Leads</a> bölümünü kullanın.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+      style="background:${C.bg};border:1px solid ${C.border};border-radius:10px;">
+      ${rows}
+    </table>
+    <div style="margin-top:24px;">
+      ${button(adminUrl, 'Leadleri Görüntüle')}
+    </div>`,
+  );
+
+  const text = [
+    'Terapimap — yeni danışan talebi (lead) alındı:',
+    '',
+    `Terapist: ${lead.professionalName ?? '—'}`,
+    `Danışan: ${lead.name}`,
+    `E-posta: ${lead.email}`,
+    lead.phone ? `Telefon: ${lead.phone}` : null,
+    lead.source ? `Kaynak: ${lead.source}` : null,
+    `Mesaj: ${lead.message}`,
+    '',
+    `Leadleri görüntüle: ${adminUrl}`,
+    '',
+    'Terapimap — terapimap.com',
+  ]
+    .filter((l) => l !== null)
+    .join('\n');
+
+  await sendMail({
+    from: { name: FROM_NAME, address: adminAddr },
+    to: adminAddr,
+    replyTo: lead.email,
+    subject: `Yeni Danışan Talebi — ${lead.name}${lead.professionalName ? ` · ${lead.professionalName}` : ''}`,
+    html,
+    text,
+  });
+}
+
 /* ── Terapiste: profil doğrulama daveti (outreach) ──────────────────── */
 
 export type VerificationInviteInput = {
