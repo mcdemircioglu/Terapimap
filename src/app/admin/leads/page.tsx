@@ -62,11 +62,13 @@ function leadWhatsAppUrl(lead: Lead): string | null {
   if (!num) return null;
   const terapist = lead.professional_name ?? 'ilgili uzmanımız';
   const msg =
-    `Merhaba ${lead.name}, Terapimap'ten yazıyoruz. ` +
-    `${terapist} için ilettiğiniz randevu talebiniz kendisine ulaştırılmıştır; ` +
-    `en kısa sürede sizinle iletişime geçecektir. ` +
+    `Merhaba ${lead.name},\n\n` +
+    `Terapimap'ten yazıyoruz. ${terapist} için ilettiğiniz randevu talebiniz ` +
+    `kendisine ulaştırılmıştır; en kısa sürede sizinle iletişime geçecektir. ` +
     `Makul bir süre içinde dönüş alamazsanız lütfen bu numaradan bize bildirin, ` +
-    `size yardımcı olalım. İyi günler dileriz.\nTerapimap Ekibi`;
+    `size yardımcı olalım.\n\n` +
+    `İyi günler dileriz. 🌿\n` +
+    `Terapimap Ekibi`;
   return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
 }
 
@@ -83,6 +85,8 @@ function therapistWhatsAppUrl(lead: Lead): string | null {
     `Telefon: ${lead.phone ?? '-'}\n` +
     `E-posta: ${lead.email}\n` +
     `Mesajı: ${lead.message}\n\n` +
+    `Not: Bu iletişim bilgileri yalnızca danışanla iletişim kurmanız amacıyla paylaşılmıştır; ` +
+    `başka bir amaçla kullanılmaması ve üçüncü kişilerle paylaşılmaması gerekmektedir.\n\n` +
     `Lütfen danışanla en kısa sürede iletişime geçin. Görüştükten sonra aşağıdaki bağlantıdan ` +
     `bize bildirebilirsiniz:\n${confirmUrl}\n\n` +
     `Teşekkürler,\nTerapimap Ekibi`;
