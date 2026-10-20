@@ -79,6 +79,7 @@ function therapistWhatsAppUrl(lead: Lead): string | null {
   const num = normalizeTrPhone(lead.professional_phone);
   if (!num) return null;
   const confirmUrl = `${SITE_URL}/iletisime-gectim/${lead.id}`;
+  const verifyUrl = `${SITE_URL}/profil-dogrula/${lead.professional_id}`;
   const msg =
     `Merhaba, Terapimap'ten yazıyoruz. Size yeni bir danışan talebi iletildi:\n\n` +
     `Danışan: ${lead.name}\n` +
@@ -89,6 +90,8 @@ function therapistWhatsAppUrl(lead: Lead): string | null {
     `başka bir amaçla kullanılmaması ve üçüncü kişilerle paylaşılmaması gerekmektedir.\n\n` +
     `Lütfen danışanla en kısa sürede iletişime geçin. Görüştükten sonra aşağıdaki bağlantıdan ` +
     `bize bildirebilirsiniz:\n${confirmUrl}\n\n` +
+    `Tarafınıza gelen diğer danışan taleplerini alabilmeniz için profilinizi lütfen ücretsiz ` +
+    `doğrulayın:\n${verifyUrl}\n\n` +
     `Teşekkürler,\nTerapimap Ekibi`;
   return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
 }
