@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   const supabase = getServiceClient();
   const { data, error } = await supabase
     .from('leads')
-    .select(`*, professionals ( name, slug, phone )`)
+    .select(`*, professionals ( name, slug, phone, is_verified )`)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -29,6 +29,7 @@ export async function GET(request: Request) {
       professional_name: professionals?.name ?? null,
       professional_slug: professionals?.slug ?? null,
       professional_phone: professionals?.phone ?? null,
+      professional_verified: professionals?.is_verified ?? false,
     };
   });
 
