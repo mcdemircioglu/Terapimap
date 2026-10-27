@@ -25,7 +25,7 @@ export default async function HomePage({
   const [t, specialties, featured, stats, tests] = await Promise.all([
     getTranslations({ locale, namespace: 'home' }),
     getSpecialties(),
-    getFeaturedTherapists(12),
+    getFeaturedTherapists(), // limitsiz — tüm öne çıkan terapistler (bkz. queries.ts)
     getHomeStats(),
     getPublishedTests(),
   ]);

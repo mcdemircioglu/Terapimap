@@ -238,11 +238,17 @@ export const getTherapists = unstable_cache(
 );
 
 export async function getFeaturedTherapists(
-  count = 6,
+  // count verilmezse limit UYGULANMAZ — tüm öne çıkan terapistler döner.
+  // Ana sayfadaki slider zaten döngüsel/sayfalı olduğu için (bkz.
+  // FeaturedTherapistsSlider) sayı arttıkça sorun çıkarmaz; önceden burada
+  // sabit bir count=12 limiti vardı, bu da admin panelinden öne çıkarılan
+  // terapist sayısı 12'yi geçince ana sayfada eksik/tutarsız görünmesine
+  // yol açıyordu.
+  count?: number,
 ): Promise<ProfessionalWithSpecialties[]> {
   const supabase = getPublicClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('professionals')
     .select(PROFESSIONAL_LIST_SELECT)
     .in('status', ['approved', 'featured'])
@@ -251,8 +257,13 @@ export async function getFeaturedTherapists(
     .eq('is_featured', true)
     // Süresi geçmemiş (veya süresiz) öne çıkarmalar.
     .or(`featured_until.is.null,featured_until.gt.${new Date().toISOString()}`)
-    .order('rating', { ascending: false })
-    .limit(count);
+    .order('rating', { ascending: false });
+
+  if (count !== undefined) {
+    query = query.limit(count);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     logError('getFeaturedTherapists', error);
