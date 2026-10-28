@@ -20,7 +20,7 @@ import ArticleDisclaimer from '@/components/guide/ArticleDisclaimer';
 import TherapistCta from '@/components/guide/TherapistCta';
 import { ARTICLE_SLUG_CTA_SPECIALTY, CATEGORY_CTA_SPECIALTY, calculateReadingMinutes, getArticleBySlug, getRelatedArticles } from '@/lib/articles';
 import { absUrl, buildArticleSchema, buildBreadcrumbSchema } from '@/lib/schema';
-import { getProfessionalUrl } from '@/lib/utils';
+import { brandedTitle, getProfessionalUrl } from '@/lib/utils';
 import { ARTICLE_CATEGORY_LABELS } from '@/types/database';
 
 // ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
@@ -45,7 +45,7 @@ export async function generateMetadata({
   const canonical = absUrl(`/${locale}/psikoloji-rehberi/${article.slug}`);
 
   return {
-    title,
+    title: brandedTitle(title),
     description,
     alternates: { canonical },
     openGraph: {

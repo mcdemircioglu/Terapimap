@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import JsonLd from '@/components/JsonLd';
 import { absUrl, buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/schema';
 import { getFeaturedTherapists } from '@/lib/queries';
-import { getTherapistsListPath } from '@/lib/utils';
+import { brandedTitle, getTherapistsListPath } from '@/lib/utils';
 
 // Öne çıkan liste günde bir tazelenir (öne çıkarma değişimleri seyrek).
 export const revalidate = 3600;
@@ -30,7 +30,7 @@ export async function generateMetadata({
       : 'Discover featured, verified psychologists and therapists on Terapimap.';
 
   return {
-    title,
+    title: brandedTitle(title),
     description,
     alternates: { canonical: url },
     robots: { index: locale === 'tr', follow: true },

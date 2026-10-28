@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/Card';
 import TherapistApplicationForm from '@/components/TherapistApplicationForm';
 import { getSpecialties } from '@/lib/queries';
 import { absUrl } from '@/lib/schema';
+import { brandedTitle } from '@/lib/utils';
 
 export function generateMetadata({
   params: { locale },
@@ -20,7 +21,7 @@ export function generateMetadata({
   const description =
     'Psikolog, klinik psikolog, psikiyatrist ve terapist olarak Terapimap dizinine ücretsiz katılın. Bilgilerinizi girin, onay sonrası profiliniz yayına alınsın.';
   return {
-    title,
+    title: brandedTitle(title),
     description,
     alternates: { canonical: absUrl(`/${locale}/uzman-basvuru`) },
     robots: { index: locale === 'tr', follow: true },

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { unstable_setRequestLocale } from 'next-intl/server';
 import { LegalDoc, H2, P, UL, Strong } from '@/components/LegalDoc';
 import { absUrl } from '@/lib/schema';
+import { brandedTitle } from '@/lib/utils';
 
 const TITLE = 'KVKK Aydınlatma Metni';
 const UPDATED = '6 Temmuz 2026';
@@ -12,7 +13,7 @@ export function generateMetadata({
   params: { locale: string };
 }): Metadata {
   return {
-    title: `${TITLE} | Terapimap`,
+    title: brandedTitle(`${TITLE} | Terapimap`),
     description:
       '6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında Terapimap aydınlatma metni.',
     alternates: { canonical: absUrl(`/${locale}/kvkk-aydinlatma-metni`) },

@@ -23,7 +23,7 @@ import {
   buildSpecialtyLinks,
   landingCanonical,
 } from '@/lib/seo-landing';
-import { findBySlug, getLocativeSuffix } from '@/lib/utils';
+import { brandedTitle, findBySlug, getLocativeSuffix } from '@/lib/utils';
 import SeoEmptySuggestions from '@/components/seo/SeoEmptySuggestions';
 
 export async function generateMetadataImpl({
@@ -63,7 +63,7 @@ export async function generateMetadataImpl({
   const canonical = qs.toString() ? `${baseUrl}?${qs}` : baseUrl;
 
   return {
-    title,
+    title: brandedTitle(title),
     description,
     alternates: { canonical },
     robots: { index: locale === 'tr' && page === 1, follow: true },

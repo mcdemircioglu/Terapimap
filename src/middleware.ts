@@ -23,10 +23,12 @@ const DYN_QUERY_KEYS = ['page', 'online', 'inPerson', 'type', 'district', 'q', '
 
 // app/[locale] altındaki literal (tek segmentli) rotalar — bunlar [seoSlug]
 // değildir, dinamik varyanta rewrite edilmemeli. Yeni bir tek segmentli sayfa
-// eklenir ve ?page= okuyorsa buraya EKLEME; [seoSlug] dışındaysa zaten kendi
-// rotası çözülür. Liste yalnızca "?page=" taşıyan istekler için önemli.
+// eklendiğinde buraya EKLENİR: eklenmezse "?page=" taşıyan istekler
+// /{locale}/dyn/s/{segment} rotasına (SEO landing view'i) yanlışlıkla rewrite
+// edilir ve sayfa yerine 404 ya da yanlış içerik döner. Liste yalnızca
+// "?page=" taşıyan istekler için önemli.
 const RESERVED_TOP_SEGMENTS = new Set([
-  'about', 'aile-terapisti', 'cerez-politikasi', 'cocuk-psikiyatristi', 'dyn',
+  'about', 'aile-terapisti', 'cerez-politikasi', 'cocuk-psikiyatristi', 'duyurular', 'dyn',
   'gizlilik-politikasi', 'iletisim', 'kullanim-kosullari', 'kvkk-aydinlatma-metni',
   'one-cikan-terapistler', 'psikiyatrist', 'psikolog', 'psikoloji-rehberi',
   'psikolojik-danisman', 'terapist-profil-politikasi', 'terapistler', 'testler',

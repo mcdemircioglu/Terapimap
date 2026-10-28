@@ -25,7 +25,7 @@ import {
   specialtyToArticleCategory,
   landingCanonical,
 } from '@/lib/seo-landing';
-import { getLocativeSuffix } from '@/lib/utils';
+import { brandedTitle, getLocativeSuffix } from '@/lib/utils';
 
 export async function generateMetadataImpl({
   params: { locale, city, specialty },
@@ -56,7 +56,7 @@ export async function generateMetadataImpl({
   const canonical = page > 1 ? `${baseUrl}?page=${page}` : baseUrl;
 
   return {
-    title,
+    title: brandedTitle(title),
     description: copy.metaDescription,
     alternates: { canonical },
     robots:

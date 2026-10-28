@@ -38,6 +38,18 @@ export function getTherapistsListPath(locale: string): string {
   return '/' + locale + '/' + (locale === 'tr' ? 'terapistler' : 'therapists');
 }
 
+/**
+ * Sayfa metadata'sındaki üst düzey `title` için kullanılır.
+ * [locale]/layout.tsx'teki şablon (`%s · Terapimap`) zaten markayı içeren
+ * başlıklara ikinci kez marka ekliyordu ("İletişim | Terapimap · Terapimap",
+ * SEO denetiminde build HTML'inden doğrulandı). Başlık markayı içeriyorsa
+ * şablon `absolute` ile atlanır; içermiyorsa (ör. "Hakkımızda" ya da DB'den
+ * markasız gelen meta_title) şablon markayı eklemeye devam eder.
+ */
+export function brandedTitle(title: string): string | { absolute: string } {
+  return /terapimap/i.test(title) ? { absolute: title } : title;
+}
+
 export function formatExperience(years: number, locale: 'tr' | 'en'): string {
   if (locale === 'tr') return `${years} yıl deneyim`;
   return `${years} ${years === 1 ? 'year' : 'years'} of experience`;

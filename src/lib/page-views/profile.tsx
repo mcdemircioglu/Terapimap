@@ -23,7 +23,7 @@ import { getApprovedReviewsForProfessional, getTherapistBySlug } from '@/lib/que
 import { getCitySlug } from '@/lib/cities';
 import { getResolvedMapsData } from '@/lib/maps';
 import { absUrl, buildTherapistSchema, buildBreadcrumbSchema, buildFaqSchema } from '@/lib/schema';
-import { getProfessionalUrlSegment, getTherapistsListPath } from '@/lib/utils';
+import { brandedTitle, getProfessionalUrlSegment, getTherapistsListPath } from '@/lib/utils';
 import { groupSpecialties, SPECIALTY_TYPE_LABELS } from '@/types/database';
 import type { ProfessionalWithSpecialties } from '@/types/database';
 
@@ -110,7 +110,7 @@ export async function generateMetadataImpl({
     : `${therapist.name}, ${location} uzman ${therapist.title ?? 'psikolog'}. Uzmanlık alanları: ${specialties}. Terapimap üzerinden iletişime geçin.`;
 
   return {
-    title,
+    title: brandedTitle(title),
     description,
     alternates: { canonical: url },
     // OG görseli: dosya bazlı opengraph-image.tsx (logo temalı) kullanılır

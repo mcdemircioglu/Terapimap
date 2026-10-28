@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import { absUrl } from '@/lib/schema';
+import { brandedTitle } from '@/lib/utils';
 
 const TITLE = 'İletişim';
 
@@ -11,7 +12,7 @@ export function generateMetadata({
   params: { locale: string };
 }): Metadata {
   return {
-    title: `${TITLE} | Terapimap`,
+    title: brandedTitle(`${TITLE} | Terapimap`),
     description:
       'Terapimap ile iletişime geçin: sorularınız, profil doğrulama, güncelleme ve kaldırma talepleriniz için.',
     alternates: { canonical: absUrl(`/${locale}/iletisim`) },

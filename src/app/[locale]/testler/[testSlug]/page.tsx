@@ -11,6 +11,7 @@ import JsonLd from '@/components/JsonLd';
 import TestRunner from '@/components/tests/TestRunner';
 import { getTestBySlug, getKnownTestSlugs } from '@/lib/queries';
 import { absUrl, buildBreadcrumbSchema } from '@/lib/schema';
+import { brandedTitle } from '@/lib/utils';
 
 export const revalidate = 3600;
 
@@ -37,7 +38,7 @@ export async function generateMetadata({
   const url = absUrl(`/${locale}/testler/${testSlug}`);
 
   return {
-    title,
+    title: brandedTitle(title),
     description,
     alternates: { canonical: url },
     robots: { index: tr, follow: true },

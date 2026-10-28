@@ -6,6 +6,7 @@ import CityBrowseSection from '@/components/CityBrowseSection';
 import JsonLd from '@/components/JsonLd';
 import { absUrl, buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/schema';
 import { getSpecialties } from '@/lib/queries';
+import { brandedTitle } from '@/lib/utils';
 
 /** Locale'e göre görünen liste URL segmenti (rewrites ile eşleşir). */
 function listPath(locale: string): string {
@@ -55,7 +56,7 @@ export async function generateMetadataImpl({
     specialtyCanonical ?? (page > 1 ? `${baseUrl}?page=${page}` : baseUrl);
 
   return {
-    title,
+    title: brandedTitle(title),
     description,
     alternates: { canonical },
     robots: { index: locale === 'tr', follow: true },

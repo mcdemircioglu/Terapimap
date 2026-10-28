@@ -12,6 +12,7 @@ import { CloudIcon, HeartIcon, EyeIcon, UsersIcon, SmileIcon } from '@/component
 import { getPublishedTests } from '@/lib/queries';
 import type { PsychologyTestListItem } from '@/types/database';
 import { absUrl, buildBreadcrumbSchema } from '@/lib/schema';
+import { brandedTitle } from '@/lib/utils';
 
 // Test detay sayfasıyla (`[testSlug]/page.tsx`) aynı revalidate süresi.
 // Bunu eklemeden önce bu sayfa varsayılan olarak süresiz statik önbelleğe
@@ -49,7 +50,7 @@ export function generateMetadata({
     ? 'Kaygı, depresyon ve daha fazlası için ücretsiz, kısa öz-değerlendirme testleri. Sonuçlarınızı görün, dilerseniz size uygun uzmanları keşfedin.'
     : 'Free, short self-assessment tests for anxiety, depression and more.';
   return {
-    title,
+    title: brandedTitle(title),
     description,
     alternates: { canonical: absUrl(`/${locale}/testler`) },
     robots: { index: tr, follow: true },

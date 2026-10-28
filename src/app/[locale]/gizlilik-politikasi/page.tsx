@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { unstable_setRequestLocale } from 'next-intl/server';
 import { LegalDoc, H2, P, UL, Strong } from '@/components/LegalDoc';
 import { absUrl } from '@/lib/schema';
+import { brandedTitle } from '@/lib/utils';
 
 const TITLE = 'Gizlilik Politikası';
 const UPDATED = '6 Temmuz 2026';
@@ -12,7 +13,7 @@ export function generateMetadata({
   params: { locale: string };
 }): Metadata {
   return {
-    title: `${TITLE} | Terapimap`,
+    title: brandedTitle(`${TITLE} | Terapimap`),
     description:
       'Terapimap gizlilik politikası: kişisel verilerinizin nasıl toplandığı, kullanıldığı ve korunduğu hakkında bilgi.',
     alternates: { canonical: absUrl(`/${locale}/gizlilik-politikasi`) },

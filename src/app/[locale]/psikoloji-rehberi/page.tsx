@@ -14,6 +14,7 @@ import CategoryFilter from '@/components/guide/CategoryFilter';
 import TherapistCta from '@/components/guide/TherapistCta';
 import { getPublishedArticles } from '@/lib/articles';
 import { absUrl, buildBreadcrumbSchema, buildCollectionPageSchema } from '@/lib/schema';
+import { brandedTitle } from '@/lib/utils';
 import { isArticleCategory } from '@/types/database';
 
 // ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
@@ -30,7 +31,7 @@ export function generateMetadata({
   const canonical = absUrl(`/${locale}/psikoloji-rehberi`);
 
   return {
-    title: 'Psikoloji Rehberi | Terapimap',
+    title: brandedTitle('Psikoloji Rehberi | Terapimap'),
     description: DESCRIPTION,
     alternates: { canonical },
     robots: { index: locale === 'tr', follow: true },

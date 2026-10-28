@@ -18,6 +18,7 @@ import {
   getPublishedArticles,
 } from '@/lib/articles';
 import { absUrl, buildBreadcrumbSchema, buildCollectionPageSchema } from '@/lib/schema';
+import { brandedTitle } from '@/lib/utils';
 import { isArticleCategory } from '@/types/database';
 
 // ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
@@ -31,7 +32,7 @@ export function generateMetadata({ params: { locale, kategori } }: Params): Meta
   const canonical = absUrl(`/${locale}/psikoloji-rehberi/kategori/${kategori}`);
 
   return {
-    title: content.metaTitle,
+    title: brandedTitle(content.metaTitle),
     description: content.metaDescription,
     alternates: { canonical },
     robots: { index: locale === 'tr', follow: true },

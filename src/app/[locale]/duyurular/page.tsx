@@ -14,7 +14,7 @@ import { getPublishedAnnouncements } from '@/lib/announcements';
 import { absUrl, buildBreadcrumbSchema, buildCollectionPageSchema } from '@/lib/schema';
 import { ANNOUNCEMENT_TYPES, ANNOUNCEMENT_TYPE_LABELS } from '@/types/database';
 import type { AnnouncementType } from '@/types/database';
-import { cn } from '@/lib/utils';
+import { brandedTitle, cn } from '@/lib/utils';
 
 // ISR: sayfa saatte bir yenilenir.
 export const revalidate = 3600;
@@ -34,7 +34,7 @@ export function generateMetadata({
   const canonical = absUrl(`/${locale}/duyurular`);
 
   return {
-    title: 'Duyurular | Terapimap',
+    title: brandedTitle('Duyurular | Terapimap'),
     description: DESCRIPTION,
     alternates: { canonical },
     robots: { index: locale === 'tr', follow: true },

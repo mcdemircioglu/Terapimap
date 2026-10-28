@@ -19,7 +19,7 @@ import {
 import { getTherapists, getSpecialtyBySlug } from '@/lib/queries';
 import { MIN_THERAPISTS_FOR_INDEX } from '@/lib/seo-landing';
 import { CITIES } from '@/lib/cities';
-import { getTherapistsListPath } from '@/lib/utils';
+import { brandedTitle, getTherapistsListPath } from '@/lib/utils';
 import {
   absUrl,
   buildCollectionPageSchema,
@@ -81,7 +81,7 @@ export async function generateMetadataImpl({
   }
 
   return {
-    title: title + pageSuffix,
+    title: brandedTitle(title + pageSuffix),
     description,
     alternates: { canonical: url },
     robots: {
