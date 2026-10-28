@@ -26,4 +26,8 @@ Thumbs.db
 *.tsbuildinfo
 next-env.d.ts
 
-.claude/
+# claude: paylaşılan yapılandırma (.claude/settings.json, .claude/rules/) takip edilir;
+# kişisel ayarlar ve yerel veriler takip edilmez
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md

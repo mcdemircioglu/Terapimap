@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(npm run typecheck)",
+      "PowerShell(npm run typecheck)",
+      "Bash(npm run build)",
+      "PowerShell(npm run build)"
+    ],
+    "ask": [
+      "Bash(git commit *)",
+      "PowerShell(git commit *)",
+      "Bash(git merge *)",
+      "PowerShell(git merge *)",
+      "Bash(git reset *)",
+      "PowerShell(git reset *)",
+      "Bash(git restore *)",
+      "PowerShell(git restore *)",
+      "Bash(git checkout -- *)",
+      "PowerShell(git checkout -- *)",
+      "Bash(git stash drop *)",
+      "PowerShell(git stash drop *)",
+      "Bash(git stash clear *)",
+      "PowerShell(git stash clear *)",
+      "Bash(npm install *)",
+      "PowerShell(npm install *)",
+      "Bash(npm uninstall *)",
+      "PowerShell(npm uninstall *)",
+      "Bash(rm *)",
+      "PowerShell(Remove-Item *)"
+    ],
+    "deny": [
+      "Read(//**/.env)",
+      "Read(//**/.env.local)",
+      "Read(//**/.env.*.local)",
+      "Read(//**/.env.development)",
+      "Read(//**/.env.production)",
+      "Read(//**/.env.test)",
+      "Read(.env.*)",
+      "Read(!.env.example)",
+      "Edit(//**/.env)",
+      "Edit(//**/.env.local)",
+      "Edit(//**/.env.*.local)",
+      "Edit(//**/.env.development)",
+      "Edit(//**/.env.production)",
+      "Edit(//**/.env.test)",
+      "Edit(.env.*)",
+      "Edit(!.env.example)",
+      "Read(~/.claude/.credentials.json)",
+
+      "Bash(git push *)",
+      "PowerShell(git push *)",
+      "Bash(git branch -d *)",
+      "PowerShell(git branch -d *)",
+      "Bash(git branch -D *)",
+      "PowerShell(git branch -D *)",
+      "Bash(git branch --delete *)",
+      "PowerShell(git branch --delete *)",
+      "Bash(git reset --hard *)",
+      "PowerShell(git reset --hard *)",
+      "Bash(git clean *)",
+      "PowerShell(git clean *)",
+      "Bash(git rebase *)",
+      "PowerShell(git rebase *)",
+      "Bash(git commit --amend *)",
+      "PowerShell(git commit --amend *)",
+      "Bash(git filter-branch *)",
+      "PowerShell(git filter-branch *)",
+      "Bash(git filter-repo *)",
+      "PowerShell(git filter-repo *)",
+      "Bash(git update-ref *)",
+      "PowerShell(git update-ref *)",
+
+      "Bash(supabase *)",
+      "PowerShell(supabase *)",
+      "Bash(npx supabase *)",
+      "PowerShell(npx supabase *)",
+      "Bash(psql *)",
+      "PowerShell(psql *)",
+      "Bash(vercel *)",
+      "PowerShell(vercel *)",
+      "Bash(npx vercel *)",
+      "PowerShell(npx vercel *)",
+      "Bash(*import_professionals*)",
+      "PowerShell(*import_professionals*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/.claude/hooks/guard-commands.js"],
+            "onFailure": "block",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
