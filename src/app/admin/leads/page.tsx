@@ -75,7 +75,25 @@ function leadWhatsAppUrl(lead: Lead): string | null {
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://terapimap.com';
 
-// Terapiste gönderilecek lead bilgisi + "iletişime geçtim" bildirim linki (telefon yoksa null).
+// Admin hangi mesajı göndereceğini butona basmadan görsün diye doğrulama durumuna göre tooltip.
+function therapistButtonTitle(lead: Lead): string {
+  return lead.professional_verified
+    ? 'Tam bilgi gönder (doğrulanmış)'
+    : 'Önizleme gönder (doğrulanmamış)';
+}
+
+// "Mehmet Kaya" → "Mehmet K."; son kelimenin baş harfi Türkçe kurallarıyla büyütülür (i → İ).
+// Tek kelimeli isimler olduğu gibi döner.
+function maskSurname(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] ?? '';
+  const last = parts[parts.length - 1];
+  const initial = last.charAt(0).toLocaleUpperCase('tr-TR');
+  return `${parts.slice(0, -1).join(' ')} ${initial}.`;
+}
+
+// Terapiste gönderilecek WhatsApp linki (telefon yoksa null).
+// Butonun tooltip'i de aynı doğrulama durumuna göre değişir (bkz. therapistButtonTitle).
 function therapistWhatsAppUrl(lead: Lead): string | null {
   const num = normalizeTrPhone(lead.professional_phone);
   if (!num) return null;
@@ -83,8 +101,8 @@ function therapistWhatsAppUrl(lead: Lead): string | null {
   const verifyUrl = `${SITE_URL}/profil-dogrula/${lead.professional_id}`;
 
   // Doğrulanmış terapist → tam detay (sahipliği teyitli, hızlı dönsün).
-  // Doğrulanmamış terapist → kişisel veri VERMEDEN kapılı öncü mesaj;
-  // danışan bilgilerine ulaşmak için önce profilini doğrulasın (lead = havuç).
+  // Doğrulanmamış terapist → iletişim bilgisi ve mesaj VERMEDEN önizleme:
+  // yalnızca ad + soyadın baş harfi. Detaylar için önce profilini doğrulasın (lead = havuç).
   const hitap = lead.professional_name ? ` ${lead.professional_name}` : '';
   const msg = lead.professional_verified
     ? `Merhaba${hitap}, Terapimap'ten yazıyoruz. Size yeni bir danışan talebi iletildi:\n\n` +
@@ -97,15 +115,15 @@ function therapistWhatsAppUrl(lead: Lead): string | null {
       `Lütfen danışanla en kısa sürede iletişime geçin. Görüştükten sonra aşağıdaki bağlantıdan ` +
       `bize bildirebilirsiniz:\n${confirmUrl}\n\n` +
       `Teşekkürler,\nTerapimap Ekibi`
-    : `Merhaba${hitap}, Terapimap ekibinden iletişime geçiyoruz.\n\n` +
-      `Terapimap'teki mesleki profiliniz üzerinden sizinle görüşmek isteyen bir danışan, ` +
-      `randevu talebi oluşturdu.\n\n` +
+    : `Merhaba${hitap}, Terapimap ekibinden yazıyoruz.\n\n` +
+      `Terapimap'teki profiliniz üzerinden size yeni bir randevu talebi geldi:\n\n` +
+      `Danışan: ${maskSurname(lead.name)}\n\n` +
+      `Danışanın telefonu, e-postası ve mesajı profilini doğrulayan uzmanlarla paylaşılıyor. ` +
+      `Profilinizi ücretsiz onaylayarak bu talebin tüm detaylarını görebilir, bundan sonraki ` +
+      `talepleri de doğrudan alabilirsiniz:\n\n` +
+      `👉 Profili onayla ve talebi gör:\n${verifyUrl}\n\n` +
       `Terapimap, danışanların uzmanları inceleyip doğrudan tercih ettikleri terapistlere ` +
       `ulaşmasını sağlayan bir uzman dizin platformudur.\n\n` +
-      `Danışanın iletişim bilgilerini yalnızca profilini doğrulayan uzmanlarla güvenle ` +
-      `paylaşıyoruz. Danışan bilgilerini görüntülemek ve bundan sonraki talepleri de ` +
-      `alabilmek için profilinizi aşağıdaki bağlantıdan ücretsiz onaylamanız yeterli:\n\n` +
-      `👉 Profili onayla ve danışan bilgilerini gör:\n${verifyUrl}\n\n` +
       `İyi çalışmalar dileriz.\nTerapimap Ekibi\nwww.terapimap.com`;
 
   return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
@@ -558,7 +576,7 @@ export default function LeadsPage() {
                             href={therapistWhatsAppUrl(lead) as string}
                             target="_blank"
                             rel="noopener noreferrer"
-                            title="Terapiste WhatsApp'tan lead bilgisi gönder"
+                            title={therapistButtonTitle(lead)}
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-950 bg-amber-400 hover:bg-amber-500 transition-colors ml-1 align-middle"
                           >
                             <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
