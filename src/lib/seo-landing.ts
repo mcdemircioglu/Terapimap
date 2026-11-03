@@ -43,6 +43,17 @@ export type LandingCopy = {
  */
 export const MIN_THERAPISTS_FOR_INDEX = 2;
 
+/**
+ * Cümle içinde kullanılacak küçük harfli uzmanlık adı; tamamı büyük harfli kısaltmalar
+ * ("EMDR", "TSSB", "(BDT)") korunur. Düz toLocaleLowerCase "emdr alanında" gibi çıktı veriyordu.
+ */
+export function lowerKeepAcronyms(name: string): string {
+  return name
+    .split(' ')
+    .map((w) => (/^\(?\p{Lu}{2,}\)?[,.;:]?$/u.test(w) ? w : w.toLocaleLowerCase('tr')))
+    .join(' ');
+}
+
 /* ── Uzmanlık kısaltması: "Bilişsel Davranışçı Terapi (BDT)" → "BDT" ── */
 export function shortSpecialtyName(name: string): string {
   const m = name.match(/\(([^)]+)\)/);
@@ -627,7 +638,7 @@ function getSpecialtyInfo(name: string): SpecialtyInfo {
   const match = SPECIALTY_INFO.find((s) => s.keywords.some((k) => lower.includes(k)));
   if (match) return match.info;
   return {
-    whatIs: `Bu alanda çalışan uzmanlar, ${lower} konusunda eğitim ve deneyime sahip psikolog, psikolojik danışman ve terapistlerdir. Terapi süreci; ihtiyacınızı birlikte anlamak, hedef belirlemek ve size uygun bir çalışma planı oluşturmak üzerine kuruludur.`,
+    whatIs: `Bu alanda çalışan uzmanlar, ${lowerKeepAcronyms(name)} konusunda eğitim ve deneyime sahip psikolog, psikolojik danışman ve terapistlerdir. Terapi süreci; ihtiyacınızı birlikte anlamak, hedef belirlemek ve size uygun bir çalışma planı oluşturmak üzerine kuruludur.`,
     suitableFor: `${name} alanında destek almayı düşünüyorsanız, uzman profillerindeki eğitim ve deneyim bilgilerini inceleyerek size uygun bir terapist değerlendirebilirsiniz. Terapi süreci kişiye göre değişebilir; ilk görüşme genellikle ihtiyacın netleşmesine yardımcı olur.`,
   };
 }
@@ -731,7 +742,7 @@ export function buildTemplateCopy({
   const da = getLocativeSuffix(cityName); // 'da / 'de
   const daki = getLocativeSuffix(cityName, true); // 'daki / 'deki
   const info = getSpecialtyInfo(specialtyName);
-  const specialtyLower = specialtyName.toLocaleLowerCase('tr');
+  const specialtyLower = lowerKeepAcronyms(specialtyName);
 
   // Title ≤ ~60 karakter: uzunsa kısaltma kullan
   let metaTitle = `${cityName} ${specialtyName} Terapistleri | Terapimap`;

@@ -24,6 +24,7 @@ import {
   buildPageInsightSection,
   buildSpecialtyLinks,
   countBySpecialty,
+  lowerKeepAcronyms,
   PILOT_COMBOS,
   specialtyToArticleCategory,
   landingCanonical,
@@ -205,7 +206,7 @@ export async function CitySpecialtyPage({
   const mapEmbedUrl = buildCityEmbedUrl(cityName, locale);
   const mapTitle = `${cityName} Haritası`;
 
-  const emptyMessage = `${cityName}${getLocativeSuffix(cityName)} ${specialtyName.toLocaleLowerCase('tr')} alanında kayıtlı uzman şu anda bulunmuyor. Online çalışan uzmanları inceleyebilir veya aşağıdaki ilgili alanlara göz atabilirsiniz; yeni uzmanlar eklendikçe bu sayfa güncellenir.`;
+  const emptyMessage = `${cityName}${getLocativeSuffix(cityName)} ${lowerKeepAcronyms(specialtyName)} alanında kayıtlı uzman şu anda bulunmuyor. Online çalışan uzmanları inceleyebilir veya aşağıdaki ilgili alanlara göz atabilirsiniz; yeni uzmanlar eklendikçe bu sayfa güncellenir.`;
 
   return (
     <>
