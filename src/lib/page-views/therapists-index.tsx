@@ -59,7 +59,9 @@ export async function generateMetadataImpl({
     title: brandedTitle(title),
     description,
     alternates: { canonical },
-    robots: { index: locale === 'tr', follow: true },
+    // Derin sayfalar (?page=71 gibi) indekslenmesin; follow açık kalır, profillere iç link değeri akar.
+    // city.tsx ile aynı kural.
+    robots: { index: locale === 'tr' && page === 1, follow: true },
     openGraph: {
       title,
       description,
