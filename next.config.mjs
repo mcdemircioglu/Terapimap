@@ -6,6 +6,9 @@ const nextConfig = {
   reactStrictMode: true,
   async redirects() {
     return [
+      // Kök adres sitemap ve canonical ile aynı /tr'ye kalıcı yönlenir (GSC ana sayfayı
+      // "/" olarak gösteriyordu; geçici locale yönlendirmesi sinyali bölüyordu)
+      { source: "/", destination: "/tr", permanent: true },
       // Eski /therapist/ → yeni tip bazlı URL (psikolog default)
       { source: "/:locale/therapist/:slug", destination: "/:locale/psikolog/:slug", permanent: true },
       // Eski /danisan/ (yanlış yazım: "danışan"=terapiye giden kişi) → doğru /psikolojik-danisman/

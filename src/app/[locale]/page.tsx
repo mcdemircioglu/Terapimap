@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
@@ -9,12 +10,23 @@ import FeaturedTests from '@/components/home/FeaturedTests';
 import { Button } from '@/components/ui/Button';
 import { UsersIcon, MapPinIcon, VideoIcon } from '@/components/ui/icons';
 import { getFeaturedTherapists, getSpecialties, getHomeStats, getPublishedTests } from '@/lib/queries';
+import { absUrl } from '@/lib/schema';
 import { getTherapistsListPath } from '@/lib/utils';
 import FeaturedArticles from '@/components/guide/FeaturedArticles';
 import FeaturedAnnouncements from '@/components/announcements/FeaturedAnnouncements';
 
 // ISR: sayfa saatte bir yenilenir (Fluid CPU tasarrufu).
 export const revalidate = 3600;
+
+// Ana sayfa canonical'ı sitemap ile aynı adres (/tr). Layout'a konmaz: canonical'ı
+// olmayan tüm sayfalar ana sayfayı işaret ederdi.
+export async function generateMetadata({
+  params: { locale },
+}: {
+  params: { locale: string };
+}): Promise<Metadata> {
+  return { alternates: { canonical: absUrl(`/${locale}`) } };
+}
 
 export default async function HomePage({
   params: { locale },
