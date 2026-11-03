@@ -287,7 +287,7 @@ export async function SeoLandingPage({
           {totalCount === 0 ? (
             <div className="rounded-2xl border border-dashed border-brand-200 bg-white p-12 text-center text-brand-600">
               {locale === 'tr'
-                ? 'Bu kriterlere uyan terapist bulunamadi.'
+                ? 'Bu kriterlere uyan terapist bulunamadı.'
                 : 'No therapists matched these filters.'}
             </div>
           ) : (
@@ -305,7 +305,7 @@ export async function SeoLandingPage({
       <section className="bg-brand-50/40">
         <Container className="py-10 md:py-14">
           <h2 className="text-xl font-semibold text-brand-900 md:text-2xl">
-            {locale === 'tr' ? 'Sikca Sorulan Sorular' : 'Frequently Asked Questions'}
+            {locale === 'tr' ? 'Sıkça Sorulan Sorular' : 'Frequently Asked Questions'}
           </h2>
           <dl className="mt-6 divide-y divide-brand-100">
             {content.faqs.map((faq, i) => (
@@ -333,7 +333,7 @@ export async function SeoLandingPage({
         <section>
           <Container className="py-10 md:py-14">
             <h2 className="text-base font-semibold text-brand-900">
-              {locale === 'tr' ? 'Ilgili Sayfalar' : 'Related Pages'}
+              {locale === 'tr' ? 'İlgili Sayfalar' : 'Related Pages'}
             </h2>
             <ul className="mt-4 flex flex-wrap gap-2">
               {relatedLinks.map((link) => (

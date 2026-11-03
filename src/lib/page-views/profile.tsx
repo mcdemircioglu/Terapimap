@@ -97,7 +97,13 @@ function buildProfileDescription(therapist: ProfessionalWithSpecialties, locatio
   const head = [`${therapist.name},`, location, therapist.title ?? 'psikolog']
     .filter(Boolean)
     .join(' ');
-  const specs = therapist.specialties.slice(0, 3).map((s) => s.name).join(', ');
+  // Önce konular, sonra yöntemler, en son danışan grupları ("Ergen, Yetişkin" gibi kitle
+  // etiketleri "…alanlarında destek verir" cümlesinde tek başına anlamsız kalıyordu)
+  const specs = groupSpecialties(therapist.specialties)
+    .flatMap((g) => g.items)
+    .slice(0, 3)
+    .map((s) => s.name)
+    .join(', ');
 
   let mode: string | null = null;
   if (therapist.is_online && therapist.is_in_person) mode = 'Online ve yüz yüze seans';

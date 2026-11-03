@@ -157,25 +157,25 @@ export function getOnlineContent(locale: string): SeoContent {
   if (locale === 'tr') {
     return {
       h1: 'Online Terapi',
-      intro: 'Online terapi, nerede olursaniz olun profesyonel psikolojik destek almanizi saglar. Video gorusme ya da telefon araciligiyla Turkiye genelinde uzman psikolog, klinik psikolog ve psikoterapistlerle baglanti kurabilirsiniz. Terapimap cevrimici gorusme sunan uzmanlari kesfetmenizi saglar.',
-      metaTitle: 'Online Terapi | Cevrimici Psikolog ve Terapist Ara — Terapimap',
-      metaDesc: 'Online terapi icin Turkiye genelinde psikolog ve terapistleri inceleyin. Video ve telefon gorusmesi sunan uzmanlari kolayca bulun. Terapimap.',
+      intro: 'Online terapi, nerede olursanız olun profesyonel psikolojik destek almanızı sağlar. Video görüşme ya da telefon aracılığıyla Türkiye genelinde uzman psikolog, klinik psikolog ve psikoterapistlerle bağlantı kurabilirsiniz. Terapimap çevrimiçi görüşme sunan uzmanları keşfetmenizi sağlar.',
+      metaTitle: 'Online Terapi | Çevrimiçi Psikolog ve Terapist Ara — Terapimap',
+      metaDesc: 'Online terapi için Türkiye genelinde psikolog ve terapistleri inceleyin. Video ve telefon görüşmesi sunan uzmanları kolayca bulun. Terapimap.',
       faqs: [
         {
-          q: 'Online terapi guvenli mi?',
-          a: 'Evet. Guvenli platformlar uzerinden yurutulen online terapi, yuz yuze terapiyle ayni etik ve gizlilik standartlarina tabidir. Tum terapistler lisansli uzmanlardir.',
+          q: 'Online terapi güvenli mi?',
+          a: 'Evet. Güvenli platformlar üzerinden yürütülen online terapi, yüz yüze terapiyle aynı etik ve gizlilik standartlarına tabidir. Tüm terapistler lisanslı uzmanlardır.',
         },
         {
-          q: 'Online terapi yuz yuze terapi kadar etkili midir?',
-          a: 'Arastirmalar, basta anksiyete ve depresyon olmak uzere bircok sorunda online terapinin yuz yuze terapi kadar etkili oldugunu gostermektedir.',
+          q: 'Online terapi yüz yüze terapi kadar etkili midir?',
+          a: 'Araştırmalar, başta anksiyete ve depresyon olmak üzere birçok sorunda online terapinin yüz yüze terapi kadar etkili olduğunu göstermektedir.',
         },
         {
-          q: 'Online terapi seans ucreti ne kadar?',
-          a: 'Seans ucretleri terapistin deneyimine ve uzmanlik alanina gore farklilasar. Her uzmanin profil sayfasinda ucret araligini gorebilirsiniz.',
+          q: 'Online terapi seans ücreti ne kadar?',
+          a: 'Seans ücretleri terapistin deneyimine ve uzmanlık alanına göre farklılaşır. Her uzmanın profil sayfasında ücret aralığını görebilirsiniz.',
         },
         {
-          q: 'Online terapi seanslari nasil yapilir?',
-          a: 'Cogu terapist Zoom, Google Meet ya da kendi guvenli platformlari uzerinden seans yapmaktadir. Baslamadan once terapistinizle kullanilacak platformu konusabilirsiniz.',
+          q: 'Online terapi seansları nasıl yapılır?',
+          a: 'Çoğu terapist Zoom, Google Meet ya da kendi güvenli platformları üzerinden seans yapmaktadır. Başlamadan önce terapistinizle kullanılacak platformu konuşabilirsiniz.',
         },
       ],
     };
@@ -213,26 +213,28 @@ export function getSpecialtyContent(
 ): SeoContent {
   if (locale === 'tr') {
     return {
-      h1: specialtyName + ' Uzmanlari',
-      intro: specialtyName + ' alaninda uzmanlasmis psikolog ve terapistleri Terapimap uzerinde bulabilirsiniz. Sehir, gorusme turu ve diger filtreler ile size en uygun uzmani kesfedin. Hem yuz yuze hem de cevrimici gorusme secenekleri mevcuttur.',
-      metaTitle: specialtyName + ' Uzmani Terapist | ' + specialtyName + ' Terapisti Ara — Terapimap',
-      metaDesc: specialtyName + ' uzmani psikolog ve terapistleri inceleyin. Sehir ve gorusme turune gore filtreleyin. Terapimap.',
+      h1: specialtyName + ' Uzmanları',
+      intro: specialtyName + ' alanında uzmanlaşmış psikolog ve terapistleri Terapimap üzerinde bulabilirsiniz. Şehir, görüşme türü ve diğer filtreler ile size en uygun uzmanı keşfedin. Hem yüz yüze hem de çevrimiçi görüşme seçenekleri mevcuttur.',
+      // Şehir sayfalarıyla aynı kalıp ("Ankara Sınav Kaygısı Terapistleri | Terapimap").
+      // Eski başlık uzmanlık adını iki kez tekrar ediyordu.
+      metaTitle: specialtyName + ' Terapistleri | Terapimap',
+      metaDesc: specialtyName + ' alanında uzman psikolog ve terapistleri inceleyin. Şehir ve görüşme türüne göre filtreleyin. Terapimap.',
       faqs: [
         {
           q: specialtyName + ' terapisi nedir?',
-          a: specialtyName + ', profesyonel bir terapistle yurutulen, belirli psikolojik sorunlari ele alan terapotik bir yaklasimdir. Uygulanan teknikler ve surec, terapistin egitimine gore farklilik gosterebilir.',
+          a: specialtyName + ', profesyonel bir terapistle yürütülen, belirli psikolojik sorunları ele alan terapötik bir yaklaşımdır. Uygulanan teknikler ve süreç, terapistin eğitimine göre farklılık gösterebilir.',
         },
         {
-          q: specialtyName + ' terapisi kimler icin uygundur?',
-          a: specialtyName + ' terapisi bu alanda destek almak isteyen herkes icin uygundur. Uygulunlugu degerlendirmek icin uzmanla bir tanisma seansi yapmaniz onerilir.',
+          q: specialtyName + ' terapisi kimler için uygundur?',
+          a: specialtyName + ' terapisi bu alanda destek almak isteyen herkes için uygundur. Uygunluğunu değerlendirmek için uzmanla bir tanışma seansı yapmanız önerilir.',
         },
         {
-          q: specialtyName + ' seans sureci nasil isler?',
-          a: 'Ilk seans degerlendirme icerir; terapist size ve ihtiyaclariniza uygun bir terapi plani olusturur. Seans sikligi ve suresi terapisten terapiste degisir.',
+          q: specialtyName + ' seans süreci nasıl işler?',
+          a: 'İlk seans değerlendirme içerir; terapist size ve ihtiyaçlarınıza uygun bir terapi planı oluşturur. Seans sıklığı ve süresi terapistten terapiste değişir.',
         },
         {
-          q: specialtyName + ' icin nasil terapist secilir?',
-          a: "Terapimap'ta uzmanlik alani filtresini kullanarak " + specialtyName + ' alaninda deneyimli terapistleri bulabilir, sehir ve gorusme turune gore daha da daraltabilirsiniz.',
+          q: specialtyName + ' için nasıl terapist seçilir?',
+          a: "Terapimap'ta uzmanlık alanı filtresini kullanarak " + specialtyName + ' alanında deneyimli terapistleri bulabilir, şehir ve görüşme türüne göre daha da daraltabilirsiniz.',
         },
       ],
     };
