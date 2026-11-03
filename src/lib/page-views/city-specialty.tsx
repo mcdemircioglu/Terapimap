@@ -7,7 +7,7 @@ import SeoLandingHeader from '@/components/seo/SeoLandingHeader';
 import SeoLandingSections from '@/components/seo/SeoLandingSections';
 import SeoEmptySuggestions from '@/components/seo/SeoEmptySuggestions';
 import { getCityName, getCitySlug, isKnownCity } from '@/lib/cities';
-import { getSpecialties, getTherapists, getTherapistStats } from '@/lib/queries';
+import { getCityCountsCached, getSpecialties, getTherapists, getTherapistStats } from '@/lib/queries';
 import { getPublishedArticles } from '@/lib/articles';
 import { buildCityEmbedUrl } from '@/lib/maps';
 import {
@@ -24,6 +24,7 @@ import {
   buildPageInsightSection,
   buildSpecialtyLinks,
   countBySpecialty,
+  isDuplicateOfCity,
   lowerKeepAcronyms,
   PILOT_COMBOS,
   specialtyToArticleCategory,
@@ -44,7 +45,10 @@ export async function generateMetadataImpl({
   const s = specialties.find((x) => x.slug === specialty);
   if (!s) return {};
 
-  const stats = await getTherapistStats({ citySlug: city, specialtySlug: specialty });
+  const [stats, cityStats] = await Promise.all([
+    getTherapistStats({ citySlug: city, specialtySlug: specialty }),
+    getTherapistStats({ citySlug: city }),
+  ]);
   const copy = await getLandingCopy({
     citySlug: city,
     cityName,
@@ -63,8 +67,12 @@ export async function generateMetadataImpl({
     title: brandedTitle(title),
     description: copy.metaDescription,
     alternates: { canonical },
+    // Şehir sayfasının kopyası olan (doygun) kombinasyonlar noindex; sitemap aynı kuralı kullanır
     robots:
-      copy.isIndexable && locale === 'tr' && page === 1
+      copy.isIndexable &&
+      !isDuplicateOfCity(stats.total, cityStats.total) &&
+      locale === 'tr' &&
+      page === 1
         ? { index: true, follow: true }
         : { index: false, follow: true },
     openGraph: {
@@ -107,13 +115,14 @@ export async function CitySpecialtyPage({
   const specialtyName = s.name;
 
   // İstatistik + JSON-LD ItemList için ilk terapistler + rehber içerikleri (paralel)
-  const [stats, listTherapists, articles, cityTherapists, specialtyTherapists] = await Promise.all([
+  const [stats, listTherapists, articles, cityTherapists, specialtyTherapists, cityTotals] = await Promise.all([
     getTherapistStats({ citySlug: city, specialtySlug: specialty }),
     getTherapists({ citySlug: city, specialtySlug: specialty, limit: 24 }),
     getPublishedArticles({ category: specialtyToArticleCategory(s), limit: 3 }),
     // İlgili uzmanlık / benzer şehir linklerini gerçek arza göre seçmek için (önbellekli)
     getTherapists({ citySlug: city }),
     getTherapists({ specialtySlug: specialty }),
+    getCityCountsCached(),
   ]);
 
   // Bu uzmanlıkta şehir slug → terapist sayısı
@@ -141,6 +150,7 @@ export async function CitySpecialtyPage({
       therapists: cityTherapists.filter((t) => t.specialties.some((x) => x.slug === specialty)),
       allSpecialties: specialties,
       citySpecialtyCounts: countBySpecialty(cityTherapists),
+      cityTotal: cityTherapists.length,
       locale,
     });
     if (insight) copy.sections.splice(1, 0, insight);
@@ -193,6 +203,7 @@ export async function CitySpecialtyPage({
     specialtySlug: specialty,
     specialtyName,
     cityCounts: specialtyCityCounts,
+    cityTotals,
   });
   const specialtyLinks = buildSpecialtyLinks({
     locale,
@@ -201,6 +212,7 @@ export async function CitySpecialtyPage({
     currentSpecialtySlug: specialty,
     specialties,
     specialtyCounts: countBySpecialty(cityTherapists),
+    cityTotal: cityTherapists.length,
     limit: 12,
   });
   const mapEmbedUrl = buildCityEmbedUrl(cityName, locale);

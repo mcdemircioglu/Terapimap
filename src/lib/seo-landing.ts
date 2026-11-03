@@ -44,6 +44,20 @@ export type LandingCopy = {
 export const MIN_THERAPISTS_FOR_INDEX = 2;
 
 /**
+ * Doygunluk eşiği: bir şehir×uzmanlık sayfası, şehirdeki terapistlerin bu oranını veya
+ * fazlasını listeliyorsa şehir sayfasının neredeyse kopyasıdır (etiketler çok geniş
+ * seçildiği için: İstanbul travma %91, Ankara BDT %85, Kocaeli travma %100) ve indekslenmez.
+ * Terapistler listelerden çıkarılmaz; yalnızca sayfa noindex olur ve sitemap'ten düşer.
+ * Sitemap, robots ve iç linkler AYNI fonksiyonu kullanmalı (aksi halde GSC'de
+ * "gönderilen URL noindex" uyarısı çıkar).
+ */
+export const SATURATION_RATIO = 0.8;
+
+export function isDuplicateOfCity(comboCount: number, cityCount: number): boolean {
+  return cityCount > 0 && comboCount / cityCount >= SATURATION_RATIO;
+}
+
+/**
  * Cümle içinde kullanılacak küçük harfli uzmanlık adı; tamamı büyük harfli kısaltmalar
  * ("EMDR", "TSSB", "(BDT)") korunur. Düz toLocaleLowerCase "emdr alanında" gibi çıktı veriyordu.
  */
@@ -838,10 +852,12 @@ export function buildTemplateCopy({
  * Anahtar biçimi: `${citySlug}:${specialtySlug}`.
  */
 export const PILOT_COMBOS: ReadonlySet<string> = new Set([
-  'ankara:bilissel-davranisci-terapi-bdt',
+  // Ankara BDT (%85) ve Kocaeli travma (%100) doygun (şehir sayfasının kopyası, noindex) olduğu
+  // için listeden çıkarıldı; yerlerine odaklı kombinasyonlar alındı.
+  'ankara:sema-terapi',
   'ankara:sinav-kaygisi',
   'ankara:mindfulness',
-  'kocaeli:travma',
+  'kayseri:dehb',
   'istanbul:dehb',
   'istanbul:bilissel-davranisci-terapi-bdt',
   'istanbul:psikanaliz',
@@ -878,6 +894,7 @@ export function buildPageInsightSection({
   therapists,
   allSpecialties,
   citySpecialtyCounts,
+  cityTotal,
   locale,
 }: {
   cityName: string;
@@ -894,6 +911,8 @@ export function buildPageInsightSection({
   allSpecialties: { slug: string; name: string }[];
   /** Şehirdeki uzmanlık slug → terapist sayısı; yalnızca indekslenebilir olanlara link verilir. */
   citySpecialtyCounts: Map<string, number>;
+  /** Şehirdeki toplam terapist sayısı; doygun (noindex) kombinasyonlara link verilmez. */
+  cityTotal: number;
   locale: string;
 }): LandingSection | null {
   const n = therapists.length;
@@ -957,7 +976,10 @@ export function buildPageInsightSection({
       `Bu uzmanlar ayrıca ${joinCounted(co.map(([slug, c]) => [nameBySlug.get(slug) as string, c]))} alanlarında da çalışıyor.`,
     );
     links = co
-      .filter(([slug]) => (citySpecialtyCounts.get(slug) ?? 0) >= MIN_THERAPISTS_FOR_INDEX)
+      .filter(([slug]) => {
+        const count = citySpecialtyCounts.get(slug) ?? 0;
+        return count >= MIN_THERAPISTS_FOR_INDEX && !isDuplicateOfCity(count, cityTotal);
+      })
       .map(([slug]) => ({
         label: `${cityName} ${nameBySlug.get(slug)} Terapistleri`,
         href: `/${locale}/${listBase}/${citySlug}/${slug}`,
@@ -1184,6 +1206,7 @@ export function buildSimilarCityLinks({
   specialtySlug,
   specialtyName,
   cityCounts,
+  cityTotals,
   limit = 8,
 }: {
   locale: string;
@@ -1193,12 +1216,18 @@ export function buildSimilarCityLinks({
   /** Şehir slug → terapist sayısı (uzmanlık verildiyse o uzmanlıktaki sayı). Verilirse
    *  yalnızca indekslenebilir (MIN_THERAPISTS_FOR_INDEX) şehirler, çoktan aza sıralı linklenir. */
   cityCounts?: Record<string, number>;
+  /** Şehir slug → şehirdeki toplam terapist; uzmanlık linklerinde doygun (noindex)
+   *  kombinasyonları elemek için. */
+  cityTotals?: Record<string, number>;
   limit?: number;
 }): InternalLink[] {
   const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
-  const candidates = CITIES.filter((c) => c.slug !== currentCitySlug).filter(
-    (c) => !cityCounts || (cityCounts[c.slug] ?? 0) >= MIN_THERAPISTS_FOR_INDEX,
-  );
+  const candidates = CITIES.filter((c) => c.slug !== currentCitySlug)
+    .filter((c) => !cityCounts || (cityCounts[c.slug] ?? 0) >= MIN_THERAPISTS_FOR_INDEX)
+    .filter(
+      (c) =>
+        !specialtySlug || !cityCounts || !cityTotals || !isDuplicateOfCity(cityCounts[c.slug] ?? 0, cityTotals[c.slug] ?? 0),
+    );
   // sort kararlı: eşit sayıda terapisti olan şehirler CITIES sırasını korur
   if (cityCounts) candidates.sort((a, b) => (cityCounts[b.slug] ?? 0) - (cityCounts[a.slug] ?? 0));
   return candidates
@@ -1227,6 +1256,7 @@ export function buildSpecialtyLinks({
   currentSpecialtySlug,
   specialties,
   specialtyCounts,
+  cityTotal,
   limit = 8,
 }: {
   locale: string;
@@ -1237,6 +1267,9 @@ export function buildSpecialtyLinks({
   /** Uzmanlık slug → bu şehirdeki terapist sayısı. Verilirse yalnızca indekslenebilir
    *  (MIN_THERAPISTS_FOR_INDEX) kombinasyonlar, terapist sayısına göre sıralı linklenir. */
   specialtyCounts?: Map<string, number>;
+  /** Şehirdeki toplam terapist sayısı; verilirse doygun (şehir sayfasının kopyası olan,
+   *  noindex) kombinasyonlara link verilmez. */
+  cityTotal?: number;
   limit?: number;
 }): InternalLink[] {
   const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
@@ -1249,6 +1282,9 @@ export function buildSpecialtyLinks({
   return [...specialties]
     .filter((s) => s.slug !== currentSpecialtySlug)
     .filter((s) => !specialtyCounts || (specialtyCounts.get(s.slug) ?? 0) >= MIN_THERAPISTS_FOR_INDEX)
+    .filter(
+      (s) => !specialtyCounts || cityTotal === undefined || !isDuplicateOfCity(specialtyCounts.get(s.slug) ?? 0, cityTotal),
+    )
     .sort((a, b) => {
       if (specialtyCounts) {
         const dc = (specialtyCounts.get(b.slug) ?? 0) - (specialtyCounts.get(a.slug) ?? 0);

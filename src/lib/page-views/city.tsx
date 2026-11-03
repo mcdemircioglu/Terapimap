@@ -174,6 +174,7 @@ export async function CityPage({
     cityName,
     specialties,
     specialtyCounts: countBySpecialty(cityTherapists),
+    cityTotal: cityTherapists.length,
     limit: 12,
   });
   const mapEmbedUrl = buildCityEmbedUrl(cityName, locale);

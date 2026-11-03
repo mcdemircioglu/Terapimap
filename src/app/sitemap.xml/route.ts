@@ -1,5 +1,5 @@
 import { CITIES, getCitySlug } from "@/lib/cities";
-import { MIN_THERAPISTS_FOR_INDEX } from "@/lib/seo-landing";
+import { MIN_THERAPISTS_FOR_INDEX, isDuplicateOfCity } from "@/lib/seo-landing";
 import { getTherapists, getSpecialties } from "@/lib/queries";
 import { getArticlesForSitemap } from "@/lib/articles";
 import { ARTICLE_CATEGORIES } from "@/types/database";
@@ -93,7 +93,10 @@ export async function GET() {
       items.push(item(`${l}/${listSlug}/${city.slug}`, "weekly", 0.8));
 
       for (const specialty of specialties) {
-        if ((comboCounts.get(`${city.slug}:${specialty.slug}`) ?? 0) < MIN_THERAPISTS_FOR_INDEX) continue;
+        const comboCount = comboCounts.get(`${city.slug}:${specialty.slug}`) ?? 0;
+        if (comboCount < MIN_THERAPISTS_FOR_INDEX) continue;
+        // Şehir sayfasının kopyası olan (doygun) kombinasyonlar noindex'tir, sitemap'e girmez
+        if (isDuplicateOfCity(comboCount, cityCounts.get(city.slug) ?? 0)) continue;
         items.push(
           item(`${l}/${listSlug}/${city.slug}/${specialty.slug}`, "weekly", 0.6)
         );
