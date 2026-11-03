@@ -6,7 +6,13 @@ import JsonLd from '@/components/JsonLd';
 import SeoLandingHeader from '@/components/seo/SeoLandingHeader';
 import SeoLandingSections from '@/components/seo/SeoLandingSections';
 import { CITIES, getCityName, isKnownCity } from '@/lib/cities';
-import { getDistricts, getSpecialties, getTherapists, getTherapistStats } from '@/lib/queries';
+import {
+  getCityCountsCached,
+  getDistricts,
+  getSpecialties,
+  getTherapists,
+  getTherapistStats,
+} from '@/lib/queries';
 import { getFeaturedArticles } from '@/lib/articles';
 import { buildCityEmbedUrl } from '@/lib/maps';
 import {
@@ -21,6 +27,7 @@ import {
   buildCityLandingCopy,
   buildSimilarCityLinks,
   buildSpecialtyLinks,
+  countBySpecialty,
   landingCanonical,
 } from '@/lib/seo-landing';
 import { brandedTitle, findBySlug, getLocativeSuffix } from '@/lib/utils';
@@ -107,11 +114,14 @@ export async function CityPage({
   const homeLabel = locale === 'tr' ? 'Ana Sayfa' : 'Home';
   const listLabel = locale === 'tr' ? 'Terapistler' : 'Therapists';
 
-  const [stats, specialties, listTherapists, articles] = await Promise.all([
+  const [stats, specialties, listTherapists, articles, cityTherapists, cityCounts] = await Promise.all([
     getTherapistStats({ citySlug: city }),
     getSpecialties(),
     getTherapists({ citySlug: city, limit: 24 }),
     getFeaturedArticles(3),
+    // Uzmanlık linklerini bu şehirdeki gerçek arza göre seçmek için (limitsiz, önbellekli)
+    getTherapists({ citySlug: city }),
+    getCityCountsCached(),
   ]);
 
   const copy = buildCityLandingCopy({
@@ -157,8 +167,15 @@ export async function CityPage({
     specialties,
   });
 
-  const cityLinks = buildSimilarCityLinks({ locale, currentCitySlug: city });
-  const specialtyLinks = buildSpecialtyLinks({ locale, citySlug: city, cityName, specialties });
+  const cityLinks = buildSimilarCityLinks({ locale, currentCitySlug: city, cityCounts });
+  const specialtyLinks = buildSpecialtyLinks({
+    locale,
+    citySlug: city,
+    cityName,
+    specialties,
+    specialtyCounts: countBySpecialty(cityTherapists),
+    limit: 12,
+  });
   const mapEmbedUrl = buildCityEmbedUrl(cityName, locale);
   const mapTitle = `${cityName} Haritası`;
 

@@ -1001,6 +1001,17 @@ export function specialtyToArticleCategory(
   return 'psikolojik-konular';
 }
 
+/** Terapist listesinden uzmanlık slug → terapist sayısı. */
+export function countBySpecialty(
+  therapists: { specialties: { slug: string }[] }[],
+): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const t of therapists) {
+    for (const s of t.specialties) counts.set(s.slug, (counts.get(s.slug) ?? 0) + 1);
+  }
+  return counts;
+}
+
 /* ── Benzer şehirler ───────────────────────────────────────────────── */
 
 /**
@@ -1012,16 +1023,25 @@ export function buildSimilarCityLinks({
   currentCitySlug,
   specialtySlug,
   specialtyName,
+  cityCounts,
   limit = 8,
 }: {
   locale: string;
   currentCitySlug: string;
   specialtySlug?: string;
   specialtyName?: string;
+  /** Şehir slug → terapist sayısı (uzmanlık verildiyse o uzmanlıktaki sayı). Verilirse
+   *  yalnızca indekslenebilir (MIN_THERAPISTS_FOR_INDEX) şehirler, çoktan aza sıralı linklenir. */
+  cityCounts?: Record<string, number>;
   limit?: number;
 }): InternalLink[] {
   const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
-  return CITIES.filter((c) => c.slug !== currentCitySlug)
+  const candidates = CITIES.filter((c) => c.slug !== currentCitySlug).filter(
+    (c) => !cityCounts || (cityCounts[c.slug] ?? 0) >= MIN_THERAPISTS_FOR_INDEX,
+  );
+  // sort kararlı: eşit sayıda terapisti olan şehirler CITIES sırasını korur
+  if (cityCounts) candidates.sort((a, b) => (cityCounts[b.slug] ?? 0) - (cityCounts[a.slug] ?? 0));
+  return candidates
     .slice(0, limit)
     .map((c) => ({
       label:
@@ -1046,6 +1066,7 @@ export function buildSpecialtyLinks({
   cityName,
   currentSpecialtySlug,
   specialties,
+  specialtyCounts,
   limit = 8,
 }: {
   locale: string;
@@ -1053,17 +1074,27 @@ export function buildSpecialtyLinks({
   cityName: string;
   currentSpecialtySlug?: string;
   specialties: Pick<Specialty, 'slug' | 'name'>[];
+  /** Uzmanlık slug → bu şehirdeki terapist sayısı. Verilirse yalnızca indekslenebilir
+   *  (MIN_THERAPISTS_FOR_INDEX) kombinasyonlar, terapist sayısına göre sıralı linklenir. */
+  specialtyCounts?: Map<string, number>;
   limit?: number;
 }): InternalLink[] {
   const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
-  const priority = ['anksiyete', 'depresyon', 'emdr', 'cift-terapisi', 'travma', 'panik-atak'];
+  const priority = ['anksiyete', 'depresyon', 'emdr', 'cift-terapisi', 'travma', 'panik-bozukluk'];
+  const rank = (slug: string) => {
+    const i = priority.indexOf(slug);
+    return i === -1 ? 99 : i;
+  };
 
   return [...specialties]
     .filter((s) => s.slug !== currentSpecialtySlug)
+    .filter((s) => !specialtyCounts || (specialtyCounts.get(s.slug) ?? 0) >= MIN_THERAPISTS_FOR_INDEX)
     .sort((a, b) => {
-      const ai = priority.indexOf(a.slug);
-      const bi = priority.indexOf(b.slug);
-      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      if (specialtyCounts) {
+        const dc = (specialtyCounts.get(b.slug) ?? 0) - (specialtyCounts.get(a.slug) ?? 0);
+        if (dc !== 0) return dc;
+      }
+      return rank(a.slug) - rank(b.slug);
     })
     .slice(0, limit)
     .map((s) => ({

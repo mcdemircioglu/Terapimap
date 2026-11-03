@@ -382,6 +382,13 @@ export async function getCityCounts(): Promise<Record<string, number>> {
   }, {});
 }
 
+// Şehir sayfalarındaki "benzer şehir" linkleri için; getTherapists ile aynı süre/etiket,
+// böylece her ISR üretiminde ayrı sorgu atılmaz.
+export const getCityCountsCached = unstable_cache(getCityCounts, ['getCityCounts'], {
+  revalidate: 86400,
+  tags: ['therapists-list'],
+});
+
 
 export type TherapistPagedFilters = TherapistFilters & {
   page?: number;
