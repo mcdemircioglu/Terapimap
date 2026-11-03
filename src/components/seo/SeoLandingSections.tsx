@@ -59,6 +59,20 @@ export default function SeoLandingSections({
                 <p key={j}>{p}</p>
               ))}
             </div>
+            {sec.links && sec.links.length > 0 && (
+              <ul className="mt-4 flex flex-wrap gap-2">
+                {sec.links.map((link, j) => (
+                  <li key={j}>
+                    <Link
+                      href={link.href}
+                      className="inline-block rounded-full border border-brand-200 bg-brand-50/60 px-3.5 py-1.5 text-xs font-medium text-brand-700 transition-colors hover:border-brand-400 hover:bg-brand-50 hover:text-brand-900"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         ))}
 

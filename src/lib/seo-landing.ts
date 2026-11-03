@@ -2,7 +2,8 @@ import { getPublicClient } from '@/lib/supabase/server';
 import { getLocativeSuffix } from '@/lib/utils';
 import { absUrl } from '@/lib/schema';
 import { CITIES } from '@/lib/cities';
-import type { ArticleCategory } from '@/types/database';
+import { PROFESSIONAL_TYPE_LABELS } from '@/types/database';
+import type { ArticleCategory, ProfessionalType } from '@/types/database';
 import type { Specialty } from '@/types/database';
 
 /**
@@ -13,7 +14,12 @@ import type { Specialty } from '@/types/database';
 
 export type LandingFaq = { q: string; a: string };
 
-export type LandingSection = { heading: string; paragraphs: string[] };
+export type LandingSection = {
+  heading: string;
+  paragraphs: string[];
+  /** Bölümün altında chip olarak gösterilen isteğe bağlı iç linkler. */
+  links?: InternalLink[];
+};
 
 export type LandingCopy = {
   h1: string;
@@ -809,6 +815,149 @@ export function buildTemplateCopy({
     sections,
     faqs,
     isIndexable: total >= MIN_THERAPISTS_FOR_INDEX,
+  };
+}
+
+/* ── Sayfaya özgü "genel bakış" bloğu (pilot) ───────────────────────── */
+
+/**
+ * Şablon metin şehirler arasında büyük ölçüde ortak olduğu için (bkz. buildTemplateCopy),
+ * pilot sayfalara o sayfadaki gerçek verilerden üretilen kısa bir bölüm eklenir. GSC'de
+ * gösterim alan kombinasyonlarla başlandı; sonuç ölçülmeden tüm sayfalara yayılmaz.
+ * Anahtar biçimi: `${citySlug}:${specialtySlug}`.
+ */
+export const PILOT_COMBOS: ReadonlySet<string> = new Set([
+  'ankara:bilissel-davranisci-terapi-bdt',
+  'ankara:sinav-kaygisi',
+  'ankara:mindfulness',
+  'kocaeli:travma',
+  'istanbul:dehb',
+  'istanbul:bilissel-davranisci-terapi-bdt',
+  'istanbul:psikanaliz',
+  'istanbul:emdr',
+  'istanbul:act-terapi',
+  'izmir:psikanaliz',
+]);
+
+/** "A (3), B (2) ve C (1)" biçiminde sayılı liste. */
+function joinCounted(items: [string, number][]): string {
+  const parts = items.map(([name, n]) => `${name} (${n})`);
+  if (parts.length <= 1) return parts.join('');
+  return `${parts.slice(0, -1).join(', ')} ve ${parts[parts.length - 1]}`;
+}
+
+function topCounts(values: (string | null | undefined)[], limit: number, min = 1): [string, number][] {
+  const m = new Map<string, number>();
+  for (const v of values) if (v) m.set(v, (m.get(v) ?? 0) + 1);
+  return [...m.entries()]
+    .filter(([, n]) => n >= min)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'tr'))
+    .slice(0, limit);
+}
+
+/**
+ * Sayfadaki uzmanların (şehir × uzmanlık) gerçek verisinden "genel bakış" bölümü üretir.
+ * Yalnızca sayılabilir olgular yazılır; fiyat gibi tutarsız alanlar kullanılmaz.
+ * Eşiğin altında (indekslenmeyen) sayfalar için null döner.
+ */
+export function buildPageInsightSection({
+  cityName,
+  citySlug,
+  specialty,
+  therapists,
+  allSpecialties,
+  citySpecialtyCounts,
+  locale,
+}: {
+  cityName: string;
+  citySlug: string;
+  specialty: { slug: string; name: string };
+  therapists: {
+    district: string | null;
+    professional_type: string | null;
+    experience_years: number;
+    is_online: boolean;
+    is_in_person: boolean;
+    specialties: { slug: string; name: string }[];
+  }[];
+  allSpecialties: { slug: string; name: string }[];
+  /** Şehirdeki uzmanlık slug → terapist sayısı; yalnızca indekslenebilir olanlara link verilir. */
+  citySpecialtyCounts: Map<string, number>;
+  locale: string;
+}): LandingSection | null {
+  const n = therapists.length;
+  if (n < MIN_THERAPISTS_FOR_INDEX) return null;
+
+  const short = shortSpecialtyName(specialty.name);
+  const da = getLocativeSuffix(cityName);
+  const daki = getLocativeSuffix(cityName, true);
+  const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
+
+  const online = therapists.filter((t) => t.is_online).length;
+  const inPerson = therapists.filter((t) => t.is_in_person).length;
+
+  // Uzmanlık adı küçük harfe çevrilmez: "EMDR", "TSSB" gibi kısaltmalar bozulurdu
+  const format =
+    online === n && inPerson === n
+      ? 'tamamı hem online hem yüz yüze görüşme sunuyor'
+      : `${online} tanesi online, ${inPerson} tanesi yüz yüze görüşme sunuyor`;
+  const p1: string[] = [`${cityName}${da} ${specialty.name} alanında çalışan ${n} uzmanın ${format}.`];
+
+  const types = topCounts(
+    therapists.map((t) => (t.professional_type ? PROFESSIONAL_TYPE_LABELS[t.professional_type as ProfessionalType] : null)),
+    4,
+  );
+  if (types.length > 0) {
+    p1.push(
+      `Meslek dağılımı: ${types.map(([label, c]) => `${c} ${label.toLocaleLowerCase('tr')}`).join(', ')}.`,
+    );
+  }
+
+  const years = therapists.map((t) => t.experience_years).filter((y) => y > 0);
+  if (years.length >= 2) {
+    const avg = Math.round(years.reduce((a, b) => a + b, 0) / years.length);
+    p1.push(`Deneyim bilgisi giren ${years.length} uzmanın ortalama deneyimi ${avg} yıl.`);
+  }
+
+  const paragraphs = [p1.join(' ')];
+
+  const districts = topCounts(therapists.map((t) => t.district), 3);
+  if (districts.length >= 2) {
+    paragraphs.push(`İlçe bilgisi paylaşan uzmanlar arasında en yoğun bölgeler ${joinCounted(districts)}.`);
+  }
+
+  // Aynı uzmanların çalıştığı diğer alanlar (en az 2 uzman), indekslenebilir kombinasyonlara link
+  const nameBySlug = new Map(allSpecialties.map((s) => [s.slug, s.name]));
+  const coCounts = new Map<string, number>();
+  for (const t of therapists) {
+    for (const s of t.specialties) {
+      if (s.slug === specialty.slug) continue;
+      coCounts.set(s.slug, (coCounts.get(s.slug) ?? 0) + 1);
+    }
+  }
+  const co = [...coCounts.entries()]
+    .filter(([slug, c]) => c >= 2 && nameBySlug.has(slug))
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 5);
+
+  let links: InternalLink[] | undefined;
+  if (co.length > 0) {
+    paragraphs.push(
+      `Bu uzmanlar ayrıca ${joinCounted(co.map(([slug, c]) => [nameBySlug.get(slug) as string, c]))} alanlarında da çalışıyor.`,
+    );
+    links = co
+      .filter(([slug]) => (citySpecialtyCounts.get(slug) ?? 0) >= MIN_THERAPISTS_FOR_INDEX)
+      .map(([slug]) => ({
+        label: `${cityName} ${nameBySlug.get(slug)} Terapistleri`,
+        href: `/${locale}/${listBase}/${citySlug}/${slug}`,
+      }));
+    if (links.length === 0) links = undefined;
+  }
+
+  return {
+    heading: `${cityName}${daki} ${short} Uzmanlarına Genel Bakış`,
+    paragraphs,
+    links,
   };
 }
 

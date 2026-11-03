@@ -21,8 +21,10 @@ import {
   getLandingCopy,
   buildInternalLinks,
   buildSimilarCityLinks,
+  buildPageInsightSection,
   buildSpecialtyLinks,
   countBySpecialty,
+  PILOT_COMBOS,
   specialtyToArticleCategory,
   landingCanonical,
 } from '@/lib/seo-landing';
@@ -128,6 +130,20 @@ export async function CitySpecialtyPage({
     total: stats.total,
     onlineCount: stats.online,
   });
+
+  // Pilot: seçili kombinasyonlara sayfadaki gerçek veriden "genel bakış" bölümü (ilk bölümün ardına)
+  if (PILOT_COMBOS.has(`${city}:${specialty}`)) {
+    const insight = buildPageInsightSection({
+      cityName,
+      citySlug: city,
+      specialty: { slug: specialty, name: specialtyName },
+      therapists: cityTherapists.filter((t) => t.specialties.some((x) => x.slug === specialty)),
+      allSpecialties: specialties,
+      citySpecialtyCounts: countBySpecialty(cityTherapists),
+      locale,
+    });
+    if (insight) copy.sections.splice(1, 0, insight);
+  }
 
   const pageUrl = landingCanonical(locale, city, specialty);
   const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
