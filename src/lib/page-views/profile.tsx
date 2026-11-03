@@ -87,6 +87,42 @@ function buildProfileFaqs(therapist: ProfessionalWithSpecialties): { q: string; 
   return faqs.slice(0, 6);
 }
 
+// SEO: meta description yapılandırılmış alanlardan üretilir. `about` serbest metni
+// çoğu profilde "Klinik Yaklaşım ve Terapi Odakları / Danışan odaklı bir yaklaşım…"
+// kalıbıyla başladığı için arama sonucunda herkeste aynı yarım cümle görünüyordu.
+// Parçalar öncelik sırasıyla eklenir; sığmayan parça atlanır, cümle ortasından kesilmez.
+const META_DESCRIPTION_MAX = 155;
+
+function buildProfileDescription(therapist: ProfessionalWithSpecialties, location: string): string {
+  const head = [`${therapist.name},`, location, therapist.title ?? 'psikolog']
+    .filter(Boolean)
+    .join(' ');
+  const specs = therapist.specialties.slice(0, 3).map((s) => s.name).join(', ');
+
+  let mode: string | null = null;
+  if (therapist.is_online && therapist.is_in_person) mode = 'Online ve yüz yüze seans';
+  else if (therapist.is_online) mode = 'Online seans';
+  else if (therapist.is_in_person) mode = 'Yüz yüze seans';
+
+  const parts = [
+    specs ? `${head}. ${specs} alanlarında destek verir.` : `${head}.`,
+    mode ? `${mode}.` : null,
+    therapist.experience_years > 0 ? `${therapist.experience_years} yıl deneyim.` : null,
+    'Yorumları inceleyin, randevu talebi gönderin.',
+  ];
+
+  let result = parts[0] as string;
+  for (const part of parts.slice(1)) {
+    if (!part) continue;
+    if ((result + ' ' + part).length > META_DESCRIPTION_MAX) continue;
+    result += ' ' + part;
+  }
+  if (result.length <= META_DESCRIPTION_MAX) return result;
+  // Yalnızca ilk cümle bile uzunsa kelime sınırında kes
+  const cut = result.slice(0, META_DESCRIPTION_MAX - 1);
+  return cut.slice(0, cut.lastIndexOf(' ')).replace(/[,.;:]+$/, '') + '…';
+}
+
 export async function generateMetadataImpl({
   params: { locale, slug },
 }: {
@@ -95,7 +131,6 @@ export async function generateMetadataImpl({
   const therapist = await getTherapistBySlug(slug);
   if (!therapist) return {};
 
-  const specialties = therapist.specialties.map((s) => s.name).join(', ');
   const location = [therapist.city, therapist.district].filter(Boolean).join(' ');
   const url = absUrl('/' + locale + '/' + getProfessionalUrlSegment(therapist.professional_type) + '/' + slug);
 
@@ -105,9 +140,7 @@ export async function generateMetadataImpl({
     'Terapimap',
   ].join(' | ');
 
-  const description = therapist.about
-    ? therapist.about.slice(0, 155)
-    : `${therapist.name}, ${location} uzman ${therapist.title ?? 'psikolog'}. Uzmanlık alanları: ${specialties}. Terapimap üzerinden iletişime geçin.`;
+  const description = buildProfileDescription(therapist, location);
 
   return {
     title: brandedTitle(title),
