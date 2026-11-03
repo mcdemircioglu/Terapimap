@@ -15,6 +15,18 @@ const nextConfig = {
       // 2026-09-17'de Supabase'ten çekilen tam malformed-slug taramasından
       // (200 kayıt) ve mert'in elle onayladığı eşleştirmeden üretildi.
       { source: "/:locale/psikiyatrist/gaziantep-pedagog-psikolog-esma-temiz-calkilicoyun-terapistiemdr-terapisti-cocuk-ergen-yet", destination: "/:locale/psikiyatrist/esma-temiz-calkilic-gaziantep", permanent: true },
+      // Aynı slug'ın eski /psikolog/ altındaki hali: Google'da bu yolla indeksliydi
+      // (GSC Eylül 2026), yukarıdaki kural yalnızca /psikiyatrist/ yolunu yakalıyordu → 404
+      { source: "/:locale/psikolog/gaziantep-pedagog-psikolog-esma-temiz-calkilicoyun-terapistiemdr-terapisti-cocuk-ergen-yet", destination: "/:locale/psikiyatrist/esma-temiz-calkilic-gaziantep", permanent: true },
+      // Aynı sorun: aşağıdaki eski slug'lar için kural başka bir tür yolu altında
+      // tanımlıydı, oysa Google'da /psikolog/ yoluyla indeksliydi (GSC Eylül 2026,
+      // canlıda 404 doğrulandı). Hedefler mevcut kuralların hedefleriyle aynı.
+      { source: "/:locale/psikolog/antalya-danisman-yesim-yavuz-uysal-", destination: "/:locale/psikolojik-danisman/yesim-yavuz-uysal-antalya", permanent: true },
+      { source: "/:locale/psikolog/beylikduzu-cucuk-psikolog-lina-cocuk-ergen-aile-egitim-ve-danismanlik", destination: "/:locale/psikolojik-danisman/lina-cocuk-ergen-aile-egitim-ve-danismanlik-istanbul", permanent: true },
+      { source: "/:locale/psikolog/f-volkan-yuksel-antalya-psikiyatrist-psikoterapist-cinsel-terapist-antalya-psikoloji-mer", destination: "/:locale/psikiyatrist/f-volkan-yuksel-antalya", permanent: true },
+      { source: "/:locale/psikolog/gizem-erbas-kayseri-psikolog-kayseri-emdr-kayseri-oyun-terapisi-", destination: "/:locale/psikiyatrist/gizem-erbas-kayseri", permanent: true },
+      { source: "/:locale/psikolog/selma-akbulut-therapium-psikolojik-danismanlik-merkezi-sated-psikoloji", destination: "/:locale/psikolojik-danisman/selma-akbulut-antalya", permanent: true },
+      { source: "/:locale/psikolog/uzm-dr-aysel-alkan-koseoglu-", destination: "/:locale/psikiyatrist/aysel-alkan-koseoglu-bursa", permanent: true },
       { source: "/:locale/psikolog/-antalya-psikolog-konyaalti-cag-psikolojik-danismanlik-merkezi-uzman-psikolog-cagri-ulusoy", destination: "/:locale/psikolog/cagri-ulusoy-antalya", permanent: true },
       { source: "/:locale/psikiyatrist/f-volkan-yuksel-antalya-psikiyatrist-psikoterapist-cinsel-terapist-antalya-psikoloji-mer", destination: "/:locale/psikiyatrist/f-volkan-yuksel-antalya", permanent: true },
       { source: "/:locale/psikolog/ozge-seker-yenimahalle-psikologyetiskin-terapisien-iyi-psikologcocuk-psikologoyu", destination: "/:locale/psikolog/ozge-seker-yenimahalle-ankara", permanent: true },
