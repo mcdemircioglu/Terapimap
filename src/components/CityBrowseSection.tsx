@@ -8,17 +8,29 @@
 import Link from 'next/link';
 import Container from './Container';
 import { CITIES } from '@/lib/cities';
+import { MIN_THERAPISTS_FOR_INDEX } from '@/lib/seo-landing';
 import { MapPinIcon } from '@/components/ui/icons';
 
-export default function CityBrowseSection({ locale }: { locale: string }) {
+export default function CityBrowseSection({
+  locale,
+  cityCounts,
+}: {
+  locale: string;
+  /** Şehir slug → terapist sayısı. Verilirse yalnızca indekslenebilir (eşiği geçen) şehirler gösterilir. */
+  cityCounts?: Record<string, number>;
+}) {
   const listBase = locale === 'tr' ? 'terapistler' : 'therapists';
+  const cities = cityCounts
+    ? CITIES.filter((c) => (cityCounts[c.slug] ?? 0) >= MIN_THERAPISTS_FOR_INDEX)
+    : CITIES;
+  if (cities.length === 0) return null;
 
   return (
     <section className="border-b border-brand-100 bg-white">
       <Container className="py-6 md:py-8">
         <h2 className="text-sm font-semibold text-brand-800">Şehre Göre Gözat</h2>
         <div className="mt-4 flex flex-wrap gap-2.5">
-          {CITIES.map((city) => (
+          {cities.map((city) => (
             <Link
               key={city.slug}
               href={`/${locale}/${listBase}/${city.slug}`}

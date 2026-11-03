@@ -6,10 +6,17 @@ import Container from '@/components/Container';
 import HeroSearch from '@/components/home/HeroSearch';
 import FeaturedTherapistsSlider from '@/components/home/FeaturedTherapistsSlider';
 import PopularSearches from '@/components/home/PopularSearches';
+import CityBrowseSection from '@/components/CityBrowseSection';
 import FeaturedTests from '@/components/home/FeaturedTests';
 import { Button } from '@/components/ui/Button';
 import { UsersIcon, MapPinIcon, VideoIcon } from '@/components/ui/icons';
-import { getFeaturedTherapists, getSpecialties, getHomeStats, getPublishedTests } from '@/lib/queries';
+import {
+  getCityCountsCached,
+  getFeaturedTherapists,
+  getSpecialties,
+  getHomeStats,
+  getPublishedTests,
+} from '@/lib/queries';
 import { absUrl } from '@/lib/schema';
 import { getTherapistsListPath } from '@/lib/utils';
 import FeaturedArticles from '@/components/guide/FeaturedArticles';
@@ -34,12 +41,13 @@ export default async function HomePage({
   params: { locale: string };
 }) {
   unstable_setRequestLocale(locale);
-  const [t, specialties, featured, stats, tests] = await Promise.all([
+  const [t, specialties, featured, stats, tests, cityCounts] = await Promise.all([
     getTranslations({ locale, namespace: 'home' }),
     getSpecialties(),
     getFeaturedTherapists(), // limitsiz — tüm öne çıkan terapistler (bkz. queries.ts)
     getHomeStats(),
     getPublishedTests(),
+    getCityCountsCached(),
   ]);
 
   const statItems = [
@@ -104,6 +112,9 @@ export default async function HomePage({
 
       {/* Popüler aramalar */}
       <PopularSearches locale={locale} />
+
+      {/* Şehre göre gözat: ana sayfadan şehir sayfalarına gövde içinde link (yalnızca indekslenebilir şehirler) */}
+      <CityBrowseSection locale={locale} cityCounts={cityCounts} />
 
       {/* Öne çıkan terapist yoksa bölüm gizlenir; bu durumda rehber yukarı çıkar */}
       {featured.length > 0 && (
