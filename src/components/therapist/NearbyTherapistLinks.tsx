@@ -1,15 +1,18 @@
 /**
  * "Yakındaki Terapistler" — internal linking bloğu.
- * Terapistin şehri/ilçesi/mesleğine göre mevcut SEO landing sayfalarına
- * (/{locale}/{city}-{tip} ve /{locale}/therapists/{city}?district=...)
- * otomatik link üretir. Local SEO + crawl depth iyileştirmesi.
+ * Terapistin şehri/ilçesine göre şehir dizinine (/{locale}/terapistler/{city}),
+ * ilçe filtresine ve online terapi sayfasına link üretir. Local SEO + crawl depth iyileştirmesi.
+ *
+ * Not: eski /{city}-psikolog, /{city}-klinik-psikolog ve /{city}-{meslek} linkleri
+ * kaldırıldı. Bu adresler 301 ile /terapistler/{city}'e gidiyordu (bkz. seo-landing.tsx,
+ * SEO T5); her profilde aynı hedefe 2-3 link ve bir yönlendirme basamağı oluşturuyordu.
  */
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { getCitySlug } from '@/lib/cities';
 import { slugifyTr, getTherapistsListPath } from '@/lib/utils';
 import { ArrowUpRightIcon, MapPinIcon } from '@/components/ui/icons';
-import type { ProfessionalType, ProfessionalWithSpecialties } from '@/types/database';
+import type { ProfessionalWithSpecialties } from '@/types/database';
 
 type Props = {
   therapist: ProfessionalWithSpecialties;
@@ -18,59 +21,24 @@ type Props = {
 
 type InternalLink = { label: string; href: string };
 
-const PROF_TYPE_TO_SLUG: Partial<Record<ProfessionalType, string>> = {
-  psychiatrist: 'psikiyatrist',
-  child_psychiatrist: 'cocuk-psikiyatristi',
-  family_therapist: 'aile-terapisti',
-  counselor: 'psikolojik-danisman',
-};
-
-const PROF_TYPE_PLURAL_TR: Partial<Record<ProfessionalType, string>> = {
-  psychiatrist: 'Psikiyatristleri',
-  child_psychiatrist: 'Çocuk Psikiyatristleri',
-  family_therapist: 'Aile Terapistleri',
-  counselor: 'Psikolojik Danışmanları',
-};
-
-const PROF_TYPE_PLURAL_EN: Partial<Record<ProfessionalType, string>> = {
-  psychiatrist: 'Psychiatrists',
-  child_psychiatrist: 'Child Psychiatrists',
-  family_therapist: 'Family Therapists',
-  counselor: 'Counselors',
-};
-
 function buildLinks(therapist: ProfessionalWithSpecialties, locale: string): InternalLink[] {
   const citySlug = getCitySlug(therapist.city);
   if (!citySlug) return [];
 
   const tr = locale === 'tr';
   const city = therapist.city;
+  const cityPath = `${getTherapistsListPath(locale)}/${citySlug}`;
   const links: InternalLink[] = [
     {
-      label: tr ? `${city} Psikologları` : `Psychologists in ${city}`,
-      href: `/${locale}/${citySlug}-psikolog`,
+      label: tr ? `${city} Psikolog ve Terapistleri` : `Therapists in ${city}`,
+      href: cityPath,
     },
   ];
 
   if (therapist.district) {
     links.push({
       label: tr ? `${therapist.district} Psikologları` : `Psychologists in ${therapist.district}`,
-      href: `${getTherapistsListPath(locale)}/${citySlug}?district=${slugifyTr(therapist.district)}`,
-    });
-  }
-
-  links.push({
-    label: tr ? `${city} Klinik Psikologları` : `Clinical Psychologists in ${city}`,
-    href: `/${locale}/${citySlug}-klinik-psikolog`,
-  });
-
-  // Terapistin kendi meslek grubu psikolog dışındaysa onun landing'ini de ekle
-  const type = therapist.professional_type;
-  if (type && PROF_TYPE_TO_SLUG[type]) {
-    const plural = tr ? PROF_TYPE_PLURAL_TR[type] : PROF_TYPE_PLURAL_EN[type];
-    links.push({
-      label: tr ? `${city} ${plural}` : `${plural} in ${city}`,
-      href: `/${locale}/${citySlug}-${PROF_TYPE_TO_SLUG[type]}`,
+      href: `${cityPath}?district=${slugifyTr(therapist.district)}`,
     });
   }
 
