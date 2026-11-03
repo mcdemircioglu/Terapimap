@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServiceClient } from '@/lib/supabase/server';
 import { sendApplicationNotification } from '@/lib/email';
+import { MAX_SPECIALTIES_PER_PROFILE } from '@/types/database';
 
 import { isRateLimited, tooManyRequests, isHoneypotTripped, fakeOk, JSON_LIMIT, UPLOAD_LIMIT } from '@/lib/spamGuard';
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -64,6 +65,15 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+  }
+
+  // Uzmanlık sayısı üst sınırı: hem yeni başvuru hem güncelleme talebi için (istemci
+  // kontrolü atlanabilir). Admin onayı sonrası düzenlemeler bu sınıra bağlı değildir.
+  if (Array.isArray(body.specialties) && body.specialties.length > MAX_SPECIALTIES_PER_PROFILE) {
+    return NextResponse.json(
+      { error: `En fazla ${MAX_SPECIALTIES_PER_PROFILE} uzmanlık alanı seçebilirsiniz.` },
+      { status: 400 },
+    );
   }
 
   const supabase = getServiceClient();

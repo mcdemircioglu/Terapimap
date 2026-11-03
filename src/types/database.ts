@@ -3,6 +3,14 @@
 
 export type SpecialtyType = 'konu' | 'yontem' | 'kitle';
 
+/**
+ * Başvuru/güncelleme taleplerinde bir profil için seçilebilecek en fazla uzmanlık sayısı.
+ * Sınır yokken 949 profilin 238'i 26'dan fazla alan işaretlemişti (en çok 61); bu hem
+ * "uzmanlık" filtresini anlamsızlaştırıyor hem şehir×uzmanlık sayfalarını şehir
+ * sayfasının kopyasına çeviriyordu. Admin düzenlemesi bu sınıra bağlı değildir.
+ */
+export const MAX_SPECIALTIES_PER_PROFILE = 10;
+
 /** Arayüzdeki grup başlıkları ve sıralama. */
 export const SPECIALTY_TYPE_ORDER: SpecialtyType[] = ['konu', 'yontem', 'kitle'];
 

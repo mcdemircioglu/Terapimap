@@ -12,6 +12,7 @@ import { Select } from './ui/Select';
 import { CITIES } from '@/lib/cities';
 import { getDistricts } from '@/lib/districts';
 import {
+  MAX_SPECIALTIES_PER_PROFILE,
   PROFESSIONAL_TYPE_LABELS,
   SPECIALTY_TYPE_LABELS,
   groupSpecialties,
@@ -102,9 +103,12 @@ export default function TherapistApplicationForm({
   const isLoading = status === 'loading';
 
   const toggleSpecialty = (name: string) =>
-    setSelected((prev) =>
-      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
-    );
+    setSelected((prev) => {
+      if (prev.includes(name)) return prev.filter((n) => n !== name);
+      // Sınıra ulaşıldıysa yeni alan eklenmez (kutular da devre dışı gösterilir)
+      return prev.length >= MAX_SPECIALTIES_PER_PROFILE ? prev : [...prev, name];
+    });
+  const specialtyLimitReached = selected.length >= MAX_SPECIALTIES_PER_PROFILE;
 
   const cityName = (slug: string) => CITIES.find((c) => c.slug === slug)?.name ?? slug;
 
@@ -192,6 +196,9 @@ export default function TherapistApplicationForm({
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return fail('Geçerli bir e-posta giriniz.');
     if (!bio.trim()) return fail('Hakkında alanı zorunludur.');
     if (selected.length === 0) return fail('En az bir uzmanlık alanı seçiniz.');
+    if (selected.length > MAX_SPECIALTIES_PER_PROFILE) {
+      return fail(`En fazla ${MAX_SPECIALTIES_PER_PROFILE} uzmanlık alanı seçebilirsiniz.`);
+    }
     if (!kvkk) return fail('Devam etmek için onay kutusunu işaretleyiniz.');
 
     setStatus('loading');
@@ -424,7 +431,11 @@ export default function TherapistApplicationForm({
         </Field>
 
         {/* Uzmanlıklar */}
-        <Field label="Uzmanlık alanları" required hint="En az bir alan seçmelisiniz.">
+        <Field
+          label="Uzmanlık alanları"
+          required
+          hint={`En az bir, en fazla ${MAX_SPECIALTIES_PER_PROFILE} alan seçin. Danışanlar sizi en iyi bildiğiniz konularla bulur; az ve net seçim profilinizi öne çıkarır.`}
+        >
           <div className="space-y-4">
             {groupSpecialties(specialtyOptions).map((group) => (
               <div key={group.type}>
@@ -434,16 +445,19 @@ export default function TherapistApplicationForm({
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {group.items.map((s) => {
                     const on = selected.includes(s.name);
+                    const blocked = !on && specialtyLimitReached;
                     return (
                       <label
                         key={s.id}
-                        className={`flex cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2 text-sm transition-colors ${
+                        className={`flex items-center gap-2.5 rounded-xl border px-3 py-2 text-sm transition-colors ${
                           on
-                            ? 'border-brand-500 bg-brand-50 text-brand-800'
-                            : 'border-brand-200 text-brand-700 hover:border-brand-300 hover:bg-brand-50'
+                            ? 'cursor-pointer border-brand-500 bg-brand-50 text-brand-800'
+                            : blocked
+                              ? 'cursor-not-allowed border-brand-100 text-brand-300'
+                              : 'cursor-pointer border-brand-200 text-brand-700 hover:border-brand-300 hover:bg-brand-50'
                         }`}
                       >
-                        <input type="checkbox" checked={on} onChange={() => toggleSpecialty(s.name)} className="h-4 w-4 rounded text-brand-600 focus:ring-brand-400" />
+                        <input type="checkbox" checked={on} disabled={blocked} onChange={() => toggleSpecialty(s.name)} className="h-4 w-4 rounded text-brand-600 focus:ring-brand-400" />
                         {s.name}
                       </label>
                     );
@@ -453,7 +467,10 @@ export default function TherapistApplicationForm({
             ))}
           </div>
           {selected.length > 0 && (
-            <p className="mt-2 text-xs text-brand-600">{selected.length} alan seçildi</p>
+            <p className="mt-2 text-xs text-brand-600">
+              {selected.length}/{MAX_SPECIALTIES_PER_PROFILE} alan seçildi
+              {specialtyLimitReached && ' — yeni alan eklemek için önce birini kaldırın'}
+            </p>
           )}
         </Field>
 

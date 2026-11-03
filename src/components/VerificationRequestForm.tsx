@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CITIES } from '@/lib/cities';
 import { getDistricts } from '@/lib/districts';
+import { MAX_SPECIALTIES_PER_PROFILE } from '@/types/database';
 
 import { Honeypot, readHoneypot } from '@/components/Honeypot';
 type RequestType = 'update' | 'photo_update' | 'removal' | '';
@@ -188,10 +189,13 @@ export default function VerificationRequestForm({
   }
 
   function toggleSpecialty(name: string) {
-    setSelectedSpecialties((prev) =>
-      prev.includes(name) ? prev.filter((s) => s !== name) : [...prev, name],
-    );
+    setSelectedSpecialties((prev) => {
+      if (prev.includes(name)) return prev.filter((s) => s !== name);
+      // Sınıra ulaşıldıysa yeni alan eklenmez (kutular da devre dışı gösterilir)
+      return prev.length >= MAX_SPECIALTIES_PER_PROFILE ? prev : [...prev, name];
+    });
   }
+  const specialtyLimitReached = selectedSpecialties.length >= MAX_SPECIALTIES_PER_PROFILE;
 
   // ── Photo handling ──
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -516,7 +520,7 @@ export default function VerificationRequestForm({
                 </div>
               </Section>
 
-              <Section title="Uzmanlık Alanları (Opsiyonel)">
+              <Section title={`Uzmanlık Alanları (Opsiyonel, en fazla ${MAX_SPECIALTIES_PER_PROFILE})`}>
                 {specialtyOptions.length === 0 ? (
                   <p className="text-sm text-gray-400">Uzmanlık alanları yüklenemedi.</p>
                 ) : (
@@ -534,18 +538,22 @@ export default function VerificationRequestForm({
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {items.map((s) => {
                               const selected = selectedSpecialties.includes(s.name);
+                              const blocked = !selected && specialtyLimitReached;
                               return (
                                 <label
                                   key={s.id}
-                                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border cursor-pointer transition-colors text-sm ${
+                                  className={`flex items-center gap-2.5 px-3 py-2 rounded-xl border transition-colors text-sm ${
                                     selected
-                                      ? 'border-brand-500 bg-brand-50 text-brand-800'
-                                      : 'border-gray-200 text-gray-700 hover:border-brand-300 hover:bg-gray-50'
+                                      ? 'cursor-pointer border-brand-500 bg-brand-50 text-brand-800'
+                                      : blocked
+                                        ? 'cursor-not-allowed border-gray-100 text-gray-300'
+                                        : 'cursor-pointer border-gray-200 text-gray-700 hover:border-brand-300 hover:bg-gray-50'
                                   }`}
                                 >
                                   <input
                                     type="checkbox"
                                     checked={selected}
+                                    disabled={blocked}
                                     onChange={() => toggleSpecialty(s.name)}
                                     className="rounded text-brand-600 focus:ring-brand-400"
                                   />
@@ -559,7 +567,8 @@ export default function VerificationRequestForm({
                     })}
                     {selectedSpecialties.length > 0 && (
                       <p className="text-xs text-brand-600">
-                        Toplam {selectedSpecialties.length} alan seçildi
+                        {selectedSpecialties.length}/{MAX_SPECIALTIES_PER_PROFILE} alan seçildi
+                        {specialtyLimitReached && ' — yeni alan eklemek için önce birini kaldırın'}
                       </p>
                     )}
                   </div>
