@@ -9,10 +9,14 @@ import { useEffect, useRef, useState } from 'react';
  *
  * Kullanım nedeni: profilde uzmanlık etiketleri ve "Hakkında" metni ~2.200 px yer kaplıyor,
  * görüşme türü ve ücret bilgisi 3-4 ekran aşağıda kalıyordu.
+ *
+ * Düzen kayması (CLS): kırpılmış durumda düğme, içeriğin altına eklenmek yerine kırpılan kutunun
+ * alt kenarına bindirilir. Ölçüm sonrası düğme görününce yer kaplamadığı için altındaki içerik
+ * aşağı itilmez (canlıda düğme ayrı satır olarak eklendiğinde CLS 0 → 0,06 olmuştu).
  */
 const COLLAPSED = {
-  sm: 'max-h-44',
-  md: 'max-h-56',
+  sm: 'max-h-48',
+  md: 'max-h-60',
 } as const;
 
 export default function ExpandableSection({
@@ -53,20 +57,26 @@ export default function ExpandableSection({
           {children}
         </div>
         {clipped && overflowing && (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-white to-transparent md:hidden"
-          />
+          <div className="absolute inset-x-0 bottom-0 flex h-14 items-end bg-gradient-to-t from-white via-white/90 to-transparent md:hidden">
+            <button
+              type="button"
+              aria-expanded={false}
+              onClick={() => setExpanded(true)}
+              className="inline-flex h-11 items-center text-sm font-medium text-brand-700 underline underline-offset-2 hover:text-brand-900"
+            >
+              {showLabel}
+            </button>
+          </div>
         )}
       </div>
-      {(overflowing || expanded) && (
+      {expanded && (
         <button
           type="button"
-          aria-expanded={expanded}
-          onClick={() => setExpanded((v) => !v)}
+          aria-expanded
+          onClick={() => setExpanded(false)}
           className="mt-1 inline-flex h-11 items-center text-sm font-medium text-brand-700 underline underline-offset-2 hover:text-brand-900 md:hidden"
         >
-          {expanded ? hideLabel : showLabel}
+          {hideLabel}
         </button>
       )}
     </div>

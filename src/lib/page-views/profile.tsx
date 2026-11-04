@@ -463,8 +463,10 @@ export async function ProfileDetail({
           scroll ederse etsin randevu butonu her zaman görünür kalır. Çerez bandı açıkken
           --cookie-banner-h (CookieBanner.tsx) çubuğu bantın üstüne oturtur, bant örtmez. */}
       <div
-        style={{ bottom: 'var(--cookie-banner-h, 0px)' }}
-        className="fixed inset-x-0 z-40 border-t border-brand-100 bg-white/95 p-3 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] backdrop-blur-sm [padding-bottom:calc(0.75rem_+_env(safe-area-inset-bottom))] lg:hidden">
+        // bottom yerine transform: bant sonradan çıkınca çubuğun yukarı kayması düzen kayması
+        // (CLS) sayılmasın diye. Canlıda bottom ile CLS 0 → 0,06 olmuştu.
+        style={{ transform: 'translateY(calc(var(--cookie-banner-h, 0px) * -1))' }}
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-100 bg-white/95 p-3 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] backdrop-blur-sm [padding-bottom:calc(0.75rem_+_env(safe-area-inset-bottom))] lg:hidden">
         <AppointmentBookingButton
           professionalId={therapist.id}
           label={tDetail('appointmentCta')}
