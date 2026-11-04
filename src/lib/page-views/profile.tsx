@@ -447,8 +447,11 @@ export async function ProfileDetail({
 
       {/* Mobilde/tablette sidebar görünmez (lg altı) — bunun yerine ekranın altında
           sabit (fixed) bir CTA bar gösteriyoruz, böylece kullanıcı sayfayı ne kadar
-          scroll ederse etsin randevu butonu her zaman görünür kalır. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-brand-100 bg-white/95 p-3 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] backdrop-blur-sm [padding-bottom:calc(0.75rem_+_env(safe-area-inset-bottom))] lg:hidden">
+          scroll ederse etsin randevu butonu her zaman görünür kalır. Çerez bandı açıkken
+          --cookie-banner-h (CookieBanner.tsx) çubuğu bantın üstüne oturtur, bant örtmez. */}
+      <div
+        style={{ bottom: 'var(--cookie-banner-h, 0px)' }}
+        className="fixed inset-x-0 z-40 border-t border-brand-100 bg-white/95 p-3 shadow-[0_-4px_12px_rgba(15,23,42,0.06)] backdrop-blur-sm [padding-bottom:calc(0.75rem_+_env(safe-area-inset-bottom))] lg:hidden">
         <AppointmentBookingButton
           professionalId={therapist.id}
           label={tDetail('appointmentCta')}
