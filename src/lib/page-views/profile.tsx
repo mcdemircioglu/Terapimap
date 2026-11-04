@@ -12,6 +12,7 @@ import Container from '@/components/Container';
 import JsonLd from '@/components/JsonLd';
 import AppointmentBookingButton from '@/components/therapist/AppointmentBookingButton';
 import DocumentsCard from '@/components/therapist/DocumentsCard';
+import ExpandableSection from '@/components/therapist/ExpandableSection';
 import ReviewsCard from '@/components/therapist/ReviewsCard';
 import LocationCard from '@/components/therapist/LocationCard';
 import MeetingInfoCard from '@/components/therapist/MeetingInfoCard';
@@ -292,35 +293,40 @@ export async function ProfileDetail({
                 <section className="mt-8">
                   <h2 className="text-lg font-semibold text-brand-900">{tDetail('specialties')}</h2>
                   {/* Uzmanlıklar tipe göre gruplanır: konu / yöntem / danışan grubu */}
-                  <div className="mt-4 space-y-4">
-                    {groupSpecialties(therapist.specialties).map((group) => (
-                      <div key={group.type}>
-                        <p className="text-xs font-medium uppercase tracking-wide text-brand-500">
-                          {SPECIALTY_TYPE_LABELS[group.type].profile}
-                        </p>
-                        <div className="mt-2 flex flex-wrap gap-2">
-                          {group.items.map((s) => (
-                            <Link
-                              key={s.id}
-                              href={getTherapistsListPath(locale) + '/' + citySlug + '/' + s.slug}
-                            >
-                              <Badge
-                                variant={
-                                  group.type === 'yontem'
-                                    ? 'accent'
-                                    : group.type === 'kitle'
-                                    ? 'soft'
-                                    : 'brand'
-                                }
-                                className="cursor-pointer hover:opacity-80"
-                              >
-                                {s.name}
-                              </Badge>
-                            </Link>
-                          ))}
-                        </div>
+                  <div className="mt-4">
+                    {/* Mobilde ilk birkaç satır görünür; etiketlerin tamamı DOM'da kalır */}
+                    <ExpandableSection size="sm">
+                      <div className="space-y-4">
+                        {groupSpecialties(therapist.specialties).map((group) => (
+                          <div key={group.type}>
+                            <p className="text-xs font-medium uppercase tracking-wide text-brand-500">
+                              {SPECIALTY_TYPE_LABELS[group.type].profile}
+                            </p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {group.items.map((s) => (
+                                <Link
+                                  key={s.id}
+                                  href={getTherapistsListPath(locale) + '/' + citySlug + '/' + s.slug}
+                                >
+                                  <Badge
+                                    variant={
+                                      group.type === 'yontem'
+                                        ? 'accent'
+                                        : group.type === 'kitle'
+                                        ? 'soft'
+                                        : 'brand'
+                                    }
+                                    className="cursor-pointer hover:opacity-80"
+                                  >
+                                    {s.name}
+                                  </Badge>
+                                </Link>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </ExpandableSection>
                   </div>
                 </section>
               )}
@@ -328,18 +334,24 @@ export async function ProfileDetail({
               {therapist.about && (
                 <section className="mt-8">
                   <h2 className="text-lg font-semibold text-brand-900">{tDetail('about')}</h2>
-                  <p className="mt-3 whitespace-pre-line leading-relaxed text-brand-800">
-                    {therapist.about}
-                  </p>
+                  <div className="mt-3">
+                    {/* Mobilde ilk ~8 satır görünür, metnin tamamı DOM'da kalır */}
+                    <ExpandableSection size="md">
+                      <p className="whitespace-pre-line leading-relaxed text-brand-800">
+                        {therapist.about}
+                      </p>
+                    </ExpandableSection>
+                  </div>
                 </section>
               )}
             </Card>
 
+            {/* 🩺 Görüşme Bilgileri — mobilde karar bilgisi (görüşme türü, ücret, ikinci randevu
+                butonu) 3-4 ekran aşağıda kalıyordu; ana karttan hemen sonra gösteriliyor. */}
+            <MeetingInfoCard therapist={therapist} locale={locale} />
+
             {/* 📍 Konum — sadece yüz yüze görüşen uzmanlar için */}
             <LocationCard therapist={therapist} locale={locale} resolvedMaps={resolvedMaps} />
-
-            {/* 🩺 Görüşme Bilgileri */}
-            <MeetingInfoCard therapist={therapist} locale={locale} />
 
             {/* 📎 Belgeler — yalnızca terapist en az bir belge yüklediyse gösterilir */}
             <DocumentsCard documents={therapist.documents} locale={locale} />
