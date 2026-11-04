@@ -63,7 +63,7 @@ function FooterColumn({
         {title}
       </h3>
       {/* Bağlantılara dikey iç boşluk: dokunma hedefi ~20 → ~32 px (liste boşluğu space-y-2 yerine bağlantı iç boşluğu) */}
-      <ul className="mt-3 space-y-0 text-sm text-brand-700 [&_a]:inline-block [&_a]:py-1.5">{children}</ul>
+      <ul className="mt-3 space-y-0 text-sm text-brand-700 [&_a]:inline-block [&_a]:py-1.5 [&_button]:inline-block [&_button]:py-1.5">{children}</ul>
     </div>
   );
 }

@@ -6,29 +6,44 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import DeferredCover from '@/components/guide/DeferredCover';
 import { ARTICLE_CATEGORY_LABELS } from '@/types/database';
 import type { ArticleListItem } from '@/types/database';
 
 type Props = {
   article: ArticleListItem;
   locale: string;
+  /** Kapak görselini yalnızca kart ekrana yaklaşınca yükle (ana sayfa: ham, ağır görseller ilk yüklemeyi bozmasın). */
+  deferCover?: boolean;
 };
 
-export default function ArticleCard({ article, locale }: Props) {
+const COVER_SIZES = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw';
+const COVER_CLASS = 'object-cover transition-transform duration-300 group-hover:scale-[1.03]';
+
+export default function ArticleCard({ article, locale, deferCover = false }: Props) {
   const href = `/${locale}/psikoloji-rehberi/${article.slug}`;
 
   return (
     <Card className="group flex h-full flex-col overflow-hidden transition-shadow hover:shadow-md">
       {article.cover_image_url && (
         <Link href={href} className="relative block aspect-[16/9] overflow-hidden bg-brand-50" tabIndex={-1}>
-          <Image
-            src={article.cover_image_url}
-            alt={article.title}
-            fill
-            unoptimized
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-          />
+          {deferCover ? (
+            <DeferredCover
+              src={article.cover_image_url}
+              alt={article.title}
+              sizes={COVER_SIZES}
+              className={COVER_CLASS}
+            />
+          ) : (
+            <Image
+              src={article.cover_image_url}
+              alt={article.title}
+              fill
+              unoptimized
+              sizes={COVER_SIZES}
+              className={COVER_CLASS}
+            />
+          )}
         </Link>
       )}
       <div className="flex flex-1 flex-col p-5">

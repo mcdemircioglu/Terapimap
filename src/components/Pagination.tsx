@@ -72,7 +72,8 @@ export default function Pagination({
           Önceki
         </Link>
       ) : (
-        <span className={`${baseLink} ${disabled} gap-1`}>
+        // aria-disabled: devre dışı öğeler kontrast denetiminden muaf (Lighthouse "Önceki" metnini hata sayıyordu)
+        <span aria-disabled="true" className={`${baseLink} ${disabled} gap-1`}>
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
@@ -108,7 +109,7 @@ export default function Pagination({
           </svg>
         </Link>
       ) : (
-        <span className={`${baseLink} ${disabled} gap-1`}>
+        <span aria-disabled="true" className={`${baseLink} ${disabled} gap-1`}>
           Sonraki
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
