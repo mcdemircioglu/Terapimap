@@ -99,6 +99,7 @@ export default async function MeetingInfoCard({ therapist, locale }: Props) {
           label={t('appointmentCta')}
           subtitle={tLead('subtitle')}
           closeLabel={t('close')}
+          placement="meeting_card"
         />
         {/* Panelde kayıtlı (hesabı olan) terapistler için randevu CTA'sının
             yanında ikinci bir yol: doğrudan mesaj. Paket seviyesinden

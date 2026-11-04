@@ -450,6 +450,7 @@ export async function ProfileDetail({
                   subtitle={tLead('subtitle')}
                   closeLabel={tDetail('close')}
                   className="w-full"
+                  placement="sidebar"
                 />
               </div>
             </Card>
@@ -470,6 +471,7 @@ export async function ProfileDetail({
           subtitle={tLead('subtitle')}
           closeLabel={tDetail('close')}
           className="w-full"
+          placement="sticky_bar"
         />
       </div>
     </>

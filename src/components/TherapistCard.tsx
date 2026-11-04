@@ -9,6 +9,7 @@ import Avatar from './ui/Avatar';
 import type { ProfessionalWithSpecialties } from '@/types/database';
 import { PROFESSIONAL_TYPE_LABELS } from '@/types/database';
 import { getProfessionalUrl } from '@/lib/utils';
+import { trackEvent } from '@/lib/analytics';
 
 export default function TherapistCard({
   therapist,
@@ -68,7 +69,10 @@ export default function TherapistCard({
       </div>
 
       <div className="mt-auto pt-5">
-        <Link href={getProfessionalUrl(therapist.slug, therapist.professional_type, locale)}>
+        <Link
+          href={getProfessionalUrl(therapist.slug, therapist.professional_type, locale)}
+          onClick={() => trackEvent('profile_card_click')}
+        >
           <Button variant="outline" className="w-full">
             {t('viewProfile')}
           </Button>

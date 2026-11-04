@@ -22,6 +22,7 @@ import LeadForm from '@/components/LeadForm';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { CalendarPlusIcon, XIcon } from '@/components/ui/icons';
+import { trackEvent } from '@/lib/analytics';
 
 import { Honeypot, readHoneypot } from '@/components/Honeypot';
 type Props = {
@@ -30,6 +31,8 @@ type Props = {
   subtitle: string;
   closeLabel: string;
   className?: string;
+  /** Butonun sayfadaki yeri (dönüşüm olaylarında kullanılır): sticky_bar | sidebar | meeting_card */
+  placement?: string;
 };
 
 type SlotsResponse = {
@@ -117,7 +120,14 @@ function fmtColumnHeader(
   return { label, day: chip.day, month: chip.month };
 }
 
-export default function AppointmentBookingButton({ professionalId, label, subtitle, closeLabel, className = '' }: Props) {
+export default function AppointmentBookingButton({
+  professionalId,
+  label,
+  subtitle,
+  closeLabel,
+  className = '',
+  placement = 'unknown',
+}: Props) {
   const t = useTranslations('booking');
   const locale = useLocale();
 
@@ -242,6 +252,7 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
         setSubmitStatus('error');
         return;
       }
+      trackEvent('appointment_booked', { placement, session_type: sessionType });
       setStep('success');
       setSubmitStatus('idle');
     } catch {
@@ -571,7 +582,10 @@ export default function AppointmentBookingButton({ professionalId, label, subtit
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          trackEvent('appointment_cta_click', { placement });
+          setOpen(true);
+        }}
         className={`inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-brand-600 px-5 text-sm font-medium text-white shadow-soft transition-colors hover:bg-brand-700 active:bg-brand-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 ${className}`}
       >
         <CalendarPlusIcon className="h-[18px] w-[18px]" />

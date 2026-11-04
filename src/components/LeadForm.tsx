@@ -6,6 +6,7 @@ import { Button } from './ui/Button';
 import { Input, Textarea } from './ui/Input';
 
 import { Honeypot, readHoneypot } from '@/components/Honeypot';
+import { trackEvent } from '@/lib/analytics';
 type Status = 'idle' | 'loading' | 'success' | 'error';
 
 // ---------------------------------------------------------------------------
@@ -151,6 +152,7 @@ export default function LeadForm({
       });
       if (!res.ok) throw new Error('failed');
       formRef.current?.reset();
+      trackEvent('lead_submitted', { source: source ?? 'default' });
       setStatus('success');
     } catch {
       setStatus('error');
