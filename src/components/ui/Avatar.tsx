@@ -13,14 +13,15 @@ const SIZE: Record<AvatarSize, { outer: string; text: string; px: number; badge:
 };
 
 // İsmin baş harfine göre tutarlı renk
+// Beyaz baş harf için AA kontrast (≥4,5:1): teal/emerald/amber-600 ~3,2–3,8:1 veriyordu → 700
 const COLORS = [
-  'bg-teal-600',
-  'bg-emerald-600',
+  'bg-teal-700',
+  'bg-emerald-700',
   'bg-cyan-700',
   'bg-slate-600',
   'bg-violet-600',
   'bg-rose-600',
-  'bg-amber-600',
+  'bg-amber-700',
   'bg-indigo-600',
 ];
 

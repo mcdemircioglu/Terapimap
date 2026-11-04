@@ -307,10 +307,10 @@ export async function SeoLandingPage({
           <h2 className="text-xl font-semibold text-brand-900 md:text-2xl">
             {locale === 'tr' ? 'Sıkça Sorulan Sorular' : 'Frequently Asked Questions'}
           </h2>
-          <dl className="mt-6 divide-y divide-brand-100">
+          <div className="mt-6 divide-y divide-brand-100">
             {content.faqs.map((faq, i) => (
               <details key={i} className="group py-4 [&_summary::-webkit-details-marker]:hidden">
-                <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-sm font-semibold text-brand-900 hover:text-brand-700">
+                <summary className="-my-3 flex cursor-pointer list-none items-start justify-between gap-4 py-3 text-sm font-semibold text-brand-900 hover:text-brand-700">
                   <span>{faq.q}</span>
                   <span
                     aria-hidden="true"
@@ -324,7 +324,7 @@ export async function SeoLandingPage({
                 <p className="mt-3 text-sm leading-relaxed text-brand-700">{faq.a}</p>
               </details>
             ))}
-          </dl>
+          </div>
         </Container>
       </section>
 

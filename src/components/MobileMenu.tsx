@@ -45,7 +45,7 @@ export default function MobileMenu({ items }: { items: NavItem[] }) {
         aria-label={open ? 'Menüyü kapat' : 'Menüyü aç'}
         aria-expanded={open}
         aria-controls="mobile-nav"
-        className="grid h-9 w-9 place-items-center rounded-lg text-brand-700 hover:bg-brand-50 md:hidden"
+        className="grid h-11 w-11 place-items-center rounded-lg text-brand-700 hover:bg-brand-50 md:hidden"
       >
         {open ? <XIcon /> : <MenuIcon />}
       </button>

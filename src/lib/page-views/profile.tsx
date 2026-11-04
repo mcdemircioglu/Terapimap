@@ -232,11 +232,11 @@ export async function ProfileDetail({
       <Container className="pt-10 pb-28 md:pt-14 lg:pb-14">
         {/* Breadcrumb */}
         <nav className="mb-6 text-sm text-brand-600" aria-label="Breadcrumb">
-          <Link href={getTherapistsListPath(locale)} className="hover:text-brand-800">
+          <Link href={getTherapistsListPath(locale)} className="inline-block py-2 hover:text-brand-800">
             {tNav('therapists')}
           </Link>
           <span className="mx-2">·</span>
-          <Link href={getTherapistsListPath(locale) + '/' + citySlug} className="hover:text-brand-800">
+          <Link href={getTherapistsListPath(locale) + '/' + citySlug} className="inline-block py-2 hover:text-brand-800">
             {therapist.city}
           </Link>
         </nav>
@@ -309,6 +309,7 @@ export async function ProfileDetail({
                                   href={getTherapistsListPath(locale) + '/' + citySlug + '/' + s.slug}
                                 >
                                   <Badge
+                                    touch
                                     variant={
                                       group.type === 'yontem'
                                         ? 'accent'
@@ -374,10 +375,11 @@ export async function ProfileDetail({
                 <h2 className="text-lg font-semibold text-brand-900">
                   {locale === 'tr' ? 'Sıkça Sorulan Sorular' : 'Frequently Asked Questions'}
                 </h2>
-                <dl className="mt-4 divide-y divide-brand-100">
+                {/* <dl> yerine <div>: <dl> doğrudan <details> içeremez (Lighthouse "tanım listesi" hatası) */}
+                <div className="mt-4 divide-y divide-brand-100">
                   {profileFaqs.map((faq, i) => (
                     <details key={i} className="group py-3 [&_summary::-webkit-details-marker]:hidden">
-                      <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-sm font-semibold text-brand-900 hover:text-brand-700">
+                      <summary className="-my-3 flex cursor-pointer list-none items-start justify-between gap-4 py-3 text-sm font-semibold text-brand-900 hover:text-brand-700">
                         <span>{faq.q}</span>
                         <span
                           aria-hidden="true"
@@ -391,7 +393,7 @@ export async function ProfileDetail({
                       <p className="mt-3 text-sm leading-relaxed text-brand-700">{faq.a}</p>
                     </details>
                   ))}
-                </dl>
+                </div>
               </Card>
             )}
 

@@ -35,7 +35,7 @@ export default function SeoLandingHeader({
             <li key={i} className="flex items-center gap-1">
               {i > 0 && <span aria-hidden="true">›</span>}
               {bc.href ? (
-                <Link href={bc.href} className="hover:text-brand-800 hover:underline">
+                <Link href={bc.href} className="inline-block py-2 hover:text-brand-800 hover:underline">
                   {bc.label}
                 </Link>
               ) : (

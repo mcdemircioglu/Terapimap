@@ -46,7 +46,7 @@ export default function ArticleCard({ article, locale }: Props) {
         </p>
         <Link
           href={href}
-          className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-brand-600 hover:text-brand-800 hover:underline"
+          className="mt-1 inline-flex items-center gap-1 py-3 text-sm font-medium text-brand-600 hover:text-brand-800 hover:underline"
         >
           Devamını oku
           <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

@@ -15,7 +15,9 @@ const config: Config = {
           200: '#b6d9d9',
           300: '#88bfbf',
           400: '#5ba1a3',
-          500: '#3f8688',
+          // Küçük metinde (text-brand-500) beyaz/açık zeminde 4,08–4,22:1 kontrast veriyordu (AA: 4,5:1);
+          // bir ton koyulaştırıldı (#3f8688 → #33797b: beyazda ~5,0, brand-50'de ~4,7)
+          500: '#33797b',
           600: '#316c6f',
           700: '#2a565a',
           800: '#26474a',

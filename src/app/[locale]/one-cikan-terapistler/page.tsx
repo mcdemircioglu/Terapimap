@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import TherapistGrid from '@/components/TherapistGrid';
-import { Button } from '@/components/ui/Button';
+import ButtonLink from '@/components/ui/ButtonLink';
 import JsonLd from '@/components/JsonLd';
 import { absUrl, buildCollectionPageSchema, buildBreadcrumbSchema } from '@/lib/schema';
 import { getFeaturedTherapists } from '@/lib/queries';
@@ -93,22 +93,18 @@ export default async function OneCikanTerapistlerPage({
                 : 'There are no featured therapists at the moment.'}
             </p>
             <div className="mt-5">
-              <Link href={getTherapistsListPath(locale)}>
-                <Button variant="outline">
-                  {locale === 'tr' ? 'Tüm terapistleri gör' : 'Browse all therapists'}
-                </Button>
-              </Link>
+              <ButtonLink href={getTherapistsListPath(locale)} variant="outline">
+                {locale === 'tr' ? 'Tüm terapistleri gör' : 'Browse all therapists'}
+              </ButtonLink>
             </div>
           </div>
         )}
 
         {featured.length > 0 && (
           <div className="mt-10 text-center">
-            <Link href={getTherapistsListPath(locale)}>
-              <Button variant="outline">
-                {locale === 'tr' ? 'Tüm terapistleri gör' : 'Browse all therapists'}
-              </Button>
-            </Link>
+            <ButtonLink href={getTherapistsListPath(locale)} variant="outline">
+              {locale === 'tr' ? 'Tüm terapistleri gör' : 'Browse all therapists'}
+            </ButtonLink>
           </div>
         )}
       </Container>

@@ -83,12 +83,13 @@ export default function SeoLandingSections({
             <div className="mt-4 space-y-3">
               {copy.faqs.map((faq, i) => (
                 <details key={i} className="group rounded-xl border border-brand-100 bg-white p-4">
-                  <summary className="cursor-pointer list-none text-sm font-semibold text-brand-900 marker:hidden">
+                  {/* -my-3 py-3: tıklanabilir alan 20 → 44 px, görünür yerleşim aynı */}
+                  <summary className="-my-3 cursor-pointer list-none py-3 text-sm font-semibold text-brand-900 marker:hidden">
                     <span className="flex items-center justify-between gap-3">
                       {faq.q}
                       <span
                         aria-hidden="true"
-                        className="text-brand-400 transition-transform group-open:rotate-45"
+                        className="text-brand-600 transition-transform group-open:rotate-45"
                       >
                         +
                       </span>

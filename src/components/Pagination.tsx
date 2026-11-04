@@ -48,11 +48,12 @@ export default function Pagination({
   const hasNext = currentPage < totalPages;
 
   const baseLink =
-    'inline-flex h-9 min-w-9 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors';
+    // 44 px dokunma hedefi (önceden 36 px)
+    'inline-flex h-11 min-w-[44px] items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors';
   const active = 'bg-brand-600 text-white';
   const inactive = 'text-brand-700 hover:bg-brand-50 border border-brand-100';
   const disabled = 'text-brand-300 pointer-events-none border border-brand-100';
-  const ellipsis = 'inline-flex h-9 min-w-9 items-center justify-center text-sm text-brand-400';
+  const ellipsis = 'inline-flex h-11 min-w-[44px] items-center justify-center text-sm text-brand-600';
 
   return (
     <nav

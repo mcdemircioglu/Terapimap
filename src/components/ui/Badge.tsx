@@ -13,15 +13,19 @@ export function Badge({
   children,
   variant = 'default',
   className,
+  touch = false,
 }: {
   children: React.ReactNode;
   variant?: Variant;
   className?: string;
+  /** Rozet bir bağlantı içindeyse mobilde dokunma yüksekliğini artırır (24 → ~32 px). */
+  touch?: boolean;
 }) {
   return (
     <span
       className={cn(
         'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium',
+        touch && 'py-1.5 sm:py-0.5',
         variants[variant],
         className,
       )}

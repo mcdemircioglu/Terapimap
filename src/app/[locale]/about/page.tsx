@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
-import { Button } from '@/components/ui/Button';
+import ButtonLink from '@/components/ui/ButtonLink';
 import { absUrl } from '@/lib/schema';
 import { getTherapistsListPath } from '@/lib/utils';
 
@@ -44,9 +44,9 @@ export default async function AboutPage({
           </div>
 
           <div className="mt-8">
-            <Link href={getTherapistsListPath(locale)}>
-              <Button size="lg">{t('ctaButton')}</Button>
-            </Link>
+            <ButtonLink href={getTherapistsListPath(locale)} size="lg">
+              {t('ctaButton')}
+            </ButtonLink>
           </div>
         </div>
       </Container>

@@ -52,7 +52,7 @@ export default function FeaturedTests({
                   <FallbackIcon className="h-6 w-6" />
                 </div>
               )}
-              <div className="text-xs font-semibold uppercase tracking-wide text-brand-800/60">
+              <div className="text-xs font-semibold uppercase tracking-wide text-brand-800/80">
                 {test.kind === 'clinical'
                   ? (tr ? 'Klinik tarama' : 'Clinical screening')
                   : (tr ? 'Kişilik & ilişki' : 'Personality & relationships')}

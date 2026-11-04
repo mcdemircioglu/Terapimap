@@ -8,7 +8,7 @@ import FeaturedTherapistsSlider from '@/components/home/FeaturedTherapistsSlider
 import PopularSearches from '@/components/home/PopularSearches';
 import CityBrowseSection from '@/components/CityBrowseSection';
 import FeaturedTests from '@/components/home/FeaturedTests';
-import { Button } from '@/components/ui/Button';
+import ButtonLink from '@/components/ui/ButtonLink';
 import { UsersIcon, MapPinIcon, VideoIcon } from '@/components/ui/icons';
 import {
   getCityCountsCached,
@@ -98,19 +98,21 @@ export default async function HomePage({
           </div>
 
           {/* İstatistik bandı */}
-          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 sm:mt-10 sm:flex sm:flex-wrap sm:gap-x-12 sm:gap-y-5">
+          {/* <dl> yerine <ul>: her öğede simge + değer + etiket vardı, <dl> içinde <div> yalnızca dt/dd
+              içerebilir (Lighthouse "tanım listesi" hatası) ve değer etiketten önce geliyordu. */}
+          <ul className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 sm:mt-10 sm:flex sm:flex-wrap sm:gap-x-12 sm:gap-y-5">
             {statItems.map((s) => (
-              <div key={s.label} className="flex items-center gap-3">
+              <li key={s.label} className="flex items-center gap-3">
                 <span className="flex h-9 w-9 flex-shrink-0 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-white/10 text-[#7ee6cf] ring-1 ring-white/15">
                   <s.icon className="h-5 w-5" />
                 </span>
                 <div>
-                  <dd className="text-xl font-semibold leading-none text-white">{s.value}</dd>
-                  <dt className="mt-1 text-xs text-brand-100/70">{s.label}</dt>
+                  <span className="block text-xl font-semibold leading-none text-white">{s.value}</span>
+                  <span className="mt-1 block text-xs text-brand-100/70">{s.label}</span>
                 </div>
-              </div>
+              </li>
             ))}
-          </dl>
+          </ul>
         </Container>
       </section>
 
@@ -142,11 +144,9 @@ export default async function HomePage({
               <FeaturedTherapistsSlider therapists={featured} locale={locale} />
             </div>
             <div className="mt-6 md:hidden">
-              <Link href={`/${locale}/one-cikan-terapistler`}>
-                <Button variant="outline" className="w-full">
-                  {locale === 'tr' ? 'Öne çıkan terapistler' : 'Featured therapists'}
-                </Button>
-              </Link>
+              <ButtonLink href={`/${locale}/one-cikan-terapistler`} variant="outline" className="w-full">
+                {locale === 'tr' ? 'Öne çıkan terapistler' : 'Featured therapists'}
+              </ButtonLink>
             </div>
           </Container>
         </section>
@@ -174,11 +174,9 @@ export default async function HomePage({
               <FeaturedTests tests={tests} locale={locale} />
             </div>
             <div className="mt-6 md:hidden">
-              <Link href={`/${locale}/testler`}>
-                <Button variant="outline" className="w-full">
-                  {t('testsCta')}
-                </Button>
-              </Link>
+              <ButtonLink href={`/${locale}/testler`} variant="outline" className="w-full">
+                {t('testsCta')}
+              </ButtonLink>
             </div>
           </Container>
         </section>
@@ -222,11 +220,9 @@ export default async function HomePage({
             <h2 className="text-2xl font-semibold md:text-3xl">{t('ctaTitle')}</h2>
             <p className="mx-auto mt-3 max-w-xl text-brand-100">{t('ctaBody')}</p>
             <div className="mt-6 md:mt-8">
-              <Link href={getTherapistsListPath(locale)}>
-                <Button size="lg" variant="secondary" className="w-full sm:w-auto">
-                  {t('ctaButton')}
-                </Button>
-              </Link>
+              <ButtonLink href={getTherapistsListPath(locale)} size="lg" variant="secondary" className="w-full sm:w-auto">
+                {t('ctaButton')}
+              </ButtonLink>
             </div>
           </div>
         </Container>
