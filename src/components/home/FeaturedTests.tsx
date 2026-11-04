@@ -6,6 +6,7 @@
  */
 import Link from 'next/link';
 import { Card } from '@/components/ui/Card';
+import MobileCarousel from '@/components/home/MobileCarousel';
 import { CloudIcon, HeartIcon, EyeIcon, UsersIcon, SmileIcon } from '@/components/ui/icons';
 import type { PsychologyTestListItem } from '@/types/database';
 
@@ -30,7 +31,7 @@ export default function FeaturedTests({
   const tr = locale === 'tr';
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <MobileCarousel gap="sm" label={tr ? 'Psikoloji testleri' : 'Psychology tests'}>
       {tests.map((test, i) => {
         const tone = CARD_TONES[i % CARD_TONES.length];
         const FallbackIcon = FALLBACK_ICONS_BY_KIND[test.kind][i % FALLBACK_ICONS_BY_KIND[test.kind].length];
@@ -67,6 +68,6 @@ export default function FeaturedTests({
           </Link>
         );
       })}
-    </div>
+    </MobileCarousel>
   );
 }

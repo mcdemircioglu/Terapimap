@@ -19,7 +19,8 @@ const T = {
     l1: 'Size nasıl yardımcı olabilir?', p1: 'Örn: Anksiyete, Depresyon',
     l2: 'Konum', p2: 'Şehir seçin',
     l3: 'Terapi Yöntemleri ve Uzmanlık Alanları', p3: 'Tercihinizi seçin',
-    l4: 'Görüşme türü', p4: 'Online, Yüz yüze vb.',
+    // Mobilde alan yarım genişlikte; uzun yer tutucu ("Online, Yüz yüze vb.") kesiliyordu
+    l4: 'Görüşme türü', p4: 'Tümü',
     online: 'Online', inperson: 'Yüz yüze', cta: 'Terapistleri ara',
   },
   en: {
@@ -181,9 +182,9 @@ export default function HeroSearch({
   }
 
   const Field = ({
-    label, icon, children,
-  }: { label: string; icon: string; children: React.ReactNode }) => (
-    <div>
+    label, icon, children, className = '',
+  }: { label: string; icon: string; children: React.ReactNode; className?: string }) => (
+    <div className={className}>
       <label className="mb-1.5 block text-[11px] font-medium text-brand-100/70">{label}</label>
       <div className="relative">
         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-brand-300">
@@ -202,20 +203,22 @@ export default function HeroSearch({
       onSubmit={onSubmit}
       className="rounded-2xl border border-white/10 bg-brand-900/60 p-3 shadow-soft backdrop-blur-md sm:p-4"
     >
-      <div className="grid gap-3 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] lg:items-end">
-        <Field label={t.l1} icon={IC.help}>
+      {/* Mobilde 2 sütun: Konum ve Görüşme türü yan yana (order ile 2. ve 3. sırada), form ~110 px
+          kısalıyor ve "Terapistleri ara" butonu çerez bandının üstünde kalıyor. lg'de eski 5 sütun. */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] lg:items-end">
+        <Field label={t.l1} icon={IC.help} className="order-1 col-span-2 lg:order-none lg:col-span-1">
           <select value={topic} onChange={(e) => setTopic(e.target.value)} className={selCls} aria-label={t.l1}>
             <option value="">{t.p1}</option>
             {konu.map((s) => <option key={s.slug} value={s.slug}>{s.name}</option>)}
           </select>
         </Field>
-        <Field label={t.l2} icon={IC.pin}>
+        <Field label={t.l2} icon={IC.pin} className="order-2 lg:order-none">
           <select value={city} onChange={(e) => setCity(e.target.value)} className={selCls} aria-label={t.l2}>
             <option value="">{t.p2}</option>
             {CITIES.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}
           </select>
         </Field>
-        <Field label={t.l3} icon={IC.spark}>
+        <Field label={t.l3} icon={IC.spark} className="order-4 col-span-2 lg:order-none lg:col-span-1">
           <SpecialtyDropdown
             value={method}
             onChange={setMethod}
@@ -224,7 +227,7 @@ export default function HeroSearch({
             label={t.l3}
           />
         </Field>
-        <Field label={t.l4} icon={IC.video}>
+        <Field label={t.l4} icon={IC.video} className="order-3 lg:order-none">
           <select value={meeting} onChange={(e) => setMeeting(e.target.value)} className={selCls} aria-label={t.l4}>
             <option value="">{t.p4}</option>
             <option value="online">{t.online}</option>
@@ -233,7 +236,7 @@ export default function HeroSearch({
         </Field>
         <button
           type="submit"
-          className="mt-1 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#7ee6cf] px-6 text-sm font-semibold text-brand-950 transition-colors hover:bg-[#6ed9c0] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 lg:mt-0"
+          className="order-5 col-span-2 mt-1 inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#7ee6cf] px-6 lg:order-none lg:col-span-1 text-sm font-semibold text-brand-950 transition-colors hover:bg-[#6ed9c0] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 lg:mt-0"
         >
           {t.cta}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-4 w-4"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" /></svg>

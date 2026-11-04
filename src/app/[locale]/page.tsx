@@ -68,14 +68,18 @@ export default async function HomePage({
             alt=""
             fill
             priority
-            unoptimized
+            // Optimize edilmiş sunum (önceden unoptimized: 1920 px JPG olduğu gibi gidiyordu).
+            // Mobilde kutu dikey olduğu için ~1200 px genişlik seçtirilir; görsel zaten koyu
+            // scrim altında, keskinlik kaybı görünmez.
+            sizes="(max-width: 767px) 1200px, 100vw"
+            quality={70}
             className="object-cover object-right"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-brand-950 via-brand-950/92 to-brand-950/30" />
           <div className="absolute inset-0 bg-gradient-to-t from-brand-950 via-brand-950/10 to-brand-950/40" />
         </div>
 
-        <Container className="relative py-16 md:py-24 lg:py-28">
+        <Container className="relative py-10 sm:py-16 md:py-24 lg:py-28">
           <p className="text-xs font-semibold uppercase tracking-widest text-[#7ee6cf]">
             Terapimap
           </p>
@@ -94,10 +98,10 @@ export default async function HomePage({
           </div>
 
           {/* İstatistik bandı */}
-          <dl className="mt-8 grid grid-cols-2 gap-x-8 gap-y-5 sm:mt-10 sm:flex sm:flex-wrap sm:gap-x-12">
+          <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-3 sm:mt-10 sm:flex sm:flex-wrap sm:gap-x-12 sm:gap-y-5">
             {statItems.map((s) => (
               <div key={s.label} className="flex items-center gap-3">
-                <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-[#7ee6cf] ring-1 ring-white/15">
+                <span className="flex h-9 w-9 flex-shrink-0 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-white/10 text-[#7ee6cf] ring-1 ring-white/15">
                   <s.icon className="h-5 w-5" />
                 </span>
                 <div>

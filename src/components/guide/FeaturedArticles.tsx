@@ -6,6 +6,7 @@
 import Link from 'next/link';
 import Container from '@/components/Container';
 import ArticleCard from '@/components/guide/ArticleCard';
+import MobileCarousel from '@/components/home/MobileCarousel';
 import { getFeaturedArticles } from '@/lib/articles';
 
 type Props = {
@@ -33,10 +34,12 @@ export default async function FeaturedArticles({ locale }: Props) {
             Tüm rehberleri incele →
           </Link>
         </div>
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {articles.map((article) => (
-            <ArticleCard key={article.id} article={article} locale={locale} />
-          ))}
+        <div className="mt-8">
+          <MobileCarousel gap="md" label="Psikoloji rehberi">
+            {articles.map((article) => (
+              <ArticleCard key={article.id} article={article} locale={locale} />
+            ))}
+          </MobileCarousel>
         </div>
       </Container>
     </section>
