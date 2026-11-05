@@ -78,53 +78,38 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://terapimap.com';
 // Admin hangi mesajı göndereceğini butona basmadan görsün diye doğrulama durumuna göre tooltip.
 function therapistButtonTitle(lead: Lead): string {
   return lead.professional_verified
-    ? 'Tam bilgi gönder (doğrulanmış)'
-    : 'Önizleme gönder (doğrulanmamış)';
-}
-
-// "Mehmet Kaya" → "Mehmet K."; son kelimenin baş harfi Türkçe kurallarıyla büyütülür (i → İ).
-// Tek kelimeli isimler olduğu gibi döner.
-function maskSurname(fullName: string): string {
-  const parts = fullName.trim().split(/\s+/).filter(Boolean);
-  if (parts.length < 2) return parts[0] ?? '';
-  const last = parts[parts.length - 1];
-  const initial = last.charAt(0).toLocaleUpperCase('tr-TR');
-  return `${parts.slice(0, -1).join(' ')} ${initial}.`;
+    ? 'Tam bilgi gönder'
+    : 'Tam bilgi + profil doğrulama daveti gönder';
 }
 
 // Terapiste gönderilecek WhatsApp linki (telefon yoksa null).
-// Butonun tooltip'i de aynı doğrulama durumuna göre değişir (bkz. therapistButtonTitle).
+// Butonun tooltip'i doğrulama durumuna göre değişir (bkz. therapistButtonTitle).
 function therapistWhatsAppUrl(lead: Lead): string | null {
   const num = normalizeTrPhone(lead.professional_phone);
   if (!num) return null;
   const confirmUrl = `${SITE_URL}/iletisime-gectim/${lead.id}`;
   const verifyUrl = `${SITE_URL}/profil-dogrula/${lead.professional_id}`;
 
-  // Doğrulanmış terapist → tam detay (sahipliği teyitli, hızlı dönsün).
-  // Doğrulanmamış terapist → iletişim bilgisi ve mesaj VERMEDEN önizleme:
-  // yalnızca ad + soyadın baş harfi. Detaylar için önce profilini doğrulasın (lead = havuç).
+  // Tüm terapistlere danışan bilgileri TAM iletilir. Doğrulanmamış terapistlere önceden
+  // yalnızca ad + soyadın baş harfi içeren önizleme gidiyordu (detaylar için profil doğrulama şartı);
+  // bu yaklaşım dönüş sağlamadığı için kaldırıldı. Doğrulama daveti artık mesajın sonunda ayrı bir öneri.
   const hitap = lead.professional_name ? ` ${lead.professional_name}` : '';
-  const msg = lead.professional_verified
-    ? `Merhaba${hitap}, Terapimap'ten yazıyoruz. Size yeni bir danışan talebi iletildi:\n\n` +
-      `Danışan: ${lead.name}\n` +
-      `Telefon: ${lead.phone ?? '-'}\n` +
-      `E-posta: ${lead.email}\n` +
-      `Mesajı: ${lead.message}\n\n` +
-      `Not: Bu iletişim bilgileri yalnızca danışanla iletişim kurmanız amacıyla paylaşılmıştır; ` +
-      `başka bir amaçla kullanılmaması ve üçüncü kişilerle paylaşılmaması gerekmektedir.\n\n` +
-      `Lütfen danışanla en kısa sürede iletişime geçin. Görüştükten sonra aşağıdaki bağlantıdan ` +
-      `bize bildirebilirsiniz:\n${confirmUrl}\n\n` +
-      `Teşekkürler,\nTerapimap Ekibi`
-    : `Merhaba${hitap}, Terapimap ekibinden yazıyoruz.\n\n` +
-      `Terapimap'teki profiliniz üzerinden size yeni bir randevu talebi geldi:\n\n` +
-      `Danışan: ${maskSurname(lead.name)}\n\n` +
-      `Danışanın telefonu, e-postası ve mesajı profilini doğrulayan uzmanlarla paylaşılıyor. ` +
-      `Profilinizi ücretsiz onaylayarak bu talebin tüm detaylarını görebilir, bundan sonraki ` +
-      `talepleri de doğrudan alabilirsiniz:\n\n` +
-      `👉 Profili onayla ve talebi gör:\n${verifyUrl}\n\n` +
-      `Terapimap, danışanların uzmanları inceleyip doğrudan tercih ettikleri terapistlere ` +
-      `ulaşmasını sağlayan bir uzman dizin platformudur.\n\n` +
-      `İyi çalışmalar dileriz.\nTerapimap Ekibi\nwww.terapimap.com`;
+  const verifyInvite = lead.professional_verified
+    ? ''
+    : `Ayrıca profilinizi ücretsiz onaylayarak bilgilerinizi güncelleyebilir, "Doğrulanmış Profil" ` +
+      `rozeti kazanabilir ve bundan sonraki talepleri de doğrudan alabilirsiniz:\n${verifyUrl}\n\n`;
+  const msg =
+    `Merhaba${hitap}, Terapimap'ten yazıyoruz. Size yeni bir danışan talebi iletildi:\n\n` +
+    `Danışan: ${lead.name}\n` +
+    `Telefon: ${lead.phone ?? '-'}\n` +
+    `E-posta: ${lead.email}\n` +
+    `Mesajı: ${lead.message}\n\n` +
+    `Not: Bu iletişim bilgileri yalnızca danışanla iletişim kurmanız amacıyla paylaşılmıştır; ` +
+    `başka bir amaçla kullanılmaması ve üçüncü kişilerle paylaşılmaması gerekmektedir.\n\n` +
+    `Lütfen danışanla en kısa sürede iletişime geçin. Görüştükten sonra aşağıdaki bağlantıdan ` +
+    `bize bildirebilirsiniz:\n${confirmUrl}\n\n` +
+    verifyInvite +
+    `Teşekkürler,\nTerapimap Ekibi`;
 
   return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
 }
