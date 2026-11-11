@@ -36,8 +36,24 @@ export default function HeroMatchBox({ matchPath }: { matchPath: string }) {
 
   return (
     <form onSubmit={onSubmit} noValidate className="w-full max-w-2xl">
-      <label htmlFor="hero-match-text" className="sr-only">
-        Yaşadığın sıkıntıyı anlat, sana uygun terapisti bulalım
+      {/* Kutunun ne yaptığını ilk bakışta söyleyen etiket; ekran okuyucu için de asıl label bu. */}
+      <label
+        htmlFor="hero-match-text"
+        className="mb-2 inline-flex items-center gap-1.5 text-sm font-medium text-[#7ee6cf]"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-4 w-4"
+          aria-hidden="true"
+        >
+          <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3zM19 16l.7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7L19 16z" />
+        </svg>
+        Yapay zekâ ile terapistini bul
       </label>
       <div className="rounded-3xl border border-white/20 bg-white p-3 shadow-lg focus-within:ring-2 focus-within:ring-white/40 sm:p-4">
         <textarea
