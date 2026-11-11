@@ -28,6 +28,9 @@ type Row = {
   whatsapp_replied_at: string | null;
 };
 
+type YesNo = '' | 'yes' | 'no';
+type SortKey = 'name' | 'city' | 'status' | 'mail' | 'wa' | 'reply';
+
 type Status = 'none' | 'mail' | 'wa' | 'both' | 'verified';
 const STATUS_LABEL: Record<Status, string> = {
   none: 'Hiç ulaşılmadı',
@@ -126,6 +129,11 @@ export default function DogrulamaTakibiPage() {
   const [statusFilter, setStatusFilter] = useState<'' | Status>('');
   const [onlyPhone, setOnlyPhone] = useState(false);
   const [q, setQ] = useState('');
+  const [mailFilter, setMailFilter] = useState<YesNo>('');
+  const [waFilter, setWaFilter] = useState<YesNo>('');
+  const [replyFilter, setReplyFilter] = useState<YesNo>('');
+  // null = varsayılan sıra (hiç ulaşılmayanlar önce, sonra şehir).
+  const [sort, setSort] = useState<{ key: SortKey; dir: 'asc' | 'desc' } | null>(null);
   const [visible, setVisible] = useState(PAGE_SIZE);
 
   const [bulkText, setBulkText] = useState('');
@@ -163,7 +171,7 @@ export default function DogrulamaTakibiPage() {
   }, [password, apiFetch]);
 
   useEffect(() => { if (password) load(); }, [password, load]);
-  useEffect(() => { setVisible(PAGE_SIZE); }, [city, statusFilter, onlyPhone, q]);
+  useEffect(() => { setVisible(PAGE_SIZE); }, [city, statusFilter, onlyPhone, q, mailFilter, waFilter, replyFilter, sort]);
 
   const patchRow = (id: string, patch: Partial<Row>) =>
     setList((l) => l?.map((r) => (r.id === id ? { ...r, ...patch } : r)) ?? l);
@@ -216,12 +224,40 @@ export default function DogrulamaTakibiPage() {
       .filter((p) => !statusFilter || statusOf(p) === statusFilter)
       .filter((p) => !onlyPhone || normalizeTrPhone(p.phone))
       .filter((p) => !needle || p.name.toLocaleLowerCase('tr').includes(needle) || (p.phone ?? '').includes(needle))
-      .sort((a, b) =>
-        rank[statusOf(a)] - rank[statusOf(b)]
-        || (a.city ?? '').localeCompare(b.city ?? '', 'tr')
-        || (a.district ?? '').localeCompare(b.district ?? '', 'tr')
-        || a.name.localeCompare(b.name, 'tr'));
-  }, [list, city, statusFilter, onlyPhone, q]);
+      .filter((p) => !mailFilter || (mailFilter === 'yes') === !!p.verification_invited_at)
+      .filter((p) => !waFilter || (waFilter === 'yes') === !!p.whatsapp_invited_at)
+      .filter((p) => !replyFilter || (replyFilter === 'yes') === !!p.whatsapp_replied_at)
+      .sort((a, b) => {
+        const byDefault = () =>
+          rank[statusOf(a)] - rank[statusOf(b)]
+          || (a.city ?? '').localeCompare(b.city ?? '', 'tr')
+          || (a.district ?? '').localeCompare(b.district ?? '', 'tr')
+          || a.name.localeCompare(b.name, 'tr');
+        if (!sort) return byDefault();
+        // Tarih sütunlarında boş değerler (hiç gönderilmemiş) artan sırada sona gider.
+        const dateCmp = (x: string | null, y: string | null) =>
+          x && y ? x.localeCompare(y) : x ? -1 : y ? 1 : 0;
+        let c = 0;
+        if (sort.key === 'name') c = a.name.localeCompare(b.name, 'tr');
+        else if (sort.key === 'city') c = (a.city ?? '').localeCompare(b.city ?? '', 'tr') || (a.district ?? '').localeCompare(b.district ?? '', 'tr');
+        else if (sort.key === 'status') c = rank[statusOf(a)] - rank[statusOf(b)];
+        else if (sort.key === 'mail') c = dateCmp(a.verification_invited_at, b.verification_invited_at);
+        else if (sort.key === 'wa') c = dateCmp(a.whatsapp_invited_at, b.whatsapp_invited_at);
+        else c = dateCmp(a.whatsapp_replied_at, b.whatsapp_replied_at);
+        // Azalan sırada boş değerler başa gelmesin diye yalnızca dolu çiftlerde yönü çevir.
+        if (sort.dir === 'desc' && c !== 0) {
+          const dateKey = sort.key === 'mail' || sort.key === 'wa' || sort.key === 'reply';
+          const av = sort.key === 'mail' ? a.verification_invited_at : sort.key === 'wa' ? a.whatsapp_invited_at : a.whatsapp_replied_at;
+          const bv = sort.key === 'mail' ? b.verification_invited_at : sort.key === 'wa' ? b.whatsapp_invited_at : b.whatsapp_replied_at;
+          if (!dateKey || (av && bv)) c = -c;
+        }
+        return c || byDefault();
+      });
+  }, [list, city, statusFilter, onlyPhone, q, mailFilter, waFilter, replyFilter, sort]);
+
+  const toggleSort = (key: SortKey) =>
+    setSort((s) => (!s || s.key !== key ? { key, dir: 'asc' } : s.dir === 'asc' ? { key, dir: 'desc' } : null));
+  const sortMark = (key: SortKey) => (sort?.key === key ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : '');
 
   /* ── Satır işlemleri ─────────────────────────────────────────────────── */
   const openWhatsApp = async (p: Row) => {
@@ -423,6 +459,21 @@ export default function DogrulamaTakibiPage() {
             <option value="">Tüm durumlar</option>
             {(Object.keys(STATUS_LABEL) as Status[]).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
           </select>
+          <select value={mailFilter} onChange={(e) => setMailFilter(e.target.value as YesNo)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white">
+            <option value="">E-posta: hepsi</option>
+            <option value="yes">E-posta gönderildi</option>
+            <option value="no">E-posta gönderilmedi</option>
+          </select>
+          <select value={waFilter} onChange={(e) => setWaFilter(e.target.value as YesNo)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white">
+            <option value="">WhatsApp: hepsi</option>
+            <option value="yes">WhatsApp gönderildi</option>
+            <option value="no">WhatsApp gönderilmedi</option>
+          </select>
+          <select value={replyFilter} onChange={(e) => setReplyFilter(e.target.value as YesNo)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white">
+            <option value="">Dönüş: hepsi</option>
+            <option value="yes">Dönüş yaptı</option>
+            <option value="no">Dönüş yapmadı</option>
+          </select>
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ad veya telefon ara"
             className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-52" />
           <label className="flex items-center gap-1.5 text-sm text-gray-600">
@@ -442,10 +493,14 @@ export default function DogrulamaTakibiPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-left text-xs uppercase tracking-wide text-gray-500">
                   <tr>
-                    <th className="px-3 py-2">Ad Soyad</th><th className="px-3 py-2">Şehir / İlçe</th>
-                    <th className="px-3 py-2">Telefon</th><th className="px-3 py-2">Durum</th>
-                    <th className="px-3 py-2">E-posta</th><th className="px-3 py-2">WhatsApp</th>
-                    <th className="px-3 py-2">Dönüş</th><th className="px-3 py-2 text-right">İşlem</th>
+                    {([['name', 'Ad Soyad'], ['city', 'Şehir / İlçe']] as const).map(([k, l]) => (
+                      <th key={k} className="px-3 py-2 cursor-pointer select-none hover:text-gray-800" onClick={() => toggleSort(k)}>{l}{sortMark(k)}</th>
+                    ))}
+                    <th className="px-3 py-2">Telefon</th>
+                    {([['status', 'Durum'], ['mail', 'E-posta'], ['wa', 'WhatsApp'], ['reply', 'Dönüş']] as const).map(([k, l]) => (
+                      <th key={k} className="px-3 py-2 cursor-pointer select-none hover:text-gray-800" onClick={() => toggleSort(k)}>{l}{sortMark(k)}</th>
+                    ))}
+                    <th className="px-3 py-2 text-right">İşlem</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
