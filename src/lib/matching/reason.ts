@@ -33,7 +33,14 @@ export function buildReason(r: RankedTherapist): string {
   if (years && years >= 3) {
     sentences.push(`${years} yıllık deneyimi var`);
   } else if (extras.length > 0) {
-    sentences.push(`ayrıca ${extras.map((s) => s.name).join(', ')} ${areaSuffix(extras.length)} da çalışıyor`);
+    const extraNames = extras.map((s) => s.name).join(', ');
+    // Talebe uyan uzmanlık yoksa (yalnızca konuma göre eşleşme) "ayrıca/da"
+    // anlamsız kalır; doğrudan çalıştığı alanlar yazılır.
+    sentences.push(
+      matched.length > 0
+        ? `ayrıca ${extraNames} ${areaSuffix(extras.length)} da çalışıyor`
+        : `${extraNames} ${areaSuffix(extras.length)} çalışıyor`,
+    );
   }
 
   // Konum bilgisi: yüz yüze aynı şehir daha ayırt edicidir; online ise

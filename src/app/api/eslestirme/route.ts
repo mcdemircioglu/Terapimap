@@ -49,9 +49,16 @@ export async function POST(request: Request) {
   try {
     const intent = await extractIntent(text);
 
-    // Model hiçbir uzmanlık çıkaramadıysa (konu dışı/anlamsız metin) rastgele
-    // terapist göstermek yerine açıkça eşleşme yok deriz.
-    if (intent.specialtySlugs.length === 0) {
+    // Model hiçbir kriter çıkaramadıysa (konu dışı/anlamsız metin) rastgele
+    // terapist göstermek yerine açıkça eşleşme yok deriz. Yalnızca şehir,
+    // online tercihi ya da terapist türü verilmişse ("Ankara'da terapist
+    // arıyorum") uzmanlık olmadan da konuma göre sıralarız.
+    const hasAnyCriteria =
+      intent.specialtySlugs.length > 0 ||
+      intent.citySlug !== null ||
+      intent.wantsOnline !== null ||
+      intent.professionalType !== null;
+    if (!hasAnyCriteria) {
       return NextResponse.json({ status: 'no_match', matches: [] });
     }
 
