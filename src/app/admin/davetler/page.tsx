@@ -154,7 +154,8 @@ export default function DavetlerPage() {
         </div>
         <div className="flex items-center gap-2">
           <a href="/admin" className="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">Profesyoneller</a>
-          <a href="/admin/basvurular" className="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">Başvurular</a>
+          <a href="/admin/dogrulama-takibi" className="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">Doğrulama Takibi</a>
+          <a href="/admin/basvurular"className="px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100">Başvurular</a>
         </div>
       </div>
 

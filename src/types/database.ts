@@ -124,6 +124,12 @@ export type Professional = {
   user_id: string | null;
   booking_tier: 'none' | 'level1' | 'full';
   documents: TherapistDocument[];
+  /** E-posta doğrulama daveti gönderim zamanı (admin/davetler). */
+  verification_invited_at?: string | null;
+  /** WhatsApp doğrulama daveti takibi (20261111_whatsapp_outreach.sql). */
+  whatsapp_invited_at?: string | null;
+  whatsapp_invite_count?: number;
+  whatsapp_replied_at?: string | null;
   created_at: string;
   updated_at: string;
 };
