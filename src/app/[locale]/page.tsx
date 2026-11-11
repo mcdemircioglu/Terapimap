@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { getTranslations, unstable_setRequestLocale } from 'next-intl/server';
 import Container from '@/components/Container';
 import HeroSearch from '@/components/home/HeroSearch';
-import FeaturedTherapistsSlider from '@/components/home/FeaturedTherapistsSlider';
+import HeroMatchBox from '@/components/home/HeroMatchBox';import FeaturedTherapistsSlider from '@/components/home/FeaturedTherapistsSlider';
 import PopularSearches from '@/components/home/PopularSearches';
 import CityBrowseSection from '@/components/CityBrowseSection';
 import FeaturedTests from '@/components/home/FeaturedTests';
@@ -92,8 +92,14 @@ export default async function HomePage({
             {t('heroSubtitleNew')}
           </p>
 
-          {/* Arama */}
+          {/* AI eşleştirme: arama kutusu görünümlü giriş (metin sessionStorage ile /eslestirme'ye taşınır) */}
           <div className="mt-8">
+            <HeroMatchBox matchPath={`/${locale}/eslestirme`} />
+          </div>
+
+          {/* Filtreli arama */}
+          <p className="mb-3 mt-6 text-xs text-brand-100/70">ya da filtreyle ara</p>
+          <div>
             <HeroSearch locale={locale} specialties={specialties} />
           </div>
 

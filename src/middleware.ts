@@ -28,7 +28,7 @@ const DYN_QUERY_KEYS = ['page', 'online', 'inPerson', 'type', 'district', 'q', '
 // edilir ve sayfa yerine 404 ya da yanlış içerik döner. Liste yalnızca
 // "?page=" taşıyan istekler için önemli.
 const RESERVED_TOP_SEGMENTS = new Set([
-  'about', 'aile-terapisti', 'cerez-politikasi', 'cocuk-psikiyatristi', 'duyurular', 'dyn',
+  'about', 'aile-terapisti', 'cerez-politikasi', 'cocuk-psikiyatristi', 'duyurular', 'dyn', 'eslestirme',
   'gizlilik-politikasi', 'iletisim', 'kullanim-kosullari', 'kvkk-aydinlatma-metni',
   'one-cikan-terapistler', 'psikiyatrist', 'psikolog', 'psikoloji-rehberi',
   'psikolojik-danisman', 'terapist-profil-politikasi', 'terapistler', 'testler',
