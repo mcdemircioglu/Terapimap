@@ -21,6 +21,7 @@ type Row = {
   district: string | null;
   phone: string | null;
   email: string | null;
+  instagram_url: string | null;
   is_verified: boolean;
   verification_invited_at: string | null;
   whatsapp_invited_at: string | null;
@@ -29,6 +30,21 @@ type Row = {
 };
 
 type YesNo = '' | 'yes' | 'no';
+// Ulaşım kanalı: WhatsApp'a uygun cep numarası yoksa sırayla e-posta, Instagram denenir.
+type Reach = '' | 'wa' | 'mail' | 'insta' | 'none';
+const REACH_LABEL: Record<Exclude<Reach, ''>, string> = {
+  wa: 'WhatsApp uygun (cep no)',
+  mail: 'WhatsApp yok, e-posta var',
+  insta: 'WhatsApp/e-posta yok, Instagram var',
+  none: 'Hiçbir kanal yok',
+};
+const validEmail = (e: string | null) => !!e && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim());
+function reachOf(p: { phone: string | null; email: string | null; instagram_url: string | null }): Exclude<Reach, ''> {
+  if (normalizeTrPhone(p.phone)) return 'wa';
+  if (validEmail(p.email)) return 'mail';
+  if (p.instagram_url && p.instagram_url.trim()) return 'insta';
+  return 'none';
+}
 type SortKey = 'name' | 'city' | 'status' | 'mail' | 'wa' | 'reply';
 
 type Status = 'none' | 'mail' | 'wa' | 'both' | 'verified';
@@ -129,6 +145,7 @@ export default function DogrulamaTakibiPage() {
   const [statusFilter, setStatusFilter] = useState<'' | Status>('');
   const [onlyPhone, setOnlyPhone] = useState(false);
   const [q, setQ] = useState('');
+  const [reachFilter, setReachFilter] = useState<Reach>('');
   const [mailFilter, setMailFilter] = useState<YesNo>('');
   const [waFilter, setWaFilter] = useState<YesNo>('');
   const [replyFilter, setReplyFilter] = useState<YesNo>('');
@@ -171,7 +188,7 @@ export default function DogrulamaTakibiPage() {
   }, [password, apiFetch]);
 
   useEffect(() => { if (password) load(); }, [password, load]);
-  useEffect(() => { setVisible(PAGE_SIZE); }, [city, statusFilter, onlyPhone, q, mailFilter, waFilter, replyFilter, sort]);
+  useEffect(() => { setVisible(PAGE_SIZE); }, [city, statusFilter, onlyPhone, q, reachFilter, mailFilter, waFilter, replyFilter, sort]);
 
   const patchRow = (id: string, patch: Partial<Row>) =>
     setList((l) => l?.map((r) => (r.id === id ? { ...r, ...patch } : r)) ?? l);
@@ -224,6 +241,7 @@ export default function DogrulamaTakibiPage() {
       .filter((p) => !statusFilter || statusOf(p) === statusFilter)
       .filter((p) => !onlyPhone || normalizeTrPhone(p.phone))
       .filter((p) => !needle || p.name.toLocaleLowerCase('tr').includes(needle) || (p.phone ?? '').includes(needle))
+      .filter((p) => !reachFilter || reachOf(p) === reachFilter)
       .filter((p) => !mailFilter || (mailFilter === 'yes') === !!p.verification_invited_at)
       .filter((p) => !waFilter || (waFilter === 'yes') === !!p.whatsapp_invited_at)
       .filter((p) => !replyFilter || (replyFilter === 'yes') === !!p.whatsapp_replied_at)
@@ -253,7 +271,7 @@ export default function DogrulamaTakibiPage() {
         }
         return c || byDefault();
       });
-  }, [list, city, statusFilter, onlyPhone, q, mailFilter, waFilter, replyFilter, sort]);
+  }, [list, city, statusFilter, onlyPhone, q, reachFilter, mailFilter, waFilter, replyFilter, sort]);
 
   const toggleSort = (key: SortKey) =>
     setSort((s) => (!s || s.key !== key ? { key, dir: 'asc' } : s.dir === 'asc' ? { key, dir: 'desc' } : null));
@@ -364,7 +382,7 @@ export default function DogrulamaTakibiPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {stat('Onaylı terapist', summary.total)}
           {stat('Doğrulanan', summary.verified, pct(summary.verified, summary.total) + ' tümü içinde')}
-          {stat('Hiç ulaşılmadı', summary.none, `${summary.noneWithPhone} tanesinin telefonu var`)}
+          {stat('Hiç ulaşılmadı', summary.none, `${summary.noneWithPhone} tanesinin cep numarası var`)}
           {stat('WhatsApp gönderilen', summary.waSent, `${summary.waReplied} dönüş`)}
           {stat('WhatsApp dönüşümü', pct(summary.waVerified, summary.waSent), `${summary.waVerified} / ${summary.waSent} doğruladı`)}
           {stat('E-posta dönüşümü', pct(summary.mailVerified, summary.mailSent), `${summary.mailVerified} / ${summary.mailSent} doğruladı`)}
@@ -459,6 +477,10 @@ export default function DogrulamaTakibiPage() {
             <option value="">Tüm durumlar</option>
             {(Object.keys(STATUS_LABEL) as Status[]).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
           </select>
+          <select value={reachFilter} onChange={(e) => setReachFilter(e.target.value as Reach)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white">
+            <option value="">Ulaşım kanalı: hepsi</option>
+            {(Object.keys(REACH_LABEL) as Exclude<Reach, ''>[]).map((k) => <option key={k} value={k}>{REACH_LABEL[k]}</option>)}
+          </select>
           <select value={mailFilter} onChange={(e) => setMailFilter(e.target.value as YesNo)} className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm bg-white">
             <option value="">E-posta: hepsi</option>
             <option value="yes">E-posta gönderildi</option>
@@ -477,7 +499,7 @@ export default function DogrulamaTakibiPage() {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ad veya telefon ara"
             className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm w-52" />
           <label className="flex items-center gap-1.5 text-sm text-gray-600">
-            <input type="checkbox" checked={onlyPhone} onChange={(e) => setOnlyPhone(e.target.checked)} /> Sadece telefonu olanlar
+            <input type="checkbox" checked={onlyPhone} onChange={(e) => setOnlyPhone(e.target.checked)} /> Sadece WhatsApp&#39;a uygun (cep) numarası olanlar
           </label>
           <div className="ml-auto flex items-center gap-2">
             <span className="text-sm text-gray-500">{filtered.length} kişi</span>
@@ -513,7 +535,7 @@ export default function DogrulamaTakibiPage() {
                         <td className="px-3 py-2 font-medium text-gray-900">{p.name}</td>
                         <td className="px-3 py-2 text-gray-600">{[p.city, p.district].filter(Boolean).join(' / ') || '—'}</td>
                         <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                          {p.phone ?? '—'}{p.phone && !hasPhone && <span className="text-red-600 text-xs ml-1">(geçersiz)</span>}
+                          {p.phone ?? '—'}{p.phone && !hasPhone && <span className="text-red-600 text-xs ml-1">(WhatsApp yok: sabit/servis hattı)</span>}
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap">
                           <span className={`px-2 py-0.5 rounded-full text-xs border ${STATUS_STYLE[st]}`}>{STATUS_LABEL[st]}</span>

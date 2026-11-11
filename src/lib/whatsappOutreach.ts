@@ -13,7 +13,9 @@ export function normalizeTrPhone(p: string | null | undefined): string | null {
   else if (d.startsWith('0') && d.length === 11) nat = d.slice(1);
   else if (d.length === 10) nat = d;
   else return null;
-  return nat.length === 10 ? '90' + nat : null;
+  // Türkiye'de cep numaraları 5 ile başlar. Sabit hatlar (312, 212, 216...) ve
+  // 444/850 gibi servis numaraları WhatsApp'a düşmez, bu yüzden geçersiz sayılır.
+  return nat.length === 10 && nat.startsWith('5') ? '90' + nat : null;
 }
 
 export type InviteMessageInput = {

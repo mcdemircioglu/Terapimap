@@ -18,6 +18,7 @@ type Row = {
   district: string | null;
   phone: string | null;
   email: string | null;
+  instagram_url: string | null;
   is_verified: boolean;
   verification_invited_at: string | null;
   whatsapp_invited_at: string | null;
@@ -26,7 +27,7 @@ type Row = {
 };
 
 const COLS =
-  'id, name, slug, city, district, phone, email, is_verified, verification_invited_at, whatsapp_invited_at, whatsapp_invite_count, whatsapp_replied_at';
+  'id, name, slug, city, district, phone, email, instagram_url, is_verified, verification_invited_at, whatsapp_invited_at, whatsapp_invite_count, whatsapp_replied_at';
 
 /** Kampanya bitiş metni; email.ts'deki sendVerificationInvite mantığıyla senkron. */
 function campaignDateText(): string | null {
