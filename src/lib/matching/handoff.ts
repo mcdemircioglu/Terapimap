@@ -7,3 +7,11 @@
  * okuduğu anda anahtarı siler, sekme kapanınca zaten silinir.
  */
 export const MATCH_HANDOFF_KEY = 'terapimap:match-text';
+
+/**
+ * Son eşleştirme sonuçları (kartlar). Kullanıcı bir profile bakıp geri
+ * dönünce diğer önerileri de inceleyebilsin diye aynı sekmede tutulur.
+ * Danışanın yazdığı METİN burada saklanmaz, yalnızca terapist kartları.
+ * sessionStorage olduğu için sekme kapanınca silinir.
+ */
+export const MATCH_RESULT_KEY = 'terapimap:match-result';

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { MATCH_HANDOFF_KEY } from '@/lib/matching/handoff';
+import { MATCH_HANDOFF_KEY, MATCH_RESULT_KEY } from '@/lib/matching/handoff';
 import Avatar from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -37,6 +37,14 @@ const ERROR_MESSAGES: Record<string, string> = {
   unavailable: 'Eşleştirme şu an kullanılamıyor. Lütfen biraz sonra tekrar deneyin.',
 };
 
+function clearSavedResult() {
+  try {
+    sessionStorage.removeItem(MATCH_RESULT_KEY);
+  } catch {
+    // sessionStorage erişilemezse yapılacak bir şey yok.
+  }
+}
+
 export default function MatchFinder({ directoryPath }: { directoryPath: string }) {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -47,15 +55,29 @@ export default function MatchFinder({ directoryPath }: { directoryPath: string }
   // ikinci (ücretli) bir istek başlatmaz.
   useEffect(() => {
     let handed: string | null = null;
+    let saved: string | null = null;
     try {
       handed = sessionStorage.getItem(MATCH_HANDOFF_KEY);
       if (handed !== null) sessionStorage.removeItem(MATCH_HANDOFF_KEY);
+      saved = sessionStorage.getItem(MATCH_RESULT_KEY);
     } catch {
       return;
     }
     if (handed && handed.trim().length >= MIN_LENGTH) {
       setText(handed);
       void runMatch(handed, '');
+      return;
+    }
+    // Yeni bir arama yoksa, profilden geri dönen kullanıcıya önceki sonuçları göster.
+    if (saved) {
+      try {
+        const matches = JSON.parse(saved);
+        if (Array.isArray(matches) && matches.length > 0) {
+          setResult({ kind: 'ok', matches });
+        }
+      } catch {
+        clearSavedResult();
+      }
     }
   }, []);
 
@@ -73,6 +95,8 @@ export default function MatchFinder({ directoryPath }: { directoryPath: string }
   async function runMatch(value: string, hp: string) {
     setLoading(true);
     setResult(null);
+    // Yeni aramada eski sonuçlar silinir; yalnızca başarılı sonuç yeniden yazılır.
+    clearSavedResult();
     try {
       const res = await fetch('/api/eslestirme', {
         method: 'POST',
@@ -95,6 +119,11 @@ export default function MatchFinder({ directoryPath }: { directoryPath: string }
         setResult({ kind: 'crisis' });
       } else if (data.status === 'ok' && Array.isArray(data.matches) && data.matches.length > 0) {
         setResult({ kind: 'ok', matches: data.matches });
+        try {
+          sessionStorage.setItem(MATCH_RESULT_KEY, JSON.stringify(data.matches));
+        } catch {
+          // Depolama kapalı/dolu: sonuçlar ekranda kalır, geri dönünce kaybolur.
+        }
       } else {
         setResult({ kind: 'no_match' });
       }
@@ -130,8 +159,9 @@ export default function MatchFinder({ directoryPath }: { directoryPath: string }
           </div>
 
           <p className="mt-4 text-xs leading-relaxed text-brand-600">
-            Yazdıkların yalnızca sana uygun uzmanları bulmak için analiz edilir ve saklanmaz. Bu
-            bir teşhis ya da tedavi değildir.{' '}
+            Yazdıkların yalnızca sana uygun uzmanları bulmak için analiz edilir ve saklanmaz.
+            Öneriler, profilleri rahatça inceleyebilmen için yalnızca bu sekmede, sekmeyi
+            kapatana kadar tutulur. Bu bir teşhis ya da tedavi değildir.{' '}
             <Link href="/tr/kvkk-aydinlatma-metni" className="underline hover:text-brand-800">
               KVKK Aydınlatma Metni
             </Link>
