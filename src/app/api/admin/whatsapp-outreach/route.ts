@@ -14,6 +14,7 @@ type Row = {
   id: string;
   name: string;
   slug: string | null;
+  professional_type: string | null;
   city: string | null;
   district: string | null;
   phone: string | null;
@@ -27,7 +28,7 @@ type Row = {
 };
 
 const COLS =
-  'id, name, slug, city, district, phone, email, instagram_url, is_verified, verification_invited_at, whatsapp_invited_at, whatsapp_invite_count, whatsapp_replied_at';
+  'id, name, slug, professional_type, city, district, phone, email, instagram_url, is_verified, verification_invited_at, whatsapp_invited_at, whatsapp_invite_count, whatsapp_replied_at';
 
 /** Kampanya bitiş metni; email.ts'deki sendVerificationInvite mantığıyla senkron. */
 function campaignDateText(): string | null {
@@ -70,7 +71,27 @@ export async function GET(request: Request) {
   }
   const { rows, error } = await fetchAll();
   if (error) return NextResponse.json({ error }, { status: 500 });
-  return NextResponse.json({ list: rows, campaignDateText: campaignDateText() });
+
+  // GSC özeti (isteğe bağlı): tablo henüz oluşturulmadıysa ya da okunamazsa liste yine döner,
+  // yalnızca kişiselleştirme devre dışı kalır.
+  const gscById = new Map<string, unknown>();
+  const supabase = getServiceClient();
+  for (let from = 0; ; from += PAGE) {
+    const { data, error: gErr } = await supabase
+      .from('professional_gsc_stats')
+      .select('professional_id, period_start, period_end, impressions, clicks, avg_position, brand_impressions, brand_clicks, top_query')
+      .order('professional_id', { ascending: true })
+      .range(from, from + PAGE - 1);
+    if (gErr) break;
+    for (const g of data ?? []) {
+      const { professional_id, ...rest } = g as { professional_id: string } & Record<string, unknown>;
+      gscById.set(professional_id, rest);
+    }
+    if (!data || data.length < PAGE) break;
+  }
+
+  const list = rows.map((r) => ({ ...r, gsc: gscById.get(r.id) ?? null }));
+  return NextResponse.json({ list, campaignDateText: campaignDateText(), gscLoaded: gscById.size });
 }
 
 /* ── POST ─────────────────────────────────────────────────────────────────

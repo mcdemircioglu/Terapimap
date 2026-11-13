@@ -23,6 +23,7 @@
 | `reviews` | Danışan değerlendirmeleri | `reviews_migration.sql` | 8 |
 | `announcements` | Terapist duyuruları | `announcements_migration.sql` | 16 |
 | `announcement_registrations` | Duyuru kayıtları | `announcements_migration.sql` | 2 |
+| `professional_gsc_stats` | Terapist başına Google Search Console özeti (admin WhatsApp daveti kişiselleştirme). RLS açık, politika yok; yalnızca service role | `20261112_professional_gsc_stats.sql` | 1 |
 | `professionals_name_backup` | Unvan normalizasyonu öncesi isim yedeği | `titles_apply.sql` | 0 |
 
 Sütun düzeyindeki tipler için `src/types/database.ts` dosyasına bakın. Bu dosya elle yazılmıştır ve doğrulanmadı: şemayla tam uyumlu olup olmadığı kontrol edilmedi.

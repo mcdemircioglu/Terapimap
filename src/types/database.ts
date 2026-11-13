@@ -134,6 +134,21 @@ export type Professional = {
   updated_at: string;
 };
 
+/** Google Search Console özeti (20261112_professional_gsc_stats.sql). Yalnızca admin API okur. */
+export type ProfessionalGscStats = {
+  professional_id: string;
+  period_start: string;
+  period_end: string;
+  impressions: number;
+  clicks: number;
+  avg_position: number | null;
+  /** Terapistin adıyla yapılan aramalardaki gösterim/tıklama. */
+  brand_impressions: number;
+  brand_clicks: number;
+  top_query: string | null;
+  updated_at: string;
+};
+
 export type ProfessionalWithSpecialties = Professional & {
   specialties: Specialty[];
 };
