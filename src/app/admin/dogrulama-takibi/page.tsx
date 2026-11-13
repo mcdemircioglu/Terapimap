@@ -80,7 +80,8 @@ function csvToGscRows(text: string): { rows: GscCsvRow[]; error?: string } {
   const head = table[0].map(normHeader);
   const find = (pred: (h: string) => boolean) => head.findIndex(pred);
   const idx = {
-    slug: find((h) => h.includes('slug')),
+    // "Terapist (tahmini, slug/sorgudan)" sütunu da "slug" içerir; yalnızca "Slug (eşleştirme anahtarı)" başlığı seçilmeli.
+    slug: find((h) => h.startsWith('slug')),
     impressions: find((h) => h === 'gosterim'),
     clicks: find((h) => h === 'tiklama'),
     avg_position: find((h) => h.startsWith('ort. pozisyon')),
